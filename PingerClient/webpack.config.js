@@ -2,21 +2,21 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-    entry: path.join(__dirname, "src", "index.js"),
+    entry: path.join(__dirname, "src", "index.tsx"),
     output: {
         path: path.resolve(__dirname, "dist"),
     },
-    mode: "development",
+    resolve: {
+        extensions: [".js", ".jsx", ".ts", ".tsx"],
+    },
+    mode: process.env.NODE_ENV || "development",
     module: {
         rules: [
             {
-                test: /\.?js$/,
+                test: /\.(jsx?|tsx?)$/,
                 exclude: /node_modules/,
                 use: {
-                    loader: "babel-loader",
-                    options: {
-                        presets: ['@babel/preset-env', '@babel/preset-react']
-                    }
+                    loader: "babel-loader"
                 }
             },
             {
