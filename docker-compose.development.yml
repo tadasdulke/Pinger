@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  nginx-service:
+    container_name: nginx-service
+    build: ./nginx-service
+    ports:
+      - "80:80"
+  pinger-client:
+    container_name: pinger-client
+    build: ./PingerClient
+    volumes:
+      - ./PingerClient:/app
+      - /app/node_modules
+    ports:
+      - "8080:8080"
+  chat-service:
+    container_name: chat-service
+    build: ./PingerChatHub
+    volumes:
+      - ./PingerChatHub:/app
+    ports:
+      - "5000:5000"

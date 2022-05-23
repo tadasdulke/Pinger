@@ -30,4 +30,11 @@ module.exports = {
             template: path.join(__dirname, "public", "index.html"),
         }),
     ],
+    devServer: {
+        allowedHosts: "all"
+    },
+    watchOptions: {
+        aggregateTimeout: 300,
+        poll: 1000
+    }
 }
