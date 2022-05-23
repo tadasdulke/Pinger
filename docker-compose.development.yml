@@ -7,16 +7,16 @@ services:
       - "80:80"
   pinger-client:
     container_name: pinger-client
-    build: ./PingerClient
+    build: ./pinger-client
     volumes:
-      - ./PingerClient:/app
+      - ./pinger-client:/app
       - /app/node_modules
     ports:
       - "8080:8080"
   chat-service:
     container_name: chat-service
-    build: ./PingerChatHub
+    build: ./chat-service/PingerChatHub
     volumes:
-      - ./PingerChatHub:/app
+      - ./chat-service/PingerChatHub:/app
     ports:
       - "5000:5000"
