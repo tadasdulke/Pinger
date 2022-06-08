@@ -1,48 +1,17 @@
 {
   "name": "pinger-client",
   "version": "1.0.0",
-  "description": "Client app for Pinger backend",
+  "private": true,
+  "description": "",
+  "workspaces": [
+    "packages/*"
+  ],
+  "main": "index.js",
   "scripts": {
-    "dev": "webpack serve",
-    "build": "webpack",
-    "lint": "eslint .",
-    "lint:fix": "eslint --fix",
-    "format": "prettier --write './**/*.{js,jsx,ts,tsx,css,md,json}' --config ./.prettierrc"
+    "dev": "yarn workspace @pinger-client/root dev"
   },
-  "author": "Tadas Dulke",
+  "keywords": [],
+  "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@microsoft/signalr": "^6.0.1",
-    "postcss-preset-env": "^7.2.3",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-grid-system": "^8.0.1",
-    "typescript": "^4.6.4"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.16.12",
-    "@babel/preset-env": "^7.16.11",
-    "@babel/preset-react": "^7.16.7",
-    "@babel/preset-typescript": "^7.16.7",
-    "@types/react": "^18.0.8",
-    "@types/react-dom": "^18.0.3",
-    "@types/signalr": "^2.2.37",
-    "autoprefixer": "^10.4.2",
-    "babel-loader": "^8.2.3",
-    "css-loader": "^6.5.1",
-    "eslint": "^8.7.0",
-    "eslint-config-airbnb": "^19.0.4",
-    "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-jsx-a11y": "^6.5.1",
-    "eslint-plugin-react": "^7.28.0",
-    "eslint-plugin-react-hooks": "^4.3.0",
-    "html-webpack-plugin": "^5.5.0",
-    "postcss": "^8.4.5",
-    "postcss-loader": "^6.2.1",
-    "style-loader": "^3.3.1",
-    "tailwindcss": "^3.0.15",
-    "webpack": "^5.67.0",
-    "webpack-cli": "^4.9.1",
-    "webpack-dev-server": "^4.7.3"
-  }
+  "devDependencies": {}
 }

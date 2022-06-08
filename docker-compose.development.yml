@@ -11,8 +11,9 @@ services:
     volumes:
       - ./pinger-client:/app
       - /app/node_modules
+      - /app/packages/**/node_modules
     ports:
-      - "8080:8080"
+      - "3000:3000"
   chat-service:
     container_name: chat-service
     build: ./chat-service/PingerChatHub
