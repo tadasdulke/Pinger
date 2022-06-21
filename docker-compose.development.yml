@@ -5,6 +5,9 @@ services:
     build: ./nginx-service
     ports:
       - "80:80"
+    depends_on: 
+      - pinger-client
+      - chat-service
   pinger-client:
     container_name: pinger-client
     build: ./pinger-client
@@ -21,3 +24,4 @@ services:
       - ./chat-service/PingerChatHub:/app
     ports:
       - "5000:5000"
+
