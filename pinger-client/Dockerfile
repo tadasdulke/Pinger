@@ -5,7 +5,6 @@ WORKDIR /app
 
 COPY package.json package.json
 COPY yarn.lock yarn.lock
-COPY packages/root/package.json packages/root/package.json
 
 RUN yarn
 
