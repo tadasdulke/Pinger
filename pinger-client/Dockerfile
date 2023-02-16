@@ -10,4 +10,4 @@ RUN yarn
 
 COPY . .
 CMD ["yarn", "dev"]
-EXPOSE 3000
+EXPOSE 3000 

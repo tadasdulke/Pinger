@@ -14,7 +14,6 @@ services:
     volumes:
       - ./pinger-client:/app
       - /app/node_modules
-      - /app/packages/root/node_modules
     ports:
       - "8080:8080"
   chat-service:
@@ -24,4 +23,23 @@ services:
       - ./chat-service/PingerChatHub:/app
     ports:
       - "5000:5000"
+  pinger-api-service:
+    container_name: pinger-api-service
+    build: ./pinger-api-service
+    volumes:
+      - ./pinger-api-service:/app
+    ports:
+      - "5122:5122"
+  db:
+    container_name: pinger-api-db
+    image: "mcr.microsoft.com/mssql/server:2022-latest"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlvolume:/var/opt/mssql
+    environment:
+        SA_PASSWORD: "S3cur3P@ssW0rd!"
+        ACCEPT_EULA: "Y"
+volumes:
+  sqlvolume:
 
