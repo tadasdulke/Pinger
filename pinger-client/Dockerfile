@@ -1,4 +1,4 @@
-FROM node:14.19.0-alpine
+FROM node:14.19.0
 ARG BUILD_CONTEXT
 
 WORKDIR /app
@@ -9,5 +9,4 @@ COPY yarn.lock yarn.lock
 RUN yarn
 
 COPY . .
-CMD ["yarn", "dev"]
 EXPOSE 3000 

@@ -2,31 +2,43 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-    mode: 'development',
-    entry: path.join(__dirname, "src", "index.js"),
-    output: {
-        path: path.resolve(__dirname, 'dist')
-    },
-    module: {
-        rules: [
-          {
-            test: /\.?js$/,
-            exclude: /node_modules/,
-            use: {
-              loader: "babel-loader",
-              options: {
-                presets: ['@babel/preset-env', '@babel/preset-react']
-              }
-            }
+  mode: 'development',
+  entry: path.join(__dirname, 'src', 'index.js'),
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+  },
+  module: {
+    rules: [
+      {
+        test: /\.?js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env', '@babel/preset-react'],
           },
-        ]
+        },
       },
-    plugins: [
-        new HtmlWebpackPlugin({
-          template: path.join(__dirname, "public", "index.html"),
-        }),
+      {
+        test: /\.css$/i,
+        use: ["style-loader", "css-loader", "postcss-loader"],
+      },
     ],
-    devServer: {
-        allowedHosts: "all",
-    }
-}
+  },
+  resolve: {
+    alias: {
+      '@Config': path.resolve(__dirname, 'src/config'),
+      '@Common': path.resolve(__dirname, 'src/common'),
+      '@Store': path.resolve(__dirname, 'src/store'),
+    },
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, 'public', 'index.html'),
+    }),
+  ],
+  devServer: {
+    allowedHosts: 'all',
+    historyApiFallback: true,
+  },
+};
