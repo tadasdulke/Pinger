@@ -33,6 +33,7 @@ services:
       - ./pinger-api-service:/app
     ports:
       - "5122:5122"
+    tty: true
     depends_on:
       - pinger-api-db
   pinger-api-db:

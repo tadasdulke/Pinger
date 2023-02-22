@@ -20,8 +20,23 @@ export const createTesonetClient = () => {
     return response.data.token;
   };
 
+  const handleRegistration = async (email, username, password) => {
+    const response = await instance.post(API_SERVICE_ENDPOINTS.REGISTER, {
+      email,
+      username,
+      password,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.data;
+  };
+
   return {
     getToken,
+    handleRegistration
   };
 };
 

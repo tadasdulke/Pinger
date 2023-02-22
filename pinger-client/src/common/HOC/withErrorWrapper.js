@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { Alert } from '../components';
 import { useErrorWrapperAlertState } from '../hooks';
 
 const withErrorWrapper = (Component) => (props) => {
@@ -18,9 +17,9 @@ const withErrorWrapper = (Component) => (props) => {
 
   return (
     <>
-      {/* {isErrorShown && errorMessage && (
-        <Alert hideAlert={hideError} message={errorMessage} />
-      )} */}
+      {isErrorShown && errorMessage && (
+        <div>{errorMessage}</div>
+      )}
       <Component {...props} errorHandler={errorHandler} />
     </>
   );

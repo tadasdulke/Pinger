@@ -3,5 +3,4 @@ WORKDIR /app
 RUN dotnet tool install  --global dotnet-ef
 COPY . .
 RUN dotnet restore
-CMD ["dotnet", "watch", "run"]
 EXPOSE 5122

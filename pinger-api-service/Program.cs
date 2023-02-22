@@ -17,7 +17,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(configurationManager.GetConnectionString("Default")));
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
@@ -30,8 +30,8 @@ builder.Services.AddAuthentication(options => {
     options.RequireHttpsMetadata = false;
     options.TokenValidationParameters = new TokenValidationParameters()
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
+        ValidateIssuer = false,
+        ValidateAudience = false,
         ValidAudience = configurationManager["JWT:ValidAudience"],
         ValidIssuer = configurationManager["JWT:ValidIssuer"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configurationManager["JWT:Secret"]))
@@ -51,6 +51,8 @@ app.UseCors(builder => builder
     .AllowAnyMethod()
     .SetIsOriginAllowed((host) => true)
     .AllowCredentials());
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
