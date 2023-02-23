@@ -4,6 +4,10 @@ namespace pinger_api_service
 {
     public class User : IdentityUser
     {
-        public virtual ICollection<ChatSpace> ChatSpaces { get; set; }
+        public User() {
+            this.ChatSpaces = new HashSet<ChatSpace>();
+        }
+
+        public ICollection<ChatSpace> ChatSpaces { get; set; }
     }
 }
