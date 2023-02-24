@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace pinger_api_service
 {
@@ -29,6 +30,16 @@ namespace pinger_api_service
             _dbContext.ChatSpaces.Add(chatSpace);
             _dbContext.SaveChanges();
             return Ok();
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<ActionResult<List<ChatSpaceResponse>>> GetUsersChatSpaces()
+        {
+            string userId = _userManager.GetUserId(User);
+            List<ChatSpace> chatSpaces = await _dbContext.ChatSpaces.Include(x => x.Members).Where(x => x.Members.Any(m => m.Id == userId)).ToListAsync();
+            List<ChatSpaceResponse> chatSpaceResponses = chatSpaces.Select(x => new ChatSpaceResponse{ Id = x.Id, Name = x.Name }).ToList();
+            return chatSpaceResponses;
         }
     }
 } 
