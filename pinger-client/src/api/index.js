@@ -1,45 +1,24 @@
 import axios from 'axios';
+import { API_SERVICE_BASE } from './config/constants';
+import getAuthEndpoints from './getAuthEndpoints';
+import getChatSpaceEndpoints from './getChatSpaceEndpoints';
 
-import { API_SERVICE_BASE, API_SERVICE_ENDPOINTS } from './config/constants';
-
-export const createTesonetClient = () => {
+export const createPingerClient = () => {
   const instance = axios.create({
     baseURL: API_SERVICE_BASE,
   });
 
-  const getToken = async (username, password) => {
-    const response = await instance.post(API_SERVICE_ENDPOINTS.LOGIN, {
-      username,
-      password,
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    return response.data.token;
-  };
-
-  const handleRegistration = async (email, username, password) => {
-    const response = await instance.post(API_SERVICE_ENDPOINTS.REGISTER, {
-      email,
-      username,
-      password,
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    return response.data;
-  };
+  const {getToken, handleRegistration} = getAuthEndpoints(instance);
+  const {getUserChatSpaces, createChatSpace} = getChatSpaceEndpoints(instance);
 
   return {
     getToken,
-    handleRegistration
+    handleRegistration,
+    getUserChatSpaces,
+    createChatSpace
   };
 };
 
-const tesonetClient = createTesonetClient();
+const pingerClient = createPingerClient();
 
-export default tesonetClient;
+export default pingerClient;

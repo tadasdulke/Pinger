@@ -8,6 +8,8 @@ namespace pinger_api_service
             this.ChatSpaces = new HashSet<ChatSpace>();
         }
 
+        public string? RefreshToken { get; set; }
+        public DateTime RefreshTokenExpiryTime { get; set; }
         public ICollection<ChatSpace> ChatSpaces { get; set; }
     }
 }

@@ -1,20 +1,6 @@
 import React from 'react';
-import {
-    createBrowserRouter,
-    RouterProvider,
-} from "react-router-dom";
-import {Login, Register} from './pages'
-
-  const router = createBrowserRouter([
-    {
-      path: "login",
-      element: <Login/>,
-    },
-    {
-      path: "register",
-      element: <Register/>,
-    },
-  ]);
+import { RouterProvider } from "react-router-dom";
+import router from './router/router'
 
 const App = () => (
     <RouterProvider router={router}/>

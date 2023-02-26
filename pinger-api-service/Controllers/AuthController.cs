@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace pinger_api_service
@@ -23,6 +24,46 @@ namespace pinger_api_service
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
+        }
+
+        [HttpPost]
+        [Route("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] TokenRefreshRequest tokenRefreshRequest)
+        {
+            if (tokenRefreshRequest is null)
+            {
+                return BadRequest();
+            }
+
+            string? accessToken = tokenRefreshRequest.AccessToken;
+            string? refreshToken = tokenRefreshRequest.RefreshToken;
+
+            var principal = GetPrincipalFromExpiredToken(accessToken);
+            if (principal == null)
+            {
+                return BadRequest();
+            }
+
+            string username = principal.Identity.Name;
+
+            var user = await _userManager.FindByNameAsync(username);
+
+            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+            {
+                return BadRequest();
+            }
+
+            var newAccessToken = GetToken(principal.Claims.ToList());
+            var newRefreshToken = GenerateRefreshToken();
+
+            user.RefreshToken = newRefreshToken;
+            await _userManager.UpdateAsync(user);
+
+            return new ObjectResult(new
+            {
+                accessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
+                refreshToken = newRefreshToken
+            });
         }
 
         [HttpPost]
@@ -47,12 +88,38 @@ namespace pinger_api_service
                 }
 
                var token = GetToken(authClaims);
+               var refreshToken = GenerateRefreshToken();
 
-                return Ok(new
-                {
-                    token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
-                });
+                DateTime refreshTokenExpirityTime = DateTime.Now.AddDays(7);
+
+               user.RefreshToken = refreshToken;
+               user.RefreshTokenExpiryTime = refreshTokenExpirityTime;
+               await _userManager.UpdateAsync(user);
+
+                CookieOptions jwtTokenCookieOptions = new CookieOptions{
+                    HttpOnly = true,
+                    Expires = token.ValidTo
+                };
+
+                Response.Cookies.Append(
+                    "X-Access-Token", 
+                    new JwtSecurityTokenHandler().WriteToken(token), 
+                    jwtTokenCookieOptions
+                );
+
+
+                CookieOptions refreshTokenCookieOptions = new CookieOptions{
+                    HttpOnly = true,
+                    Expires = refreshTokenExpirityTime
+                };
+
+                Response.Cookies.Append(
+                    "X-Refresh-Token",
+                    refreshToken,
+                    refreshTokenCookieOptions
+                );
+
+                return Ok();
             }
             return Unauthorized();
         }
@@ -85,12 +152,40 @@ namespace pinger_api_service
             var token = new JwtSecurityToken(
                 issuer: _configuration["JWT:ValidIssuer"],
                 audience: _configuration["JWT:ValidAudience"],
-                expires: DateTime.Now.AddHours(3),
+                expires: DateTime.Now.AddMinutes(1),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-                );
+            );
 
             return token;
+        }
+
+        private static string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
+
+        private ClaimsPrincipal? GetPrincipalFromExpiredToken(string? token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"])),
+                ValidateLifetime = false
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+            if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                throw new SecurityTokenException("Invalid token");
+
+            return principal;
+
         }
     }
 } 
