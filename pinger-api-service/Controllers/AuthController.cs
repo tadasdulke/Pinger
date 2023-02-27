@@ -30,13 +30,12 @@ namespace pinger_api_service
         [Route("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] TokenRefreshRequest tokenRefreshRequest)
         {
-            if (tokenRefreshRequest is null)
-            {
+            string? accessToken = Request.Cookies["X-Access-Token"];
+            string? refreshToken = Request.Cookies["X-Refresh-Token"];
+
+            if(accessToken is null || refreshToken is null) {
                 return BadRequest();
             }
-
-            string? accessToken = tokenRefreshRequest.AccessToken;
-            string? refreshToken = tokenRefreshRequest.RefreshToken;
 
             var principal = GetPrincipalFromExpiredToken(accessToken);
             if (principal == null)
@@ -44,9 +43,9 @@ namespace pinger_api_service
                 return BadRequest();
             }
 
-            string username = principal.Identity.Name;
+            string userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var user = await _userManager.FindByNameAsync(username);
+            var user = await _userManager.FindByIdAsync(userId);
 
             if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
             {
@@ -55,15 +54,34 @@ namespace pinger_api_service
 
             var newAccessToken = GetToken(principal.Claims.ToList());
             var newRefreshToken = GenerateRefreshToken();
+            DateTime refreshTokenExpirityTime = DateTime.Now.AddDays(7);
 
-            user.RefreshToken = newRefreshToken;
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = refreshTokenExpirityTime;
             await _userManager.UpdateAsync(user);
 
-            return new ObjectResult(new
-            {
-                accessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
-                refreshToken = newRefreshToken
-            });
+            CookieOptions jwtTokenCookieOptions = new CookieOptions{
+                HttpOnly = true,
+            };
+
+            Response.Cookies.Append(
+                "X-Access-Token", 
+                new JwtSecurityTokenHandler().WriteToken(newAccessToken), 
+                jwtTokenCookieOptions
+            );
+
+            CookieOptions refreshTokenCookieOptions = new CookieOptions{
+                HttpOnly = true,
+                Expires = refreshTokenExpirityTime
+            };
+
+            Response.Cookies.Append(
+                "X-Refresh-Token",
+                refreshToken,
+                refreshTokenCookieOptions
+            );
+
+            return Ok();
         }
 
         [HttpPost]
@@ -90,7 +108,7 @@ namespace pinger_api_service
                var token = GetToken(authClaims);
                var refreshToken = GenerateRefreshToken();
 
-                DateTime refreshTokenExpirityTime = DateTime.Now.AddDays(7);
+               DateTime refreshTokenExpirityTime = DateTime.Now.AddDays(7);
 
                user.RefreshToken = refreshToken;
                user.RefreshTokenExpiryTime = refreshTokenExpirityTime;
@@ -98,7 +116,6 @@ namespace pinger_api_service
 
                 CookieOptions jwtTokenCookieOptions = new CookieOptions{
                     HttpOnly = true,
-                    Expires = token.ValidTo
                 };
 
                 Response.Cookies.Append(
@@ -106,7 +123,6 @@ namespace pinger_api_service
                     new JwtSecurityTokenHandler().WriteToken(token), 
                     jwtTokenCookieOptions
                 );
-
 
                 CookieOptions refreshTokenCookieOptions = new CookieOptions{
                     HttpOnly = true,
