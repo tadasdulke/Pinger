@@ -26,9 +26,9 @@ namespace pinger_api_service
             _configuration = configuration;
         }
 
-        [HttpPost]
+        [HttpGet]
         [Route("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] TokenRefreshRequest tokenRefreshRequest)
+        public async Task<IActionResult> RefreshToken()
         {
             string? accessToken = Request.Cookies["X-Access-Token"];
             string? refreshToken = Request.Cookies["X-Refresh-Token"];
@@ -61,7 +61,6 @@ namespace pinger_api_service
             await _userManager.UpdateAsync(user);
 
             CookieOptions jwtTokenCookieOptions = new CookieOptions{
-                HttpOnly = true,
             };
 
             Response.Cookies.Append(
@@ -71,7 +70,6 @@ namespace pinger_api_service
             );
 
             CookieOptions refreshTokenCookieOptions = new CookieOptions{
-                HttpOnly = true,
                 Expires = refreshTokenExpirityTime
             };
 
@@ -115,7 +113,6 @@ namespace pinger_api_service
                await _userManager.UpdateAsync(user);
 
                 CookieOptions jwtTokenCookieOptions = new CookieOptions{
-                    HttpOnly = true,
                 };
 
                 Response.Cookies.Append(
@@ -125,7 +122,6 @@ namespace pinger_api_service
                 );
 
                 CookieOptions refreshTokenCookieOptions = new CookieOptions{
-                    HttpOnly = true,
                     Expires = refreshTokenExpirityTime
                 };
 

@@ -1,5 +1,5 @@
 const LOCAL_STORAGE_ITEMS = {
-    TOKEN: 'token',
+    IS_AUTHENTICATED: 'isAuthenticated',
 }
 
 export default LOCAL_STORAGE_ITEMS;

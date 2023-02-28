@@ -7,12 +7,22 @@ const getAuthEndpoints = (instance) => {
             password,
         }, {
             headers: {
-            'Content-Type': 'application/json',
+                'Content-Type': 'application/json',
             },
         });
 
         return response.data.token;
-        };
+    };
+
+    const refreshToken = async () => {
+        const response = await instance.get(API_SERVICE_ENDPOINTS['REFRESH-TOKEN'], {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        return response.data.token;
+    };
 
     const handleRegistration = async (email, username, password) => {
         const response = await instance.post(API_SERVICE_ENDPOINTS.REGISTER, {
@@ -21,7 +31,7 @@ const getAuthEndpoints = (instance) => {
             password,
         }, {
             headers: {
-            'Content-Type': 'application/json',
+                'Content-Type': 'application/json',
             },
         });
 
@@ -30,7 +40,8 @@ const getAuthEndpoints = (instance) => {
 
     return {
         handleRegistration,
-        getToken
+        getToken,
+        refreshToken
     }
 }
 

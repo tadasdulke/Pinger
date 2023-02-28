@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import { useDispatch } from 'react-redux';
 import { Input, Button, withErrorWrapper } from '@Common'
-import { changeToken } from '@Store/slices/auth';
+import { authenticate } from '@Store/slices/auth';
 import LOCAL_STORAGE_ITEMS from '@Common/config/localStorageItems'
 import useLogin from './hooks/useLogin';
 
@@ -14,9 +14,9 @@ const LoginForm = ({errorHandler}) => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        const token = await sendAction(login, password);
-        dispath(changeToken(token))
-        localStorage.setItem(LOCAL_STORAGE_ITEMS.TOKEN, token)
+        await sendAction(login, password);
+        dispath(authenticate());
+        localStorage.setItem(LOCAL_STORAGE_ITEMS.IS_AUTHENTICATED, true);
     }
 
     return (

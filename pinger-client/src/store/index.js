@@ -10,7 +10,7 @@ const store = configureStore({
     },
     preloadedState: {
         auth: {
-            [LOCAL_STORAGE_ITEMS.TOKEN]: localStorage.getItem(LOCAL_STORAGE_ITEMS.TOKEN)
+            [LOCAL_STORAGE_ITEMS.IS_AUTHENTICATED]: localStorage.getItem(LOCAL_STORAGE_ITEMS.IS_AUTHENTICATED)
         }
     }
 })

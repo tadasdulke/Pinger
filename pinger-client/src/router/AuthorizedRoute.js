@@ -4,10 +4,10 @@ import { ROUTES } from './constants';
 import ProtectedRoute from './ProtectedRoute';
 
 const AuthorizedRoute = ({children}) => {
-    const token = useSelector(store => store.auth.token);
+    const {isAuthenticated} = useSelector(store => store.auth);
     
     return (
-        <ProtectedRoute isVerified={token} fallbackRoute={ROUTES.LOGIN}>
+        <ProtectedRoute isVerified={isAuthenticated} fallbackRoute={ROUTES.LOGIN}>
             {children}
         </ProtectedRoute>
     )
