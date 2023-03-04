@@ -1,31 +1,17 @@
-import React, { useState } from 'react';
-import { Container } from 'react-grid-system';
-import { Button, withErrorWrapper } from '@Common'
-import useRegistration from './hooks/useRegistration'
+import React from 'react';
+import { Container, Row, Col } from 'react-grid-system';
+import RegisterForm from './RegisterForm';
 
-const Register = ({errorHandler}) => {
-    const [email, setEmail] = useState('');
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const {loaded, sendAction} = useRegistration(errorHandler);
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        await sendAction(email, username, password)
-    }
-
+const Register = () => {
     return (
-        <Container>
-            <form onSubmit={handleSubmit} >
-                {/* <Input type="text" placeholder="enter email" value={email} onChange={(event) => setEmail(event.target.value)} /> */}
-                {/* <Input type="text" placeholder="enter username" value={username} onChange={(event) => setUsername(event.target.value)} /> */}
-                {/* <Input type="password" placeholder="enter password" value={password} onChange={(event) => setPassword(event.target.value)} /> */}
-                <Button type="submit">
-                    Confirm
-                </Button>
-            </form>
+        <Container className="top-1/2 translate-y-[-50%]">
+            <Row>
+                <Col xs={12} md={10} lg={6} offset={{lg: 3, md: 1 }}>
+                    <RegisterForm/>
+                </Col>
+            </Row>
         </Container>
     )
 }
 
-export default withErrorWrapper(Register);
+export default Register;

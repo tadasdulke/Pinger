@@ -53,6 +53,16 @@ builder.Services.AddAuthentication(options => {
     options.Events = AuthEventsHandler.Instance;
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policyBuilder => policyBuilder
+            .WithOrigins("http://localhost:80")
+            .SetIsOriginAllowedToAllowWildcardSubdomains()
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
+});
+
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(5122);
@@ -61,17 +71,15 @@ builder.WebHost.ConfigureKestrel(options =>
 var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseCors(builder => builder
-    .AllowAnyHeader()
-    .AllowAnyMethod()
-    .SetIsOriginAllowed((host) => true)
-    .AllowCredentials());
+
+app.UseCors("CorsPolicy");
+
 
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
            Path.Combine(builder.Environment.ContentRootPath, "data/public")),
-    RequestPath = "/public"
+    RequestPath = "/public",
 });
 
 app.UseAuthentication();

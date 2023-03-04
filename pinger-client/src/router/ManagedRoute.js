@@ -5,9 +5,11 @@ import { ROUTES } from './constants';
 
 const ManagedRoute = () => {
     const { currentWorkspaceId } = useSelector(state => state.workspace)
- 
+    
     if(currentWorkspaceId) {
-        return <Navigate to={ROUTES.MAIN} replace={true}/>;
+        return (
+            <Navigate to={ROUTES.USE_CHATSPACE} replace={true}/>
+        )
     }
 
     return <Navigate to={ROUTES.CHATSPACES} replace={true}/>

@@ -1,3 +1,5 @@
 export { default as Login } from './Login'
 export { default as Register } from './Register'
 export { default as ChatSpaces } from './ChatSpaces'
+export { default as CreateChatSpace } from './CreateChatSpace'
+export { default as Chat } from './Chat'

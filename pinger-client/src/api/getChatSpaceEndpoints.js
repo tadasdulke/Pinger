@@ -8,7 +8,12 @@ const getChatSpaceEndpoints = (instance) => {
             },
         });
 
-        return response.data;
+        const {status, data} = response;
+
+        return {
+            status,
+            data
+        };
     }; 
 
     const createChatSpace = async (name) => {
@@ -18,7 +23,12 @@ const getChatSpaceEndpoints = (instance) => {
             },
         });
 
-        return response.data;
+        const {status, data} = response;
+
+        return {
+            status,
+            data
+        };
     };
 
     return {

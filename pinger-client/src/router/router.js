@@ -1,20 +1,20 @@
 import React from 'react';
 import { createBrowserRouter } from "react-router-dom";
-import { ROUTES } from "./constants";
-import {Login, Register, ChatSpaces} from '../pages'
+import { BaseLayout } from '@Components';
+import { ROUTES } from "@Router";
+import {Login, Register, ChatSpaces, CreateChatSpace, Chat } from '../pages'
 import AuthorizedRoute from './AuthorizedRoute'
 import UnauthorizedRoute from './UnauthorizedRoute'
 import ManagedRoute from './ManagedRoute'
-import { CenteredLayout } from '@Components';
 
 const router = createBrowserRouter([
     {
       path: ROUTES.LOGIN,
       element: (
         <UnauthorizedRoute>
-          <CenteredLayout>
+          <BaseLayout>
             <Login/>
-          </CenteredLayout>
+          </BaseLayout>
         </UnauthorizedRoute>
         ),
     },
@@ -22,7 +22,9 @@ const router = createBrowserRouter([
       path: ROUTES.REGISTER,
       element: (
         <UnauthorizedRoute>
+          <BaseLayout>
             <Register/>
+          </BaseLayout>
         </UnauthorizedRoute>
         ),
     },
@@ -36,7 +38,29 @@ const router = createBrowserRouter([
       path: ROUTES.CHATSPACES,
       element: (
         <AuthorizedRoute>
+          <BaseLayout>
             <ChatSpaces/>
+          </BaseLayout>
+        </AuthorizedRoute>
+      ),
+    },
+    {
+      path: ROUTES.CREATE_CHATSPACE,
+      element: (
+        <AuthorizedRoute>
+          <BaseLayout>
+            <CreateChatSpace/>
+          </BaseLayout>
+        </AuthorizedRoute>
+      ),
+    },
+    {
+      path: ROUTES.USE_CHATSPACE,
+      element: (
+        <AuthorizedRoute>
+          <BaseLayout>
+            <Chat/>
+          </BaseLayout>
         </AuthorizedRoute>
       ),
     },

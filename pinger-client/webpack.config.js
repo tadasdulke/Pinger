@@ -32,6 +32,7 @@ module.exports = {
       '@Api': path.resolve(__dirname, 'src/api'),
       '@Store': path.resolve(__dirname, 'src/store'),
       '@Components': path.resolve(__dirname, 'src/components'),
+      '@Router': path.resolve(__dirname, 'src/router'),
     },
   },
   plugins: [

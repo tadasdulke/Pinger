@@ -26,7 +26,12 @@ const getAuthEndpoints = (instance) => {
             },
         });
 
-        return response.data.token;
+        const {status, data} = response;
+
+        return {
+            status,
+            data
+        };
     };
 
     const handleRegistration = async (email, username, password) => {
@@ -40,7 +45,12 @@ const getAuthEndpoints = (instance) => {
             },
         });
 
-        return response.data;
+        const {status, data} = response;
+
+        return {
+            status,
+            data
+        };
     };
 
     return {
