@@ -11,7 +11,12 @@ const getAuthEndpoints = (instance) => {
             },
         });
 
-        return response.data.token;
+        const {status, data} = response;
+
+        return {
+            status,
+            data
+        };
     };
 
     const refreshToken = async () => {

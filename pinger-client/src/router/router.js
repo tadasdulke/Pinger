@@ -5,13 +5,16 @@ import {Login, Register, ChatSpaces} from '../pages'
 import AuthorizedRoute from './AuthorizedRoute'
 import UnauthorizedRoute from './UnauthorizedRoute'
 import ManagedRoute from './ManagedRoute'
+import { CenteredLayout } from '@Components';
 
 const router = createBrowserRouter([
     {
       path: ROUTES.LOGIN,
       element: (
         <UnauthorizedRoute>
+          <CenteredLayout>
             <Login/>
+          </CenteredLayout>
         </UnauthorizedRoute>
         ),
     },

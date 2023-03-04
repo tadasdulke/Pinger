@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container } from 'react-grid-system';
-import { Input, Button, withErrorWrapper } from '@Common'
+import { Button, withErrorWrapper } from '@Common'
 import useRegistration from './hooks/useRegistration'
 
 const Register = ({errorHandler}) => {
@@ -17,9 +17,9 @@ const Register = ({errorHandler}) => {
     return (
         <Container>
             <form onSubmit={handleSubmit} >
-                <Input type="text" placeholder="enter email" value={email} onChange={(event) => setEmail(event.target.value)} />
-                <Input type="text" placeholder="enter username" value={username} onChange={(event) => setUsername(event.target.value)} />
-                <Input type="password" placeholder="enter password" value={password} onChange={(event) => setPassword(event.target.value)} />
+                {/* <Input type="text" placeholder="enter email" value={email} onChange={(event) => setEmail(event.target.value)} /> */}
+                {/* <Input type="text" placeholder="enter username" value={username} onChange={(event) => setUsername(event.target.value)} /> */}
+                {/* <Input type="password" placeholder="enter password" value={password} onChange={(event) => setPassword(event.target.value)} /> */}
                 <Button type="submit">
                     Confirm
                 </Button>

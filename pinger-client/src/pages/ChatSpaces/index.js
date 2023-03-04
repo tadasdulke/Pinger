@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { useFetchData, useApiAction, withErrorWrapper, Input, Button } from '@Common';
+import { useFetchData, useApiAction, withErrorWrapper, Button } from '@Common';
 import getUserChatSpaces from './services/getUserChatSpaces';
 import createChatSpace from './services/createChatSpace';
 
@@ -23,7 +23,7 @@ const ChatSpaces = ({errorHandler}) => {
         <div>
             {result.map(workspace => <div>{workspace.name}</div>)}
             <form onSubmit={handleSubmit}>
-                <Input type="text" placeholder="Enter workspace id" value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} />
+                {/* <Input type="text" placeholder="Enter workspace id" value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} /> */}
                 <Button type="submit">
                     Add workspace
                 </Button>

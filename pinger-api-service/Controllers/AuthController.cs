@@ -61,6 +61,7 @@ namespace pinger_api_service
             await _userManager.UpdateAsync(user);
 
             CookieOptions jwtTokenCookieOptions = new CookieOptions{
+                HttpOnly = true
             };
 
             Response.Cookies.Append(
@@ -70,7 +71,8 @@ namespace pinger_api_service
             );
 
             CookieOptions refreshTokenCookieOptions = new CookieOptions{
-                Expires = refreshTokenExpirityTime
+                Expires = refreshTokenExpirityTime,
+                HttpOnly = true
             };
 
             Response.Cookies.Append(
@@ -113,6 +115,7 @@ namespace pinger_api_service
                await _userManager.UpdateAsync(user);
 
                 CookieOptions jwtTokenCookieOptions = new CookieOptions{
+                    HttpOnly = true,
                 };
 
                 Response.Cookies.Append(
@@ -122,7 +125,8 @@ namespace pinger_api_service
                 );
 
                 CookieOptions refreshTokenCookieOptions = new CookieOptions{
-                    Expires = refreshTokenExpirityTime
+                    Expires = refreshTokenExpirityTime,
+                    HttpOnly = true
                 };
 
                 Response.Cookies.Append(

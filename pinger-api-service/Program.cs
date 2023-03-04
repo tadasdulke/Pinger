@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using pinger_api_service;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configurationManager = builder.Configuration;
@@ -65,6 +66,13 @@ app.UseCors(builder => builder
     .AllowAnyMethod()
     .SetIsOriginAllowed((host) => true)
     .AllowCredentials());
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+           Path.Combine(builder.Environment.ContentRootPath, "data/public")),
+    RequestPath = "/public"
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

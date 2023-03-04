@@ -1,12 +1,16 @@
 import React from 'react';
-import { Container } from 'react-grid-system';
+import { Container, Row, Col, ScreenClassRender } from 'react-grid-system';
 import LoginForm from './LoginForm'
 
 const Login = () => {
     
     return (
-    <Container>
-        <LoginForm />
+    <Container className="top-1/2 translate-y-[-50%]">
+        <Row>
+            <Col xs={12} md={10} lg={6} offset={{lg: 3, md: 1 }}>
+                <LoginForm />
+            </Col>
+        </Row>
     </Container>
 )}
 

@@ -18,6 +18,8 @@ const useApiAction = (action, errorHandler, resolveErrorMessage = null) => {
         : resolveErrorMessage(status);
 
       errorHandler.showError(errorMessage);
+      
+      return { status }
     } finally {
       setLoaded(true);
     }
