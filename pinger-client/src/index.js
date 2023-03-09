@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import App from './App'
 import { setConfiguration } from 'react-grid-system';
 import tailwindConfig from '../tailwind.config';
+import "react-loading-skeleton/dist/skeleton.css";
 import './index.css'
 
 const domNode = document.getElementById('root');

@@ -11,6 +11,9 @@ const store = configureStore({
     preloadedState: {
         auth: {
             [LOCAL_STORAGE_ITEMS.IS_AUTHENTICATED]: localStorage.getItem(LOCAL_STORAGE_ITEMS.IS_AUTHENTICATED)
+        },
+        workspace: {
+            [LOCAL_STORAGE_ITEMS.WORKSPACE_ID]: +localStorage.getItem(LOCAL_STORAGE_ITEMS.WORKSPACE_ID)
         }
     }
 })

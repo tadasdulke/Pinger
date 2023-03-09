@@ -6,10 +6,10 @@ services:
       - ./nginx-service/nginx.conf:/etc/nginx/nginx.conf
     ports:
       - "80:80"
-    depends_on: 
+    depends_on:
       - pinger-client
-      - chat-service
       - pinger-api-service
+      - pinger-api-db
   pinger-client:
     container_name: pinger-client
     build: ./pinger-client
@@ -19,13 +19,6 @@ services:
     tty: true
     ports:
       - "8080:8080"
-  chat-service:
-    container_name: chat-service
-    build: ./chat-service/PingerChatHub
-    volumes:
-      - ./chat-service/PingerChatHub:/app
-    ports:
-      - "5000:5000"
   pinger-api-service:
     container_name: pinger-api-service
     build: ./pinger-api-service

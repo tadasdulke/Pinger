@@ -6,10 +6,13 @@ namespace pinger_api_service
     {
         public User() {
             this.ChatSpaces = new HashSet<ChatSpace>();
+            this.ConnectionInformations = new HashSet<ConnectionInformation>();
         }
 
         public string? RefreshToken { get; set; }
         public DateTime RefreshTokenExpiryTime { get; set; }
         public ICollection<ChatSpace> ChatSpaces { get; set; }
+
+        public ICollection<ConnectionInformation> ConnectionInformations {get; set;}
     }
 }

@@ -19,7 +19,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(configurationManager.GetConnectionString("Default")));
-
+builder.Services.AddSignalR();
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
@@ -56,7 +56,7 @@ builder.Services.AddAuthentication(options => {
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policyBuilder => policyBuilder
-            .WithOrigins("http://localhost:80")
+            .WithOrigins("http://localhost", "http://localhost:8080")
             .SetIsOriginAllowedToAllowWildcardSubdomains()
             .AllowAnyMethod()
             .AllowAnyHeader()
@@ -74,6 +74,7 @@ app.UseSwaggerUI();
 
 app.UseCors("CorsPolicy");
 
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.UseStaticFiles(new StaticFileOptions
 {

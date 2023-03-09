@@ -1,3 +1,7 @@
+import LOCAL_STORAGE_ITEMS from "../../common/config/localStorageItems";
+import { logout } from "../../store/slices/auth";
+import store from '@Store'
+
 const jwtInterceptor = (instance, refreshToken) => {
     instance.interceptors.response.use(
         (response) => response,
@@ -5,7 +9,12 @@ const jwtInterceptor = (instance, refreshToken) => {
             const originalRequest = error.config;
             if(error.response.status === 401 && !originalRequest._retry) {
                 originalRequest._retry = true;
-                await refreshToken();
+                try {
+                    await refreshToken();
+                } catch(err) {
+                    store.dispatch(logout());
+                    localStorage.removeItem(LOCAL_STORAGE_ITEMS.IS_AUTHENTICATED)
+                }
 
                 return instance(originalRequest)
             }

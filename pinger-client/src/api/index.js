@@ -11,7 +11,7 @@ export const createPingerClient = () => {
   });
 
   const {getToken, handleRegistration, refreshToken} = getAuthEndpoints(instance);
-  const {getUserChatSpaces, createChatSpace} = getChatSpaceEndpoints(instance);
+  const {getUserChatSpaces, createChatSpace, searchChatSpaceMembers} = getChatSpaceEndpoints(instance);
   jwtInterceptor(instance, refreshToken);
 
   return {
@@ -19,7 +19,8 @@ export const createPingerClient = () => {
     handleRegistration,
     getUserChatSpaces,
     createChatSpace,
-    refreshToken
+    refreshToken,
+    searchChatSpaceMembers,
   };
 };
 

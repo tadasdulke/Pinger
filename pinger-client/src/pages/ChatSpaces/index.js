@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFetchData, withErrorWrapper } from '@Common';
 import { ROUTES } from '@Router'
 import { changeCurrentWorkspaceId } from '@Store/slices/workspaces';
+import LOCAL_STORAGE_ITEMS from '@Common/config/localStorageItems'
 import getUserChatSpaces from './services/getUserChatSpaces';
 import ChatSpace from './ChatSpace';
 import CreateChatSpace from './CreateChatSpace'
@@ -20,6 +21,7 @@ const ChatSpaces = ({ errorHandler }) => {
 
     const selectWorkspace = (workspaceId) => {
         dispatch(changeCurrentWorkspaceId(workspaceId));
+        localStorage.setItem(LOCAL_STORAGE_ITEMS.WORKSPACE_ID, workspaceId)
         navigate(ROUTES.USE_CHATSPACE);
     }
 
