@@ -13,6 +13,8 @@ namespace pinger_api_service
         public DateTime RefreshTokenExpiryTime { get; set; }
         public ICollection<ChatSpace> ChatSpaces { get; set; }
 
+        public ICollection<User> ContactedUsers {get; set;}
+
         public ICollection<ConnectionInformation> ConnectionInformations {get; set;}
     }
 }

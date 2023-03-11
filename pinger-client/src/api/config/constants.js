@@ -4,4 +4,6 @@ export const API_SERVICE_ENDPOINTS = {
     'REFRESH-TOKEN': '/api/authenticate/refresh-token',
     REGISTER: '/api/authenticate/register',
     CHATSPACES: '/api/chatspaces',
+    JOINED_CHATSPACES: '/api/chatspaces/joined',
+    USERS_CONTACTED_USERS: '/api/user/contacted-users',
 }

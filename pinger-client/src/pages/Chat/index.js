@@ -1,8 +1,8 @@
 import React, {useEffect} from 'react';
 import { Container, Row, Col } from 'react-grid-system';
 import {HubConnectionBuilder} from "@microsoft/signalr";
-import { Outlet } from 'react-router-dom';
 
+import ChatMessages from './ChatMessages';
 import ChatOptionsMenu from './ChatOptionsMenu'
 
 const Chat = () => {
@@ -30,14 +30,11 @@ const Chat = () => {
             fluid
         >
             <Row nogutter align="stretch" className="h-full">
-                <Col xs={2}>
+                <Col xs={4} lg={2}>
                     <ChatOptionsMenu/>
                 </Col>
-                <Col xs={10} className="bg-tuna-darker">
-                    <div>
-                        <input type="text" />
-                        <button type="button" className="bg-green-600">Send</button>
-                    </div>
+                <Col xs={8} lg={10} className="bg-tuna-darker">
+                    <ChatMessages connection={connection} />
                 </Col>
             </Row>
         </Container>

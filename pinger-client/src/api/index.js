@@ -2,6 +2,7 @@ import axios from 'axios';
 import { API_SERVICE_BASE } from './config/constants';
 import getAuthEndpoints from './getAuthEndpoints';
 import getChatSpaceEndpoints from './getChatSpaceEndpoints';
+import getUserEndpoints from './getUserEndpoints'
 import jwtInterceptor from './interceptors/jwtInterceptor';
 
 export const createPingerClient = () => {
@@ -11,9 +12,10 @@ export const createPingerClient = () => {
   });
 
   const {getToken, handleRegistration, refreshToken} = getAuthEndpoints(instance);
-  const {getUserChatSpaces, createChatSpace, searchChatSpaceMembers} = getChatSpaceEndpoints(instance);
+  const {getUserChatSpaces, createChatSpace, searchChatSpaceMembers, getChatSpaces, joinChatSpace} = getChatSpaceEndpoints(instance);
+  const { addContactedUser, getContactedUsers } = getUserEndpoints(instance);
   jwtInterceptor(instance, refreshToken);
-
+  
   return {
     getToken,
     handleRegistration,
@@ -21,6 +23,10 @@ export const createPingerClient = () => {
     createChatSpace,
     refreshToken,
     searchChatSpaceMembers,
+    addContactedUser,
+    getChatSpaces,
+    joinChatSpace,
+    getContactedUsers
   };
 };
 

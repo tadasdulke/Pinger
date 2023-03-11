@@ -2,7 +2,7 @@ import React from 'react';
 import { createBrowserRouter } from "react-router-dom";
 import { BaseLayout } from '@Components';
 import { ROUTES } from "@Router";
-import {Login, Register, ChatSpaces, CreateChatSpace, Chat } from '../pages'
+import {Login, Register, ChatSpaces, CreateChatSpace, Chat, JoinChatSpace } from '../pages'
 import AuthorizedRoute from './AuthorizedRoute'
 import UnauthorizedRoute from './UnauthorizedRoute'
 import ManagedRoute from './ManagedRoute'
@@ -60,6 +60,16 @@ const router = createBrowserRouter([
         <AuthorizedRoute>
           <BaseLayout>
             <Chat/>
+          </BaseLayout>
+        </AuthorizedRoute>
+      ),
+    },
+    {
+      path: ROUTES.JOIN_CHATSPACE,
+      element: (
+        <AuthorizedRoute>
+          <BaseLayout>
+            <JoinChatSpace/>
           </BaseLayout>
         </AuthorizedRoute>
       ),

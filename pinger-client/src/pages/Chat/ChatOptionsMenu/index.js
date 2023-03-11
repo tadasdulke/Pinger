@@ -1,32 +1,18 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { ReactSVG } from 'react-svg';
 import UserSearchModal from './UserSearchModal';
-
-const DirectMessageItem = () => (
-    <button>
-        User Name
-    </button>
-)
-
-const DirectMessages = () => {
-
-    return (
-        <div className="text-white">
-            <p className=" text-center">Members</p>
-            <DirectMessageItem/>
-        </div>
-    )
-}
+import DirectMessages from './DirectMessages';
 
 const UserBar = () => {
+    const [showModal, setShowModal] = useState(false);
 
     return (
         <div className="flex justify-between items-center p-[20px]">
             <p className="text-white">
                 Tadas
-                <UserSearchModal />
+                {showModal && <UserSearchModal setShowModal={setShowModal} />}
             </p>
-            <button>
+            <button onClick={() => setShowModal(true)}>
                 <ReactSVG
                     src="http://localhost:5122/public/icons/search.svg"
                     beforeInjection={(svg) => {

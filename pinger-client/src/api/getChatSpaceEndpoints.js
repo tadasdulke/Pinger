@@ -2,7 +2,7 @@ import { API_SERVICE_ENDPOINTS } from './config/constants';
 
 const getChatSpaceEndpoints = (instance) => {
     const getUserChatSpaces = async () => {
-        const response = await instance.get(API_SERVICE_ENDPOINTS.CHATSPACES, {
+        const response = await instance.get(API_SERVICE_ENDPOINTS.JOINED_CHATSPACES, {
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -51,10 +51,46 @@ const getChatSpaceEndpoints = (instance) => {
         };
     };
 
+    const getChatSpaces = async () => {
+        const response = await instance.get(API_SERVICE_ENDPOINTS.CHATSPACES,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        const {status, data} = response;
+
+        return {
+            status,
+            data
+        };
+    };
+
+    const joinChatSpace = async (chatspaceId) => {
+        const response = await instance.post(`${API_SERVICE_ENDPOINTS.CHATSPACES}/${chatspaceId}/join`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        const {status, data} = response;
+
+        return {
+            status,
+            data
+        };
+    };
+
     return {
         getUserChatSpaces,
         createChatSpace,
-        searchChatSpaceMembers
+        searchChatSpaceMembers,
+        getChatSpaces,
+        joinChatSpace
     }
 }
 

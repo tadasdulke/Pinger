@@ -19,6 +19,14 @@ namespace pinger_api_service
         }
 
         [Authorize]
+        [HttpGet]
+        public async Task<ActionResult<List<ChatSpace>>> GetChatSpaces()
+        {
+            List<ChatSpace> chatSpaces = await _dbContext.ChatSpaces.ToListAsync();
+            return chatSpaces;
+        }
+
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateChatSpace([FromBody] NewChatSpace newChatSpace)
         {
@@ -53,7 +61,26 @@ namespace pinger_api_service
         }
 
         [Authorize]
-        [HttpGet]
+        [HttpPost("{chatspaceId}/join")]
+        public async Task<ActionResult<ChatSpace>> JoinChatSpace([FromRoute] int chatspaceId)
+        {
+            string userId = _userManager.GetUserId(User);
+            User user = await _userManager.FindByIdAsync(userId);
+            ChatSpace? chatspace = await _dbContext.ChatSpaces.Include(cs => cs.Members).FirstOrDefaultAsync(cs => cs.Id == chatspaceId);
+            
+            if(chatspace is null) {
+                return NotFound();
+            }
+
+            chatspace.Members.Add(user);
+            _dbContext.SaveChanges();
+
+            return NoContent();
+
+        }
+
+        [Authorize]
+        [HttpGet("joined")]
         public async Task<ActionResult<List<ChatSpaceResponse>>> GetUsersChatSpaces()
         {
             string userId = _userManager.GetUserId(User);
