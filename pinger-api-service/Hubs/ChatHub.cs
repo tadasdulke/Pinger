@@ -8,23 +8,36 @@ namespace pinger_api_service
     [Authorize]
     public class ChatHub : Hub 
     {
-        private readonly UserManager<User> _userManager;
+        private readonly ApplicationUserManager _userManager;
+        private IChatSpaceManager _chatSpaceManager;
         private ApplicationDbContext _dbContext;
+        private IPrivateMessagesManager _privateMessageManager;
 
-        public ChatHub(ApplicationDbContext dbContext, UserManager<User> userManager)
+        public ChatHub(
+            ApplicationDbContext dbContext,
+            ApplicationUserManager userManager,
+            IChatSpaceManager chatSpaceManager,
+            IPrivateMessagesManager privateMessageManager
+        )
         {
             _userManager = userManager;
             _dbContext = dbContext;
+            _chatSpaceManager = chatSpaceManager;
+            _privateMessageManager = privateMessageManager;
         }
 
         public override async Task OnConnectedAsync() 
         {
             string userId = _userManager.GetUserId(Context.User);
+            int chatSpaceId = _userManager.GetChatSpaceId(Context.User);
+
+            ChatSpace currentChatSpace = _chatSpaceManager.GetChatSpaceById(chatSpaceId);
             User user = await _userManager.FindByIdAsync(userId);
-            var userConnections = user.ConnectionInformations;
+            
             ConnectionInformation ct = new ConnectionInformation();
             ct.ConnectionId = Context.ConnectionId;
-            userConnections.Add(ct);
+            ct.ChatSpace = currentChatSpace;
+            user.ConnectionInformations.Add(ct);
             await _userManager.UpdateAsync(user);
             await base.OnConnectedAsync();
         }
@@ -48,10 +61,16 @@ namespace pinger_api_service
 
         public async Task SendPrivateMessage(string receiverId, string message)
         {
-            User user = await _userManager.Users.Include(u => u.ConnectionInformations).FirstOrDefaultAsync(u => u.Id == receiverId);
+            int chatspaceId = _userManager.GetChatSpaceId(Context.User);
+            string senderId = _userManager.GetUserId(Context.User);
+            
+            User receiver = await _userManager.Users.Include(u => u.ConnectionInformations).ThenInclude(ci => ci.ChatSpace).FirstOrDefaultAsync(u => u.Id == receiverId);
+            List<ConnectionInformation> filteredConnectionInformations = receiver.ConnectionInformations.Where(ci => ci.ChatSpace.Id == chatspaceId).ToList();
+            
+            var sentMessage = await _privateMessageManager.AddPrivateMessage(senderId, receiverId, chatspaceId, message);
 
-            foreach(ConnectionInformation connectionInfo in user.ConnectionInformations) {
-                await Clients.Client(connectionInfo.ConnectionId).SendAsync("ReceiveMessage", message);   
+            foreach(ConnectionInformation connectionInfo in filteredConnectionInformations) {
+                await Clients.Client(connectionInfo.ConnectionId).SendAsync("ReceiveMessage", sentMessage);   
             }
         }
     }

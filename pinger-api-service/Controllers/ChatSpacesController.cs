@@ -10,9 +10,9 @@ namespace pinger_api_service
     public class ChatSpacesController : ControllerBase
     {
         private ApplicationDbContext _dbContext;
-        private readonly UserManager<User> _userManager;
+        private readonly ApplicationUserManager _userManager;
 
-        public ChatSpacesController(ApplicationDbContext dbContext, UserManager<User> userManager)
+        public ChatSpacesController(ApplicationDbContext dbContext, ApplicationUserManager userManager)
         {
             _dbContext = dbContext;
             _userManager = userManager;
@@ -22,7 +22,7 @@ namespace pinger_api_service
         [HttpGet]
         public async Task<ActionResult<List<ChatSpace>>> GetChatSpaces()
         {
-            List<ChatSpace> chatSpaces = await _dbContext.ChatSpaces.ToListAsync();
+            List<ChatSpace> chatSpaces = await _dbContext.ChatSpace.ToListAsync();
             return chatSpaces;
         }
 
@@ -35,7 +35,7 @@ namespace pinger_api_service
             ChatSpace chatSpace = new ChatSpace();
             chatSpace.Name = newChatSpace.Name;
             chatSpace.Members.Add(owner);
-            _dbContext.ChatSpaces.Add(chatSpace);
+            _dbContext.ChatSpace.Add(chatSpace);
             _dbContext.SaveChanges();
             return Ok();
         }
@@ -45,7 +45,7 @@ namespace pinger_api_service
         public async Task<ActionResult<ChatSpace>> GetChatSpaceById([FromRoute] int chatspaceId)
         {
             string userId = _userManager.GetUserId(User);
-            ChatSpace? chatspace = await _dbContext.ChatSpaces.Include(cs => cs.Members).FirstOrDefaultAsync(cs => cs.Id == chatspaceId);
+            ChatSpace? chatspace = await _dbContext.ChatSpace.Include(cs => cs.Members).FirstOrDefaultAsync(cs => cs.Id == chatspaceId);
             
             if(chatspace is null) {
                 return NotFound();
@@ -66,7 +66,7 @@ namespace pinger_api_service
         {
             string userId = _userManager.GetUserId(User);
             User user = await _userManager.FindByIdAsync(userId);
-            ChatSpace? chatspace = await _dbContext.ChatSpaces.Include(cs => cs.Members).FirstOrDefaultAsync(cs => cs.Id == chatspaceId);
+            ChatSpace? chatspace = await _dbContext.ChatSpace.Include(cs => cs.Members).FirstOrDefaultAsync(cs => cs.Id == chatspaceId);
             
             if(chatspace is null) {
                 return NotFound();
@@ -84,7 +84,7 @@ namespace pinger_api_service
         public async Task<ActionResult<List<ChatSpaceResponse>>> GetUsersChatSpaces()
         {
             string userId = _userManager.GetUserId(User);
-            List<ChatSpace> chatSpaces = await _dbContext.ChatSpaces.Include(x => x.Members).Where(x => x.Members.Any(m => m.Id == userId)).ToListAsync();
+            List<ChatSpace> chatSpaces = await _dbContext.ChatSpace.Include(x => x.Members).Where(x => x.Members.Any(m => m.Id == userId)).ToListAsync();
             List<ChatSpaceResponse> chatSpaceResponses = chatSpaces.Select(x => new ChatSpaceResponse{ Id = x.Id, Name = x.Name }).ToList();
             return chatSpaceResponses;
         }
@@ -93,7 +93,7 @@ namespace pinger_api_service
         [HttpGet("{chatspaceId}/members")]
         public async Task<ActionResult<List<User>>> GetChatSpaceMembers([FromRoute] int chatspaceId, [FromQuery(Name = "search")]  string search)
         {
-            ChatSpace? chatSpace = await _dbContext.ChatSpaces.Include(x => x.Members).FirstOrDefaultAsync(c => c.Id == chatspaceId);
+            ChatSpace? chatSpace = await _dbContext.ChatSpace.Include(x => x.Members).FirstOrDefaultAsync(c => c.Id == chatspaceId);
             
             if(chatSpace is null) {
                 return NotFound();

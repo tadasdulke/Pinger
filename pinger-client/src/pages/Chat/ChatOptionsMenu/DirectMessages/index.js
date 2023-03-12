@@ -32,7 +32,7 @@ const DirectMessages = ({errorHandler}) => {
         <div className="text-white">
             <p className="text-left">Direct messages</p>
             <div className="flex items-start flex-col">
-                {result && result.data.map(({id, userName}) => (
+                {result && result.data.map(({contactedUser: {id, userName}}) => (
                     <DirectMessageItem 
                         key={id} 
                         userName={userName} 

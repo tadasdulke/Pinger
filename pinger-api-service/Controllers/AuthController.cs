@@ -17,7 +17,7 @@ namespace pinger_api_service
         private readonly IConfiguration _configuration;
 
         public AuthenticateController(
-            UserManager<User> userManager,
+            ApplicationUserManager userManager,
             RoleManager<IdentityRole> roleManager,
             IConfiguration configuration)
         {
@@ -82,6 +82,50 @@ namespace pinger_api_service
             );
 
             return Ok();
+        }
+
+        [HttpPut]
+        [Route("append-claims")]
+        public async Task<IActionResult> AppendNewClaimsToToken(AppendNewClaim appendNewClaim)
+        {
+            string? accessToken = Request.Cookies["X-Access-Token"];
+
+            if(accessToken is null) {
+                return BadRequest();
+            }
+
+            var principal = GetPrincipalFromExpiredToken(accessToken);
+            if (principal == null)
+            {
+                return BadRequest();
+            }
+            
+            var claims = principal.Claims.ToList();
+            claims = claims.Where(c => c.Type != CustomClaims.ChatSpaceId).ToList();
+            claims.Add(new Claim(CustomClaims.ChatSpaceId, appendNewClaim.chatspaceId.ToString()));
+            
+            string userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user is null)
+            {
+                return BadRequest();
+            }
+
+            var newAccessToken = GetToken(claims);
+
+            CookieOptions jwtTokenCookieOptions = new CookieOptions{
+                HttpOnly = true
+            };
+
+            Response.Cookies.Append(
+                "X-Access-Token", 
+                new JwtSecurityTokenHandler().WriteToken(newAccessToken), 
+                jwtTokenCookieOptions
+            );
+
+            return NoContent();
         }
 
         [HttpPost]
@@ -168,7 +212,7 @@ namespace pinger_api_service
             var token = new JwtSecurityToken(
                 issuer: _configuration["JWT:ValidIssuer"],
                 audience: _configuration["JWT:ValidAudience"],
-                expires: DateTime.Now.AddMinutes(1),
+                expires: DateTime.Now.AddMinutes(15),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
             );

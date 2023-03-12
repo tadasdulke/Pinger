@@ -1,6 +1,6 @@
-import React, { useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import _debounce from 'lodash.debounce'
-import { Modal, useFetchData, withErrorWrapper, useApiAction } from '@Common'
+import { Modal, useFetchData, withErrorWrapper } from '@Common'
 import { ReactSVG } from 'react-svg';
 import { useDispatch, useSelector } from 'react-redux';
 import searchChatSpaceMembers from './services/searchChatSpaceMembers'
@@ -27,7 +27,7 @@ const UserSearchModal = ({errorHandler, setShowModal}) => {
     );
 
     const { addContactedUser } = useAddContactedUser(errorHandler)
-
+    
     const loadedBody = result && result.data.map(({userName, id: userId }) => {
         const onClick = async () => {
             dispatch(changeChatOccupierInfo({
@@ -37,7 +37,6 @@ const UserSearchModal = ({errorHandler, setShowModal}) => {
             setShowModal(false);
             await addContactedUser(userId)
         }
-
         return (
             <Item name={userName} onClick={onClick} />
         )

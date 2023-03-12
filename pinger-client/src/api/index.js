@@ -3,6 +3,7 @@ import { API_SERVICE_BASE } from './config/constants';
 import getAuthEndpoints from './getAuthEndpoints';
 import getChatSpaceEndpoints from './getChatSpaceEndpoints';
 import getUserEndpoints from './getUserEndpoints'
+import getPrivateMessagesEndpoint from './getPrivateMessagesEndpoint';
 import jwtInterceptor from './interceptors/jwtInterceptor';
 
 export const createPingerClient = () => {
@@ -11,9 +12,10 @@ export const createPingerClient = () => {
     withCredentials: true
   });
 
-  const {getToken, handleRegistration, refreshToken} = getAuthEndpoints(instance);
+  const {getToken, handleRegistration, refreshToken, appendClaims} = getAuthEndpoints(instance);
   const {getUserChatSpaces, createChatSpace, searchChatSpaceMembers, getChatSpaces, joinChatSpace} = getChatSpaceEndpoints(instance);
   const { addContactedUser, getContactedUsers } = getUserEndpoints(instance);
+  const { getPrivateMessages } = getPrivateMessagesEndpoint(instance);
   jwtInterceptor(instance, refreshToken);
   
   return {
@@ -26,7 +28,9 @@ export const createPingerClient = () => {
     addContactedUser,
     getChatSpaces,
     joinChatSpace,
-    getContactedUsers
+    getContactedUsers,
+    appendClaims,
+    getPrivateMessages,
   };
 };
 

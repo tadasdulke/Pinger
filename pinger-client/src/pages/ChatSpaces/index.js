@@ -10,6 +10,7 @@ import getUserChatSpaces from './services/getUserChatSpaces';
 import ChatSpace from './ChatSpace';
 import CreateChatSpace from './CreateChatSpace'
 import JoinChatSpace from './JoinChangeSpace';
+import useAppendClaims from './hooks/useAppendClaims';
 
 const ChatSpaces = ({ errorHandler }) => {
     const dispatch = useDispatch();
@@ -19,10 +20,16 @@ const ChatSpaces = ({ errorHandler }) => {
         errorHandler,
     );
 
-    const selectWorkspace = (workspaceId) => {
-        dispatch(changeCurrentWorkspaceId(workspaceId));
-        localStorage.setItem(LOCAL_STORAGE_ITEMS.WORKSPACE_ID, workspaceId)
-        navigate(ROUTES.USE_CHATSPACE);
+    const { addClaims } = useAppendClaims(errorHandler);
+
+    const selectWorkspace = async (workspaceId) => {
+        const { status } = await addClaims(workspaceId);
+        
+        if(status === 204) {
+            dispatch(changeCurrentWorkspaceId(workspaceId));
+            localStorage.setItem(LOCAL_STORAGE_ITEMS.WORKSPACE_ID, workspaceId)
+            navigate(ROUTES.USE_CHATSPACE);            
+        }
     }
 
     return (

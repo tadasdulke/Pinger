@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 
 namespace pinger_api_service
@@ -12,8 +13,7 @@ namespace pinger_api_service
         public string? RefreshToken { get; set; }
         public DateTime RefreshTokenExpiryTime { get; set; }
         public ICollection<ChatSpace> ChatSpaces { get; set; }
-
-        public ICollection<User> ContactedUsers {get; set;}
+        public ICollection<ContactedUserInfo> ContactedUsersInfo {get; set;}
 
         public ICollection<ConnectionInformation> ConnectionInformations {get; set;}
     }

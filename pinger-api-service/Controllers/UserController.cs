@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,27 +12,35 @@ namespace pinger_api_service
     public class UserController : ControllerBase
     {
         private ApplicationDbContext _dbContext;
-        private readonly UserManager<User> _userManager;
+        private IChatSpaceManager _chatSpaceManager;
+        private readonly ApplicationUserManager _userManager;
 
-        public UserController(ApplicationDbContext dbContext, UserManager<User> userManager)
+        public UserController(ApplicationDbContext dbContext, ApplicationUserManager userManager, IChatSpaceManager chatSpaceManager)
         {
             _dbContext = dbContext;
             _userManager = userManager;
+            _chatSpaceManager = chatSpaceManager;
         }
 
         [Authorize]
         [HttpGet]
         [Route("contacted-users")]
-        public async Task<ActionResult<List<User>>> GetContactedUsers()
+        public async Task<ActionResult<List<ContactedUserInfo>>> GetContactedUsers()
         {
             string userId = _userManager.GetUserId(User);
-            User? user = await _dbContext.Users.Include(u => u.ContactedUsers).FirstOrDefaultAsync(u => u.Id == userId);
-
+            int chatspaceId = _userManager.GetChatSpaceId(User);
+            User? user = await _dbContext.Users
+                .Include(u => u.ContactedUsersInfo)
+                .ThenInclude(userInfo => userInfo.ChatSpace)
+                .Include(u => u.ContactedUsersInfo)
+                .ThenInclude(userInfo => userInfo.ContactedUser)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+                
             if(user is null) {
                 return NotFound();
             }
-
-            List<User> contactedUsers = user.ContactedUsers.ToList();
+            
+            List<ContactedUserInfo> contactedUsers = user.ContactedUsersInfo.Where(userInfo => userInfo.ChatSpace.Id == chatspaceId).ToList();
 
             return contactedUsers;
 
@@ -42,7 +52,7 @@ namespace pinger_api_service
         public async Task<IActionResult> AddContactedUser([FromBody] AddContactedUser contactedUserRequest)
         {
             string userId = _userManager.GetUserId(User);
-            User? user = await _dbContext.Users.Include(u => u.ContactedUsers).FirstOrDefaultAsync(u => u.Id == userId);
+            User? user = await _dbContext.Users.Include(u => u.ContactedUsersInfo).FirstOrDefaultAsync(u => u.Id == userId);
 
             if(user is null) {
                 return NotFound();
@@ -55,11 +65,23 @@ namespace pinger_api_service
                 return NotFound();
             }
             
-            List<User> contactedUsers = user.ContactedUsers.ToList();
-            contactedUsers.Add(contactedUser);
-            user.ContactedUsers = contactedUsers;
-            await _dbContext.SaveChangesAsync();
+            bool userAlreadyAdded = user.ContactedUsersInfo.Any(item => item.ContactedUser.Id == contactedUserId); 
+            if(userAlreadyAdded) {
+                return NoContent();
+            }
 
+            int chatspaceId = _userManager.GetChatSpaceId(User);
+            ChatSpace? chatSpace = _chatSpaceManager.GetChatSpaceById(chatspaceId);
+            
+            if(chatSpace is null) {
+                return NotFound();
+            }
+
+            ContactedUserInfo contactedUserInfo = new ContactedUserInfo();
+            contactedUserInfo.ChatSpace = chatSpace;
+            contactedUserInfo.ContactedUser = contactedUser;
+            user.ContactedUsersInfo.Add(contactedUserInfo);
+            await _userManager.UpdateAsync(user);
             return Ok();
         }
     }

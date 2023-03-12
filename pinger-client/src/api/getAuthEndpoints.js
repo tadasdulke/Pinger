@@ -20,7 +20,22 @@ const getAuthEndpoints = (instance) => {
     };
 
     const refreshToken = async () => {
-        const response = await instance.get(API_SERVICE_ENDPOINTS['REFRESH-TOKEN'], {
+        const response = await instance.get(API_SERVICE_ENDPOINTS.REFRESH_TOKEN, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const {status, data} = response;
+
+        return {
+            status,
+            data
+        };
+    };
+
+    const appendClaims = async (chatspaceId) => {
+        const response = await instance.put(API_SERVICE_ENDPOINTS.APPEND_CLAIMS, { chatspaceId }, {
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -56,7 +71,8 @@ const getAuthEndpoints = (instance) => {
     return {
         handleRegistration,
         getToken,
-        refreshToken
+        refreshToken,
+        appendClaims
     }
 }
 

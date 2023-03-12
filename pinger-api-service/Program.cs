@@ -22,6 +22,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddSignalR();
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddUserManager<ApplicationUserManager>()
     .AddDefaultTokenProviders();
 
 builder.Services.Configure<IdentityOptions>(options =>
@@ -62,6 +63,9 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowCredentials());
 });
+
+builder.Services.AddScoped<IChatSpaceManager, ChatSpaceManager>();
+builder.Services.AddScoped<IPrivateMessagesManager, PrivateMessagesManager>();
 
 builder.WebHost.ConfigureKestrel(options =>
 {

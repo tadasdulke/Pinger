@@ -9,9 +9,9 @@ namespace pinger_api_service.Controllers;
 public class FileController : ControllerBase
 {
     private readonly ApplicationDbContext _dbContext;
-    private readonly UserManager<User> _userManager;
+    private readonly ApplicationUserManager _userManager;
 
-    public FileController(ApplicationDbContext dbContext, UserManager<User> userManager)
+    public FileController(ApplicationDbContext dbContext, ApplicationUserManager userManager)
     {
         _dbContext = dbContext;
         _userManager = userManager;

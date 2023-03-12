@@ -16,10 +16,6 @@ const Chat = () => {
         return async () => await connection.stop();
     }, [])
 
-    connection.on("ReceiveMessage", data => {
-        console.log(data);
-    });
-
     return (
         <Container
             style={{
