@@ -18,9 +18,9 @@ const Item = ({name, onClick}) => {
 const UserSearchModal = ({errorHandler, setShowModal}) => {
     const dispatch = useDispatch();
     const [searchInput, setSearchInput] = useState();
-    const { currentWorkspaceId } = useSelector(state => state.workspace)
+    const { userId} = useSelector(state => state.auth)
     const { loaded, result } = useFetchData(
-        async () => await searchChatSpaceMembers(currentWorkspaceId, searchInput), //TODO: add debounce
+        async () => await searchChatSpaceMembers(searchInput), //TODO: add debounce
         errorHandler,
         null,
         [searchInput]
@@ -28,14 +28,24 @@ const UserSearchModal = ({errorHandler, setShowModal}) => {
 
     const { addContactedUser } = useAddContactedUser(errorHandler)
     
-    const loadedBody = result && result.data.map(({userName, id: userId }) => {
+    const getUsersWithRemovedSelf = () => {
+        if(!result || !result.data) {
+            return null;
+        }
+
+        return result.data.filter(user => user.id !== userId);
+    }
+
+    const filteredUsers = getUsersWithRemovedSelf();
+
+    const loadedBody = filteredUsers && filteredUsers.map(({userName, id }) => {
         const onClick = async () => {
             dispatch(changeChatOccupierInfo({
-                userId,
+                id,
                 userName
             }));
             setShowModal(false);
-            await addContactedUser(userId)
+            await addContactedUser(id)
         }
         return (
             <Item name={userName} onClick={onClick} />

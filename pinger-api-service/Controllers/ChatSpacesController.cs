@@ -90,9 +90,10 @@ namespace pinger_api_service
         }
 
         [Authorize]
-        [HttpGet("{chatspaceId}/members")]
-        public async Task<ActionResult<List<User>>> GetChatSpaceMembers([FromRoute] int chatspaceId, [FromQuery(Name = "search")]  string search)
+        [HttpGet("members")]
+        public async Task<ActionResult<List<User>>> GetChatSpaceMembers([FromQuery(Name = "search")]  string search)
         {
+            int chatspaceId = _userManager.GetChatSpaceId(User);
             ChatSpace? chatSpace = await _dbContext.ChatSpace.Include(x => x.Members).FirstOrDefaultAsync(c => c.Id == chatspaceId);
             
             if(chatSpace is null) {
@@ -103,6 +104,27 @@ namespace pinger_api_service
             List<User> filteredMembers = members.Where(m => m.UserName.ToLower().Contains(search.ToLower())).ToList();
             
             return filteredMembers;
+        }
+
+        [Authorize]
+        [HttpGet("members/{memberId}")]
+        public async Task<ActionResult<User>> GetChatSpaceMember([FromRoute] string memberId)
+        {
+            int chatspaceId = _userManager.GetChatSpaceId(User);
+            ChatSpace? chatSpace = await _dbContext.ChatSpace.Include(x => x.Members).FirstOrDefaultAsync(c => c.Id == chatspaceId);
+            
+            if(chatSpace is null) {
+                return NotFound();
+            }
+
+            
+            User? foundMember = chatSpace.Members.FirstOrDefault(m => m.Id == memberId);
+
+            if(foundMember is null) {
+                return NotFound();
+            }
+
+            return foundMember;
         }
     }
 } 

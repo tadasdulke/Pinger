@@ -4,6 +4,7 @@ import cx from 'classnames';
 const TextInput = ({
   field,
   label,
+  labelClassName,
   name,
   id,
   value,
@@ -16,6 +17,7 @@ const TextInput = ({
       <div>
         <label
           htmlFor={id}
+          className={labelClassName}
         >
           <span>{label}</span>
         </label>

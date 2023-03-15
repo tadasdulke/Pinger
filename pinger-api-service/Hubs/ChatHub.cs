@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,14 +25,29 @@ namespace pinger_api_service
             _privateMessageManager = privateMessageManager;
         }
 
+        private async void AddUserToGroups(List<Channel> channels) {
+
+            foreach(Channel channel in channels) {
+                string groupName = $"{channel.Id}-{channel.Name}";
+                await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+            }
+        }
+
         public override async Task OnConnectedAsync() 
         {
             string userId = _userManager.GetUserId(Context.User);
             int chatSpaceId = _userManager.GetChatSpaceId(Context.User);
 
             ChatSpace currentChatSpace = _chatSpaceManager.GetChatSpaceById(chatSpaceId);
-            User user = await _userManager.FindByIdAsync(userId);
+            User user = await _dbContext.Users
+                .Include(u => u.Channels)
+                .ThenInclude(c => c.ChatSpace)
+                .FirstOrDefaultAsync(u => u.Id == userId);
             
+            List<Channel> activeChannels = user.Channels.Where(c => c.ChatSpace.Id == chatSpaceId).ToList();
+            
+            AddUserToGroups(activeChannels);
+
             ConnectionInformation ct = new ConnectionInformation();
             ct.ConnectionId = Context.ConnectionId;
             ct.ChatSpace = currentChatSpace;
@@ -68,10 +82,17 @@ namespace pinger_api_service
             List<ConnectionInformation> filteredConnectionInformations = receiver.ConnectionInformations.Where(ci => ci.ChatSpace.Id == chatspaceId).ToList();
             
             var sentMessage = await _privateMessageManager.AddPrivateMessage(senderId, receiverId, chatspaceId, message);
+            
+            await Clients.Client(Context.ConnectionId).SendAsync("MessageSent", sentMessage);
 
             foreach(ConnectionInformation connectionInfo in filteredConnectionInformations) {
                 await Clients.Client(connectionInfo.ConnectionId).SendAsync("ReceiveMessage", sentMessage);   
             }
+        }
+
+        public async Task SendGroupMessage(string groupName, string message)
+        {
+             await Clients.Group(groupName).SendAsync("ReceiveGroupMessage", message);
         }
     }
 } 

@@ -1,15 +1,17 @@
 import React, {useState} from 'react';
 import { ReactSVG } from 'react-svg';
+import { useSelector } from 'react-redux';
 import UserSearchModal from './UserSearchModal';
 import DirectMessages from './DirectMessages';
 
 const UserBar = () => {
     const [showModal, setShowModal] = useState(false);
+    const { userName } = useSelector(state => state.auth)
 
     return (
         <div className="flex justify-between items-center p-[20px]">
             <p className="text-white">
-                Tadas
+                {userName}
                 {showModal && <UserSearchModal setShowModal={setShowModal} />}
             </p>
             <button onClick={() => setShowModal(true)}>

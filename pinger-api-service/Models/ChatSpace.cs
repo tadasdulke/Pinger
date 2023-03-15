@@ -13,5 +13,6 @@ namespace pinger_api_service
         public int Id { get; set; }
         public string? Name { get; set; }
         public ICollection<User> Members { get; set; }
+        public ICollection<Channel> Channel { get; set; }
     }
 }

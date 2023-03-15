@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 
 import { Button, withErrorWrapper, TextInput } from '@Common'
 import { ROUTES } from '@Router';
-import { authenticate } from '@Store/slices/auth';
+import { authenticate, setUserName, setUserId } from '@Store/slices/auth';
 import LOCAL_STORAGE_ITEMS from '@Common/config/localStorageItems'
 
 import useLogin from './hooks/useLogin';
@@ -24,8 +24,14 @@ const LoginForm = ({errorHandler}) => {
         const response = await sendAction(username, password);
 
         if(response.status === 200) {
+            const { id, userName } = response.data;
+
             dispath(authenticate());
+            dispath(setUserId(response.data.id));
+            dispath(setUserName(response.data.userName));
             localStorage.setItem(LOCAL_STORAGE_ITEMS.IS_AUTHENTICATED, true);
+            localStorage.setItem(LOCAL_STORAGE_ITEMS.USER_ID, id);
+            localStorage.setItem(LOCAL_STORAGE_ITEMS.USER_NAME, userName);
         }
     }
 

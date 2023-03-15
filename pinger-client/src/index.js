@@ -2,7 +2,7 @@ import React from 'react';
 import {createRoot} from 'react-dom/client'
 import store from './store'
 import { Provider } from 'react-redux';
-import App from './App'
+import Router from './router/Router';
 import { setConfiguration } from 'react-grid-system';
 import tailwindConfig from '../tailwind.config';
 import "react-loading-skeleton/dist/skeleton.css";
@@ -17,4 +17,4 @@ setConfiguration({
     maxScreenClass: 'xl'
 })
 
-root.render(<Provider store={store}><App/></Provider>)
+root.render(<Provider store={store}><Router/></Provider>)

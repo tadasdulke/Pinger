@@ -5,5 +5,8 @@ export const ROUTES = {
     CHATSPACES: '/explore-chatspaces',
     CREATE_CHATSPACE: '/create-chatspace',
     USE_CHATSPACE: '/use-chatspace',
-    JOIN_CHATSPACE: '/join-chatspace'
+    JOIN_CHATSPACE: '/join-chatspace',
+    DIRECT_MESSAGE: 'direct-message',
+    CREATE_CHANNEL: 'create-channel',
+    CHANNEL_CHAT: 'channel-chat'
 }

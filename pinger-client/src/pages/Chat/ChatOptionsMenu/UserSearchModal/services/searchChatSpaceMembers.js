@@ -1,11 +1,11 @@
 import apiClient from '@Api';
 
-const searchChatSpaceMembers = async (chatspaceId, search) => {
-    if(!search || !chatspaceId) {
+const searchChatSpaceMembers = async (search) => {
+    if(!search) {
         return null;
     }
     
-    return await apiClient.searchChatSpaceMembers(chatspaceId, search);
+    return await apiClient.searchChatSpaceMembers(search);
 
 }
 

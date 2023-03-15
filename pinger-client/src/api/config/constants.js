@@ -5,7 +5,9 @@ export const API_SERVICE_ENDPOINTS = {
     APPEND_CLAIMS: '/api/authenticate/append-claims',
     REGISTER: '/api/authenticate/register',
     CHATSPACES: '/api/chatspaces',
+    CHATSPACE_MEMBERS: '/api/chatspaces/members',
     JOINED_CHATSPACES: '/api/chatspaces/joined',
     USERS_CONTACTED_USERS: '/api/user/contacted-users',
     PRIVATE_MESSAGES: '/api/private-messages',
+    CHANNELS: '/api/channel',
 }
