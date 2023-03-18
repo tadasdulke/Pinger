@@ -3,7 +3,7 @@ import _debounce from 'lodash.debounce'
 import { Modal, useFetchData, withErrorWrapper } from '@Common'
 import { ReactSVG } from 'react-svg';
 import { useDispatch, useSelector } from 'react-redux';
-import searchChatSpaceMembers from './services/searchChatSpaceMembers'
+import { searchChatSpaceMembers } from '@Services'
 import { changeChatOccupierInfo } from '@Store/slices/chat';
 import useAddContactedUser from './hooks/useAddContactedUser';
 

@@ -66,6 +66,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<IChatSpaceManager, ChatSpaceManager>();
 builder.Services.AddScoped<IPrivateMessagesManager, PrivateMessagesManager>();
+builder.Services.AddScoped<IChannelMessageManager, ChannelMessageManager>();
 
 builder.WebHost.ConfigureKestrel(options =>
 {

@@ -1,32 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import cx from 'classnames'
+import { useOnScreen } from '@Common'
 import { useSelector } from 'react-redux';
 
+
 const Message = ({body, isMessageSent}) => (
-    <div className={cx("p-[10px] mt-[10px] bg-green-500 rounded-[5px]", isMessageSent ? "self-start" : "self-end")}>
+    <div className={cx("p-[10px] mt-[10px] bg-green-500 rounded-[5px] max-w-[49%] break-words", isMessageSent ? "self-start" : "self-end")}>
         {body}
     </div>
 )
 
-const ChatWindow = ({receiverName, messages, handleMessageSending}) => {
+const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, lazyLoadComponent}) => {
     const { userId: senderId } = useSelector(state => state.auth)
     const [messageValue, setMessageValue] = useState('');
+    const [seeNewMessagesButtonVisible, setSeeNewMessagesButtonVisible] = useState(false);
+    const messageEndRef = useRef();
+    const scrollRef = useRef();
+    const isAtBottom = useOnScreen(messageEndRef);
+
+    const scrollToBottom = (options) => {
+        messageEndRef.current?.scrollIntoView(options)
+    }
+
+    useEffect(() => {
+        if(isAtBottom) {
+            scrollToBottom();
+        } else {
+            setSeeNewMessagesButtonVisible(true);
+        }
+    }, [messages])
+
+    useEffect(() => {
+        if(isAtBottom) 
+        {
+            setSeeNewMessagesButtonVisible(false);
+        }
+    }, [isAtBottom])
 
     return (
         <div className="flex justify-between flex-col h-full">
-            <div className="flex bg-tuna p-[20px] text-white">
+            <div className="flex justify-between bg-tuna p-[20px] text-white">
                 {receiverName}
+                {chatActions}
             </div>
             <div className="relative h-full">
-                <div className="absolute overflow-y-scroll bottom-0 top-0 left-0 right-0">
-                    <div className="px-[10px] flex flex-col">
-                    {messages.map(({id, body, sender}) => (
-                        <Message 
-                            key={id} 
-                            body={body}
-                            isMessageSent={sender.id === senderId}
-                        />
-                    ))}
+                {seeNewMessagesButtonVisible && 
+                    <button 
+                        className="p-[10px] rounded-[5px] absolute bg-tuna z-10 bottom-[20px] left-1/2 translate-x-[-50%] text-white"
+                        onClick={() => scrollToBottom({behavior: "smooth"})}
+                    >
+                            See new messages
+                    </button>
+                }
+                <div ref={scrollRef} className="absolute overflow-y-auto bottom-0 top-0 left-0 right-0">
+                    <div className="px-[10px] flex flex-col justify-end h-full">
+                        {lazyLoadComponent}
+                            {messages.map(({id, body, sender}) => (
+                                <Message
+                                    key={id}
+                                    body={body}
+                                    isMessageSent={sender?.id === senderId}
+                                />
+                            ))}
+                        <div ref={messageEndRef} />
                     </div>
                 </div>
             </div>

@@ -46,10 +46,26 @@ const getChannelEndpoints = (instance) => {
         };
     };
 
+    const addUserToChannel = async (channelId, newMemberId) => {
+        const response = await instance.post(`${API_SERVICE_ENDPOINTS.CHANNELS}/${channelId}/members`, {newMemberId}, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const {status, data} = response;
+
+        return {
+            status,
+            data
+        };
+    };
+
     return {
         createChannel,
         getChannels,
-        getChannel
+        getChannel,
+        addUserToChannel
     }
 }
 

@@ -11,21 +11,24 @@ namespace pinger_api_service
         private IChatSpaceManager _chatSpaceManager;
         private ApplicationDbContext _dbContext;
         private IPrivateMessagesManager _privateMessageManager;
+        private IChannelMessageManager _channelMessageManager;
 
         public ChatHub(
             ApplicationDbContext dbContext,
             ApplicationUserManager userManager,
             IChatSpaceManager chatSpaceManager,
-            IPrivateMessagesManager privateMessageManager
+            IPrivateMessagesManager privateMessageManager,
+            IChannelMessageManager channelMessageManager
         )
         {
             _userManager = userManager;
             _dbContext = dbContext;
             _chatSpaceManager = chatSpaceManager;
             _privateMessageManager = privateMessageManager;
+            _channelMessageManager = channelMessageManager;
         }
 
-        private async void AddUserToGroups(List<Channel> channels) {
+        private async Task AddUserToGroups(List<Channel> channels) {
 
             foreach(Channel channel in channels) {
                 string groupName = $"{channel.Id}-{channel.Name}";
@@ -46,7 +49,7 @@ namespace pinger_api_service
             
             List<Channel> activeChannels = user.Channels.Where(c => c.ChatSpace.Id == chatSpaceId).ToList();
             
-            AddUserToGroups(activeChannels);
+            await AddUserToGroups(activeChannels);
 
             ConnectionInformation ct = new ConnectionInformation();
             ct.ConnectionId = Context.ConnectionId;
@@ -90,9 +93,33 @@ namespace pinger_api_service
             }
         }
 
-        public async Task SendGroupMessage(string groupName, string message)
+        public async Task SendGroupMessage(int channelId, string message)
         {
-             await Clients.Group(groupName).SendAsync("ReceiveGroupMessage", message);
+            string senderId = _userManager.GetUserId(Context.User);
+            Channel channel = _dbContext.Channel.FirstOrDefault(c => c.Id == channelId);
+
+            string groupName = $"{channel.Id}-{channel.Name}";
+
+            if(channel is null) {
+                return;
+            }
+
+            ChannelMessage sentMessage = await _channelMessageManager.AddChannelMessage(
+                senderId,
+                channelId,
+                DateTime.Now,
+                message
+            );
+
+             await Clients.Group(groupName).SendAsync("ReceiveGroupMessage", new {
+                Id = sentMessage.Id,
+                Sender = new {
+                    Id = sentMessage.Sender.Id
+                },
+                ChannelId = sentMessage.Channel.Id,
+                SentAt = sentMessage.SentAt,
+                Body = sentMessage.Body
+             });
         }
     }
 } 

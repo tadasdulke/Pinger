@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace pinger_api_service
@@ -11,12 +12,19 @@ namespace pinger_api_service
         private ApplicationDbContext _dbContext;
         private IChatSpaceManager _chatSpaceManager;
         private readonly ApplicationUserManager _userManager;
+        private readonly IHubContext<ChatHub> _chatHubContext;
 
-        public ChannelController(ApplicationDbContext dbContext, ApplicationUserManager userManager, IChatSpaceManager chatSpaceManager)
+        public ChannelController(
+            ApplicationDbContext dbContext,
+            ApplicationUserManager userManager,
+            IChatSpaceManager chatSpaceManager,
+            IHubContext<ChatHub> chatHubContext
+        )
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _chatSpaceManager = chatSpaceManager;
+            _chatHubContext = chatHubContext;
         }
 
         [Authorize]
@@ -107,6 +115,30 @@ namespace pinger_api_service
             }
 
             return channel;
+        }
+
+        [Authorize]
+        [HttpPost("{channelId}/members")]
+        public async Task<IActionResult> AddMembersToChannel([FromRoute] int channelId, AddUserToChannelRequest addUserToChannelRequest)
+        {
+            Channel? channel = await _dbContext.Channel
+                .Include(c => c.Members)
+                .FirstOrDefaultAsync(c => c.Id == channelId);
+            
+            if(channel is null) {
+                return NotFound();
+            }
+
+            User? newMember = await _userManager.FindByIdAsync(addUserToChannelRequest.NewMemberId);
+
+            if(newMember is null) {
+                return NotFound();
+            }
+
+            channel.Members.Add(newMember);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok();
         }
 
     }

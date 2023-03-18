@@ -6,11 +6,12 @@ import { useFetchData, withErrorWrapper } from "@Common"
 import getContactedUsers from './services/getContactedUsers';
 import getChannels from './services/getChannels'
 
-const DirectMessageItem = ({id, userName}) => (
+const DirectMessageItem = ({to, children}) => (
     <Link 
-        to={`${ROUTES.DIRECT_MESSAGE}/${id}`} 
-        className="py-[10px]">
-        {userName}
+        to={to} 
+        className="py-[10px]"
+    >
+        {children}
     </Link>
 )
 
@@ -37,9 +38,10 @@ const DirectMessages = ({errorHandler}) => {
                     {channelsResult && channelsResult.data.map(({name, id}) => (
                         <DirectMessageItem 
                             key={id}
-                            id={id} 
-                            userName={name} 
-                        />
+                            to={`${ROUTES.CHANNEL_CHAT}/${id}`}
+                        >
+                            {name}
+                        </DirectMessageItem>
                     ))}                
                     <Link to={ROUTES.CREATE_CHANNEL} className="mt-[5px]">
                         Add channel
@@ -51,9 +53,10 @@ const DirectMessages = ({errorHandler}) => {
                 {result && result.data.map(({contactedUser: {id, userName}}) => (
                     <DirectMessageItem 
                         key={id}
-                        id={id} 
-                        userName={userName} 
-                    />
+                        to={`${ROUTES.DIRECT_MESSAGE}/${id}`}
+                    >
+                        {userName}
+                    </DirectMessageItem>
                 ))}
             </div>
         </div>
