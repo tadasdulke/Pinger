@@ -53,7 +53,7 @@ const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, 
                     </button>
                 }
                 <div ref={scrollRef} className="absolute overflow-y-auto bottom-0 top-0 left-0 right-0">
-                    <div className="px-[10px] flex flex-col justify-end h-full">
+                    <div className="px-[10px] flex flex-col">
                         {lazyLoadComponent}
                             {messages.map(({id, body, sender}) => (
                                 <Message
@@ -66,7 +66,7 @@ const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, 
                     </div>
                 </div>
             </div>
-            <form onSubmit={handleMessageSending} className="flex bg-tuna p-[10px]">
+            <form onSubmit={(event) => handleMessageSending(event, scrollToBottom)} className="flex bg-tuna p-[10px]">
                 <input 
                     type="text" 
                     className="w-full"

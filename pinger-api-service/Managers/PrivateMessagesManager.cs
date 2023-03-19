@@ -21,8 +21,8 @@ namespace pinger_api_service
 
         public async Task<PrivateMessage> AddPrivateMessage(string senderId, string receiverId, int chatspaceId, string body)
         {
-            User sender = await _applicationUserManager.FindByIdAsync(senderId);
-            User receiver = await _applicationUserManager.FindByIdAsync(receiverId);
+            User sender = await _dbContext.Users.Where(u => u.Id == senderId).FirstOrDefaultAsync();
+            User receiver = await _dbContext.Users.Where(u => u.Id == receiverId).FirstOrDefaultAsync();
             ChatSpace? chatSpace = _chatSpaceManager.GetChatSpaceById(chatspaceId);
 
             if(chatSpace is null) {

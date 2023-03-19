@@ -52,7 +52,7 @@ namespace pinger_api_service
         public async Task<IActionResult> AddContactedUser([FromBody] AddContactedUser contactedUserRequest)
         {
             string userId = _userManager.GetUserId(User);
-            User? user = await _dbContext.Users.Include(u => u.ContactedUsersInfo).FirstOrDefaultAsync(u => u.Id == userId);
+            User? user = await _dbContext.Users.Include(u => u.ContactedUsersInfo).ThenInclude(cuf => cuf.ContactedUser).FirstOrDefaultAsync(u => u.Id == userId);
 
             if(user is null) {
                 return NotFound();

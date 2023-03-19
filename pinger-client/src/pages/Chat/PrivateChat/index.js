@@ -12,10 +12,12 @@ const PrivateChat = ({errorHandler}) => {
     const { connection } = useOutletContext();
     const { receiverId } = useParams();
     const [messages, setMessages] = useState([]);
-    const { member } = useFetchChatSpaceMember(errorHandler, receiverId);
+    const { member } = useFetchChatSpaceMember(errorHandler, receiverId, null, [receiverId]);
     
     connection.on("ReceiveMessage", data => {
-        setMessages([...messages, data])
+        if(data.sender.id === receiverId) {
+            setMessages([...messages, data])
+        }
     });
 
     connection.on("MessageSent", data => {
@@ -44,13 +46,18 @@ const PrivateChat = ({errorHandler}) => {
         }
     }, [member])
 
+    useEffect(() => {
+        connection.off("ReceiveMessage");
+    }, [receiverId])
+
     const sendMessage = (messageValue) => {
         connection.invoke("SendPrivateMessage", receiverId, messageValue)
     }
     
-    const handleSubmit = (event) => {
+    const handleSubmit = (event, scrollToBottom) => {
         event.preventDefault();
         sendMessage(event.target.message.value)
+        scrollToBottom();
     }
 
     return (

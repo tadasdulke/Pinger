@@ -2,11 +2,12 @@ import React, {useEffect, useState} from 'react';
 import { useOutletContext, useParams } from 'react-router-dom'
 import { ChatWindow } from '@Components'
 import { ReactSVG } from 'react-svg';
-import { useFetchData, withErrorWrapper } from '@Common'
+import { useFetchData, withErrorWrapper, useApiAction } from '@Common'
 import { DropDown } from '@Components'
 import getChannel from './services/getChannel'
 import getChannelMessages from './services/getChannelMessages'
 import AddUsersToChannel from './components/AddUsersToChannel'
+import updateChannelMessageReadTime from './services/updateChannelMessageReadTime'
 
 const ChannelChat = ({errorHandler}) => {
     const [messages, setMessages] = useState([]);
@@ -17,9 +18,10 @@ const ChannelChat = ({errorHandler}) => {
     const { channelId } = useParams();
     const { connection } = useOutletContext();
 
-    const sendMessage = (event) => {
+    const sendMessage = (event, scrollToBottom) => {
         event.preventDefault()
         connection.invoke("SendGroupMessage", parseInt(channelId), event.target.message.value)
+        scrollToBottom();
     }
     
     connection.on("ReceiveGroupMessage", data => {
@@ -48,12 +50,18 @@ const ChannelChat = ({errorHandler}) => {
 
     }, [channelMessagesResult])
 
+
     const handleAdditionalLoad = () => {
         setFetchingOptions({
             step: 50,
             offset: fetchingOptions.offset + 50, 
         })
     }
+
+    const { sendAction: updateReadTime } =  useApiAction(
+        () => updateChannelMessageReadTime(channelId),
+        errorHandler
+    )
 
     return ( 
         <ChatWindow

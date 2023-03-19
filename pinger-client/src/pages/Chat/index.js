@@ -27,7 +27,7 @@ const Chat = () => {
         >
             <Row nogutter align="stretch" className="h-full">
                 <Col xs={4} lg={2}>
-                    <ChatOptionsMenu/>
+                    <ChatOptionsMenu connection={connection}/>
                 </Col>
                 <Col xs={8} lg={10} className="bg-tuna-darker">
                     <Outlet context={{connection}} />

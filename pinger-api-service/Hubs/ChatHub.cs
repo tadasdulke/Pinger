@@ -21,7 +21,7 @@ namespace pinger_api_service
             IChannelMessageManager channelMessageManager
         )
         {
-            _userManager = userManager;
+        _userManager = userManager;
             _dbContext = dbContext;
             _chatSpaceManager = chatSpaceManager;
             _privateMessageManager = privateMessageManager;
@@ -42,7 +42,7 @@ namespace pinger_api_service
             int chatSpaceId = _userManager.GetChatSpaceId(Context.User);
 
             ChatSpace currentChatSpace = _chatSpaceManager.GetChatSpaceById(chatSpaceId);
-            User user = await _dbContext.Users
+            User? user = await _dbContext.Users
                 .Include(u => u.Channels)
                 .ThenInclude(c => c.ChatSpace)
                 .FirstOrDefaultAsync(u => u.Id == userId);
@@ -65,7 +65,7 @@ namespace pinger_api_service
             User user = await _userManager.Users.Include(u => u.ConnectionInformations).FirstOrDefaultAsync(u => u.Id == userId);
             var userConnections = user.ConnectionInformations;
             ConnectionInformation? connectionInfoToRemove = userConnections.FirstOrDefault(c => c.ConnectionId == Context.ConnectionId);
-
+            
             if(connectionInfoToRemove is not null) 
             {
                 userConnections.Remove(connectionInfoToRemove);
@@ -81,15 +81,53 @@ namespace pinger_api_service
             int chatspaceId = _userManager.GetChatSpaceId(Context.User);
             string senderId = _userManager.GetUserId(Context.User);
             
-            User receiver = await _userManager.Users.Include(u => u.ConnectionInformations).ThenInclude(ci => ci.ChatSpace).FirstOrDefaultAsync(u => u.Id == receiverId);
+            User? receiver = await _dbContext.Users
+                .Include(u => u.ConnectionInformations)
+                .ThenInclude(ci => ci.ChatSpace)
+                .FirstOrDefaultAsync(u => u.Id == receiverId);
             List<ConnectionInformation> filteredConnectionInformations = receiver.ConnectionInformations.Where(ci => ci.ChatSpace.Id == chatspaceId).ToList();
-            
+
             var sentMessage = await _privateMessageManager.AddPrivateMessage(senderId, receiverId, chatspaceId, message);
             
             await Clients.Client(Context.ConnectionId).SendAsync("MessageSent", sentMessage);
+            await SendToMulitpleClients(filteredConnectionInformations, "ReceiveMessage", sentMessage);
 
-            foreach(ConnectionInformation connectionInfo in filteredConnectionInformations) {
-                await Clients.Client(connectionInfo.ConnectionId).SendAsync("ReceiveMessage", sentMessage);   
+            // Add contacted user for receiver if not added
+            
+            List<ContactedUserInfo> contactedUserInfos = await _dbContext.ContactedUserInfo
+                .Include(cui => cui.ChatSpace)
+                .Include(cui => cui.ContactedUser)
+                .Include(cui => cui.Owner)
+                .Where(cui => cui.Owner.Id == receiverId)
+                .ToListAsync();
+            bool alreadyContacted = contactedUserInfos.Any(cu => cu.ContactedUser.Id == senderId);
+            
+            if(!alreadyContacted) {
+                User sender = await _userManager.FindByIdAsync(senderId);
+                ChatSpace chatSpace = _chatSpaceManager.GetChatSpaceById(chatspaceId);
+
+                ContactedUserInfo contactedUserInfo = new ContactedUserInfo {
+                    Owner = receiver,
+                    ContactedUser = sender,
+                    ChatSpace = chatSpace
+                };
+
+
+                var contactedUserInfoToSend = new {
+                    Owner = receiver,
+                    ContactedUser = sender,
+                };
+
+                await SendToMulitpleClients(filteredConnectionInformations, "NewUserContactAdded", contactedUserInfoToSend);
+                _dbContext.ContactedUserInfo.Add(contactedUserInfo);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        private async Task SendToMulitpleClients(List<ConnectionInformation> connectionInformation, string method, object message) 
+        {
+            foreach(ConnectionInformation connectionInfo in connectionInformation) {
+                await Clients.Client(connectionInfo.ConnectionId).SendAsync(method, message);   
             }
         }
 

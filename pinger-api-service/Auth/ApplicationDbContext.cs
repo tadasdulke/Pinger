@@ -9,6 +9,9 @@ namespace pinger_api_service
         public DbSet<PrivateMessage> PrivateMessage { get; set; }
         public DbSet<Channel> Channel { get; set; }
         public DbSet<ChannelMessage> ChannelMessage { get; set; }
+        public DbSet<ChannelMessagesReadTimes> ChannelMessagesReadTimes { get; set; }
+        public DbSet<DirectMessagesReadTimes> DirectMessagesReadTimes { get; set; }
+        public DbSet<ContactedUserInfo> ContactedUserInfo { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {

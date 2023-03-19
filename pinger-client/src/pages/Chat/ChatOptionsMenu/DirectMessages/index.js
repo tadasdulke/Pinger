@@ -1,34 +1,56 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
+import React, {useState} from 'react';
 import { Link } from 'react-router-dom';
+import cx from 'classnames'
 import { ROUTES } from '@Router'
 import { useFetchData, withErrorWrapper } from "@Common"
 import getContactedUsers from './services/getContactedUsers';
 import getChannels from './services/getChannels'
 
-const DirectMessageItem = ({to, children}) => (
+const DirectMessageItem = ({to, children, className}) => (
     <Link 
         to={to} 
-        className="py-[10px]"
+        className={cx(className, "py-[10px]")}
     >
         {children}
     </Link>
 )
 
-const DirectMessages = ({errorHandler}) => {
-    const {occupierInfo} = useSelector(state => state.chat)
-
-    const { loaded, result } = useFetchData(
+const DirectMessages = ({errorHandler, connection}) => {
+    const { loaded, result: contactedUsersResult, setData: updateContacterUsers } = useFetchData(
         getContactedUsers,
         errorHandler,
-        null,
-        [occupierInfo]
     )
 
     const { loaded: channelsFetched, result: channelsResult } = useFetchData(
         getChannels,
         errorHandler,
     )
+    
+    const [contactedUsersWithNewMsg, setContactedUsersWithNewMsg] = useState([]);
+
+    connection.on("NewUserContactAdded", (data) => {
+        const userAlreadyExists = contactedUsersResult.data.some(u => u.ContactedUser.id === data.sender.id);
+        
+        if(!userAlreadyExists) {
+            updateContacterUsers(
+                [
+                    ...contactedUsersResult.data,
+                    data
+                ]
+            )
+        }
+    })
+
+    connection.on("ReceiveMessage", data => {
+        console.log(data)
+        setContactedUsersWithNewMsg(
+            [
+                ...contactedUsersWithNewMsg,
+                data.sender.id
+            ]
+        )
+    });
+
 
     return (
         <div className="text-white">
@@ -50,10 +72,11 @@ const DirectMessages = ({errorHandler}) => {
             </div>
             <p className="text-left">Direct messages</p>
             <div className="flex items-start flex-col">
-                {result && result.data.map(({contactedUser: {id, userName}}) => (
+                {contactedUsersResult && contactedUsersResult.data.map(({contactedUser: {id, userName}}) => (
                     <DirectMessageItem 
                         key={id}
                         to={`${ROUTES.DIRECT_MESSAGE}/${id}`}
+                        className={contactedUsersWithNewMsg.includes(id) && "text-rose-700"}
                     >
                         {userName}
                     </DirectMessageItem>

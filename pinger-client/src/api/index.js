@@ -7,6 +7,7 @@ import getPrivateMessagesEndpoint from './getPrivateMessagesEndpoint';
 import getChannelEndpoints from './getChannelEndpoints';
 import jwtInterceptor from './interceptors/jwtInterceptor';
 import getChannelMessageEndpoints from './getChannelMessageEndpoints';
+import getChannelMessageReadTimesEndpoints from './getChannelMessageReadTimesEndpoints';
 
 export const createPingerClient = () => {
   const instance = axios.create({
@@ -27,6 +28,7 @@ export const createPingerClient = () => {
   const { getPrivateMessages } = getPrivateMessagesEndpoint(instance);
   const { getChannelMessages } = getChannelMessageEndpoints(instance);
   const { createChannel, getChannels, getChannel, addUserToChannel } = getChannelEndpoints(instance);
+  const { updateChannelMessageReadTime } = getChannelMessageReadTimesEndpoints(instance);
   jwtInterceptor(instance, refreshToken);
   
   return {
@@ -47,7 +49,8 @@ export const createPingerClient = () => {
     getChannels,
     getChannel,
     getChannelMessages,
-    addUserToChannel
+    addUserToChannel,
+    updateChannelMessageReadTime
   };
 };
 

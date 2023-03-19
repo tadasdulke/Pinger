@@ -29,11 +29,11 @@ const UserBar = () => {
 }
 
 
-const ChatOptionsMenu = () => {
+const ChatOptionsMenu = ({connection}) => {
     return (
         <div>
             <UserBar/>
-            <DirectMessages/>
+            <DirectMessages connection={connection}/>
         </div>
     )
 }

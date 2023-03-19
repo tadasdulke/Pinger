@@ -33,10 +33,18 @@ const useFetchData = (
     })();
   }, deps);
 
+  const setData = (data) => {
+    setResult({
+      ...result,
+      data: data
+    })
+  }
+
   return {
     result,
     loaded,
     reload: core,
+    setData
   };
 };
 
