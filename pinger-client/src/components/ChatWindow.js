@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import cx from 'classnames'
+import { useSelector, useDispatch } from 'react-redux';
 import { useOnScreen } from '@Common'
-import { useSelector } from 'react-redux';
-
 
 const Message = ({body, isMessageSent}) => (
     <div className={cx("p-[10px] mt-[10px] bg-green-500 rounded-[5px] max-w-[49%] break-words", isMessageSent ? "self-start" : "self-end")}>
@@ -10,7 +9,7 @@ const Message = ({body, isMessageSent}) => (
     </div>
 )
 
-const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, lazyLoadComponent}) => {
+const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, lazyLoadComponent, onIsAtButtonUpdate}) => {
     const { userId: senderId } = useSelector(state => state.auth)
     const [messageValue, setMessageValue] = useState('');
     const [seeNewMessagesButtonVisible, setSeeNewMessagesButtonVisible] = useState(false);
@@ -31,10 +30,18 @@ const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, 
     }, [messages])
 
     useEffect(() => {
+        scrollToBottom();
+    }, [])
+
+    useEffect(() => {
         if(isAtBottom) 
         {
             setSeeNewMessagesButtonVisible(false);
         }
+    }, [isAtBottom])
+
+    useEffect(() => {
+        onIsAtButtonUpdate && onIsAtButtonUpdate(isAtBottom)
     }, [isAtBottom])
 
     return (

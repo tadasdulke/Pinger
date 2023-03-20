@@ -6,6 +6,8 @@ import { changeChatOccupierInfo } from '@Store/slices/chat';
 import { ChatWindow } from '@Components'
 import getPrivateMessages from './services/getPrivateMessages';
 import useFetchChatSpaceMember from './hooks/useFetchChatSpaceMember'
+import { updateChatType, updateIsAtButton } from '@Store/slices/chat';
+import { removeUserHighlight } from '@Store/slices/contactedUsers';
 
 const PrivateChat = ({errorHandler}) => {
     const dispatch = useDispatch();
@@ -14,15 +16,28 @@ const PrivateChat = ({errorHandler}) => {
     const [messages, setMessages] = useState([]);
     const { member } = useFetchChatSpaceMember(errorHandler, receiverId, null, [receiverId]);
     
-    connection.on("ReceiveMessage", data => {
-        if(data.sender.id === receiverId) {
+    useEffect(() => {
+        const callBack = (data) => {
+            if(data.sender.id === receiverId) {
+                setMessages([...messages, data])
+            }
+        }
+
+        connection.on("ReceiveMessage", callBack);
+
+        return () => connection.off("ReceiveMessage", callBack);
+    }, [receiverId, messages])
+
+
+    useEffect(() => {
+        const callBack = data => {
             setMessages([...messages, data])
         }
-    });
 
-    connection.on("MessageSent", data => {
-        setMessages([...messages, data])
-    });
+        connection.on("MessageSent", callBack);
+
+        return () => connection.off("MessageSent", callBack)
+    }, [messages])
 
     const { loaded, result } = useFetchData(
         () => getPrivateMessages(receiverId),
@@ -46,10 +61,6 @@ const PrivateChat = ({errorHandler}) => {
         }
     }, [member])
 
-    useEffect(() => {
-        connection.off("ReceiveMessage");
-    }, [receiverId])
-
     const sendMessage = (messageValue) => {
         connection.invoke("SendPrivateMessage", receiverId, messageValue)
     }
@@ -60,11 +71,21 @@ const PrivateChat = ({errorHandler}) => {
         scrollToBottom();
     }
 
+    useEffect(() => {
+        dispatch(updateChatType("DIRECT_MESSAGE"))
+    }, [])
+
+    const onIsAtButtonUpdate = (isAtBottom) => {
+        dispatch(updateIsAtButton(isAtBottom))
+        dispatch(removeUserHighlight(receiverId))
+    }
+
     return (
         <ChatWindow
             receiverName={member?.userName}
             messages={messages}
             handleMessageSending={handleSubmit}
+            onIsAtButtonUpdate={onIsAtButtonUpdate}
         />
     )
 }

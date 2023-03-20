@@ -3,12 +3,16 @@ import LOCAL_STORAGE_ITEMS from '@Common/config/localStorageItems'
 import authReducer from './slices/auth'
 import workspaceReducer from './slices/workspaces'
 import chatReducer from './slices/chat'
+import contactedUsersReducer from './slices/contactedUsers'
+import channelsReducer from './slices/channels'
 
 const store = configureStore({
     reducer: {
         auth: authReducer,
         workspace: workspaceReducer,
-        chat: chatReducer
+        chat: chatReducer,
+        contactedUsers: contactedUsersReducer,
+        channels: channelsReducer
     },
     preloadedState: {
         auth: {
