@@ -20,7 +20,6 @@ const RegisterForm = ({errorHandler}) => {
 
     const handleSubmit = async ({email, username, password}) => {
         const response = await sendAction(email, username, password);
-        console.log(response)
         
         if(response.status === 200) {
             navigate(ROUTES.LOGIN)

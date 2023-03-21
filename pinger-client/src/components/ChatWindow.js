@@ -61,7 +61,7 @@ const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, 
                 }
                 <div ref={scrollRef} className="absolute overflow-y-auto bottom-0 top-0 left-0 right-0">
                     <div className="px-[10px] flex flex-col">
-                        {lazyLoadComponent}
+                            {lazyLoadComponent}
                             {messages.map(({id, body, sender}) => (
                                 <Message
                                     key={id}

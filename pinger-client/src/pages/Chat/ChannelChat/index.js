@@ -9,7 +9,8 @@ import getChannel from './services/getChannel'
 import getChannelMessages from './services/getChannelMessages'
 import AddUsersToChannel from './components/AddUsersToChannel'
 import updateChannelMessageReadTime from './services/updateChannelMessageReadTime'
-import { updateChatType, changeChatOccupierInfo } from '@Store/slices/chat';
+import { updateChatType, changeChatOccupierInfo, updateIsAtButton } from '@Store/slices/chat';
+import { removeChannelHighlight } from '@Store/slices/channels';
 
 
 const ChannelChat = ({errorHandler}) => {
@@ -20,11 +21,12 @@ const ChannelChat = ({errorHandler}) => {
         offset: 0,
     });
     const { channelId } = useParams();
+    const convertedChannelId = parseInt(channelId)
     const { connection } = useOutletContext();
 
     const sendMessage = (event, scrollToBottom) => {
         event.preventDefault()
-        connection.invoke("SendGroupMessage", parseInt(channelId), event.target.message.value)
+        connection.invoke("SendGroupMessage", convertedChannelId, event.target.message.value)
         scrollToBottom();
     }
     
@@ -39,6 +41,19 @@ const ChannelChat = ({errorHandler}) => {
         connection.on("ReceiveGroupMessage", callBack);
 
         return () => connection.off("ReceiveGroupMessage", callBack);
+    }, [messages])
+    
+    useEffect(() => {
+        const callBack = (data) => {
+            setMessages([
+                ...messages,
+                data
+            ]);
+        }
+
+        connection.on("GroupMessageSent", callBack);
+
+        return () => connection.off("GroupMessageSent", callBack);
     }, [messages])
 
     const { loaded, result } = useFetchData(
@@ -69,22 +84,30 @@ const ChannelChat = ({errorHandler}) => {
     }
 
     const { sendAction: updateReadTime } =  useApiAction(
-        () => updateChannelMessageReadTime(channelId),
+        () => updateChannelMessageReadTime(convertedChannelId),
         errorHandler
     )
 
     useEffect(() => {
         dispatch(updateChatType('CHANNEL_CHAT'))
         dispatch(changeChatOccupierInfo({
-            channelId
+            channelId: convertedChannelId
         }))
     }, [])
+
+
+    const onIsAtButtonUpdate = (isAtBottom) => {
+        dispatch(updateIsAtButton(isAtBottom))
+        dispatch(removeChannelHighlight(convertedChannelId))
+    }
+
 
     return ( 
         <ChatWindow
             receiverName={result?.data?.name}
             messages={messages}
             handleMessageSending={sendMessage}
+            onIsAtButtonUpdate={onIsAtButtonUpdate}
             lazyLoadComponent={
                 <button onClick={handleAdditionalLoad}>
                     load more

@@ -15,9 +15,37 @@ const channelsSlice = createSlice({
 
         return [...state, modifiedChannel]
       },
+      highlightChannel: (state, action) => {
+        const channelId = action.payload;
+
+        return state.map(channel => {
+          if(channel.id === channelId) {
+            return {
+              ...channel,
+              highlighted: true
+            }
+          }
+
+          return channel;
+        })
+      },
+      removeChannelHighlight: (state, action) => {
+        const channelId = action.payload;
+
+        return state.map(channel => {
+          if(channel.id === channelId) {
+            return {
+              ...channel,
+              highlighted: false
+            }
+          }
+
+          return channel;
+        })
+      }
     }
 })
 
 export default channelsSlice.reducer;
 
-export const { addChannel } = channelsSlice.actions;
+export const { addChannel, highlightChannel, removeChannelHighlight } = channelsSlice.actions;

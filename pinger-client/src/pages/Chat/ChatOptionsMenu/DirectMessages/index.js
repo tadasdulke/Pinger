@@ -7,7 +7,7 @@ import { useFetchData, withErrorWrapper } from "@Common"
 import getContactedUsers from './services/getContactedUsers';
 import getChannels from './services/getChannels'
 import { addContactedUser, highlightUser } from '@Store/slices/contactedUsers';
-import { addChannel } from '@Store/slices/channels';
+import { addChannel, highlightChannel, removeChannelHighlight } from '@Store/slices/channels';
 
 const DirectMessageItem = ({to, children, className}) => (
     <Link 
@@ -22,7 +22,7 @@ const DirectMessages = ({errorHandler, connection}) => {
     const dispatch = useDispatch();
     const {users: contactedUsers} = useSelector(state => state.contactedUsers)
     const { channels } = useSelector(state => state)
-    const { occupierInfo: chatOccupierInfo, isAtButton } = useSelector(state => state.chat)
+    const { occupierInfo: chatOccupierInfo, isAtButton, chatType } = useSelector(state => state.chat)
     const { loaded, result: contactedUsersResult } = useFetchData(
         getContactedUsers,
         errorHandler,
@@ -50,25 +50,21 @@ const DirectMessages = ({errorHandler, connection}) => {
     }, [channelsResult])
     
 
-    // put this in useeffect
-    connection.on("NewUserContactAdded", (data) => {
-        const userAlreadyExists = contactedUsersResult.data.some(u => u.ContactedUser.id === data.sender.id);
-        
-        if(!userAlreadyExists) {
-            updateContacterUsers(
-                [
-                    ...contactedUsersResult.data,
-                    data
-                ]
-            )
+    useEffect(() => {
+        const callBack = (data) => {
+            dispatch(addContactedUser(data.contactedUser))
         }
-    })
+
+        connection.on("NewUserContactAdded", callBack);
+
+        return () => connection.off("NewUserContactAdded", callBack);
+    }, [])
 
     useEffect(() => {
         const callBack = (data) => {
             const senderId = data.sender.id;
             const isSenderCurrentlyInMessaging = chatOccupierInfo.userId === senderId;
-            console.log(isAtButton)
+            console.log(senderId)
             if(!isSenderCurrentlyInMessaging) {
                 dispatch(highlightUser(senderId))
             }
@@ -78,15 +74,35 @@ const DirectMessages = ({errorHandler, connection}) => {
             }
         }
 
-        if(chatOccupierInfo.userId) {
-            connection.on("ReceiveMessage", callBack);
-        }
+        connection.on("ReceiveMessage", callBack);
 
         return () => {
             connection.off("ReceiveMessage", callBack)
         }
 
     }, [chatOccupierInfo.userId, isAtButton])
+
+    useEffect(() => {
+        const callBack = (data) => {
+            const channelId = data.channelId;
+            console.log(chatOccupierInfo.channelId, channelId, isAtButton)
+            if(chatOccupierInfo.channelId !== channelId) {
+                dispatch(highlightChannel(channelId));
+            }
+
+            if(chatOccupierInfo.channelId === channelId && !isAtButton) {
+                dispatch(highlightChannel(channelId));
+            }
+
+        }
+
+        connection.on("ReceiveGroupMessage", callBack);
+
+        return () => {
+            connection.off("ReceiveGroupMessage", callBack)
+        }
+
+    }, [chatOccupierInfo.channelId, chatType, isAtButton])
 
 
     return (

@@ -88,9 +88,6 @@ namespace pinger_api_service
             List<ConnectionInformation> filteredConnectionInformations = receiver.ConnectionInformations.Where(ci => ci.ChatSpace.Id == chatspaceId).ToList();
 
             var sentMessage = await _privateMessageManager.AddPrivateMessage(senderId, receiverId, chatspaceId, message);
-            
-            await Clients.Client(Context.ConnectionId).SendAsync("MessageSent", sentMessage);
-            await SendToMulitpleClients(filteredConnectionInformations, "ReceiveMessage", sentMessage);
 
             // Add contacted user for receiver if not added
             
@@ -122,6 +119,21 @@ namespace pinger_api_service
                 _dbContext.ContactedUserInfo.Add(contactedUserInfo);
                 await _dbContext.SaveChangesAsync();
             }
+
+            var sentMessageObj = new {
+                Id = sentMessage.Id,
+                Receiver = new {
+                    Id = sentMessage.Receiver.Id,
+                },
+                Sender = new {
+                    Id = sentMessage.Sender.Id
+                },
+                SentAt = sentMessage.SentAt,
+                Body = sentMessage.Body,
+            };
+
+            await Clients.Client(Context.ConnectionId).SendAsync("MessageSent", sentMessageObj);
+            await SendToMulitpleClients(filteredConnectionInformations, "ReceiveMessage", sentMessageObj);
         }
 
         private async Task SendToMulitpleClients(List<ConnectionInformation> connectionInformation, string method, object message) 
@@ -149,7 +161,14 @@ namespace pinger_api_service
                 message
             );
 
-             await Clients.Group(groupName).SendAsync("ReceiveGroupMessage", new {
+            User? sender = await _dbContext.Users
+                .Include(u => u.ConnectionInformations)
+                .Where(u => u.Id == senderId)
+                .FirstOrDefaultAsync();
+
+            List<string> senderConnectionIds = sender.ConnectionInformations.Select(ci => ci.ConnectionId).ToList();
+
+            var sentMessageDto = new {
                 Id = sentMessage.Id,
                 Sender = new {
                     Id = sentMessage.Sender.Id
@@ -157,7 +176,10 @@ namespace pinger_api_service
                 ChannelId = sentMessage.Channel.Id,
                 SentAt = sentMessage.SentAt,
                 Body = sentMessage.Body
-             });
+            };
+
+            await Clients.Client(Context.ConnectionId).SendAsync("GroupMessageSent", sentMessageDto);
+            await Clients.GroupExcept(groupName, senderConnectionIds).SendAsync("ReceiveGroupMessage", sentMessageDto);
         }
     }
 } 
