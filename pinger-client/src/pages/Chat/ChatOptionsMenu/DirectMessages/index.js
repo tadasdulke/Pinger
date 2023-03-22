@@ -64,7 +64,6 @@ const DirectMessages = ({errorHandler, connection}) => {
         const callBack = (data) => {
             const senderId = data.sender.id;
             const isSenderCurrentlyInMessaging = chatOccupierInfo.userId === senderId;
-            console.log(senderId)
             if(!isSenderCurrentlyInMessaging) {
                 dispatch(highlightUser(senderId))
             }
@@ -85,7 +84,6 @@ const DirectMessages = ({errorHandler, connection}) => {
     useEffect(() => {
         const callBack = (data) => {
             const channelId = data.channelId;
-            console.log(chatOccupierInfo.channelId, channelId, isAtButton)
             if(chatOccupierInfo.channelId !== channelId) {
                 dispatch(highlightChannel(channelId));
             }
@@ -114,7 +112,7 @@ const DirectMessages = ({errorHandler, connection}) => {
                         <DirectMessageItem 
                             key={id}
                             to={`${ROUTES.CHANNEL_CHAT}/${id}`}
-                            className={highlighted && "text-rose-700"}
+                            className={highlighted && "font-extrabold"}
                         >
                             {name}
                         </DirectMessageItem>
@@ -130,7 +128,7 @@ const DirectMessages = ({errorHandler, connection}) => {
                     <DirectMessageItem 
                         key={id}
                         to={`${ROUTES.DIRECT_MESSAGE}/${id}`}
-                        className={highlighted && "text-rose-700"}
+                        className={highlighted && "font-extrabold"}
                     >
                         {userName}
                     </DirectMessageItem>

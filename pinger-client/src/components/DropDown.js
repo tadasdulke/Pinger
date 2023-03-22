@@ -8,11 +8,11 @@ const DropDown = ({activationElement, options}) => {
 
     const toggle = () => setExpanded(!expanded)
 
-    const dropDownOptions = options.map(({buttonText, svg, componentToRender}, index) => (
+    const dropDownOptions = options?.map(({buttonText, svg, action, componentToRender}, index) => (
         <button
             key={index}
             className="flex justify-between text-left w-full rounded-[5px] whitespace-nowrap hover:bg-slate-300 p-[16px] mr-[10px]" 
-            onClick={() => setCurrentComponentFunc(componentToRender)}
+            onClick={() => action(toggle) || setCurrentComponentFunc(componentToRender)}
         >
             {svg && 
                 <ReactSVG 

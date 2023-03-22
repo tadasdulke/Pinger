@@ -8,6 +8,8 @@ import getPrivateMessages from './services/getPrivateMessages';
 import useFetchChatSpaceMember from './hooks/useFetchChatSpaceMember'
 import { updateChatType, updateIsAtButton } from '@Store/slices/chat';
 import { removeUserHighlight } from '@Store/slices/contactedUsers';
+import useRemovePrivateMessage from './hooks/useRemovePrivateMessage'
+import useUpdatePrivateMessage from './hooks/useUpdatePrivateMessage'
 
 const PrivateChat = ({errorHandler}) => {
     const dispatch = useDispatch();
@@ -15,6 +17,8 @@ const PrivateChat = ({errorHandler}) => {
     const { receiverId } = useParams();
     const [messages, setMessages] = useState([]);
     const { member } = useFetchChatSpaceMember(errorHandler, receiverId, null, [receiverId]);
+    const { sendRemoveMessageAction } = useRemovePrivateMessage(errorHandler)
+    const { sendUpdateMessageAction } = useUpdatePrivateMessage(errorHandler)
     
     useEffect(() => {
         const callBack = (data) => {
@@ -37,6 +41,39 @@ const PrivateChat = ({errorHandler}) => {
         connection.on("MessageSent", callBack);
 
         return () => connection.off("MessageSent", callBack)
+    }, [messages])
+
+    useEffect(() => {
+        const callBack = data => {
+            const senderId = data.sender.id;
+
+            if(senderId === receiverId) {
+                const messageId = data.id;
+                setMessages(messages.filter(m => m.id !== messageId))
+            }
+        }
+
+        connection.on("PrivateMessageRemoved", callBack);
+
+        return () => connection.off("PrivateMessageRemoved", callBack)
+    }, [messages])
+
+    useEffect(() => {
+        const callBack = data => {
+            const modifiedMessages = messages.map(message => {
+                if(message.id === data.id) {
+                    return data;
+                }
+
+                return message;
+            })
+
+            setMessages(modifiedMessages)
+        }
+
+        connection.on("PrivateMessageUpdated", callBack);
+
+        return () => connection.off("PrivateMessageUpdated", callBack)
     }, [messages])
 
     const { loaded, result } = useFetchData(
@@ -65,7 +102,7 @@ const PrivateChat = ({errorHandler}) => {
         connection.invoke("SendPrivateMessage", receiverId, messageValue)
     }
     
-    const handleSubmit = (event, scrollToBottom) => {
+    const handleMessageSending = (event, scrollToBottom) => {
         event.preventDefault();
         sendMessage(event.target.message.value)
         scrollToBottom();
@@ -80,12 +117,44 @@ const PrivateChat = ({errorHandler}) => {
         dispatch(removeUserHighlight(receiverId))
     }
 
+
+    const handleMessageEdit = async (event, {id}) => {
+        event.preventDefault();
+        const editedMessage = event.target.message.value;
+        const { status } = await sendUpdateMessageAction(id, editedMessage);
+
+        if(status === 204) {
+            const modifiedMessages = messages.map(message => {
+                if(message.id === id) {
+                    return {
+                        ...message,
+                        body: editedMessage,
+                    }
+                }
+
+                return message;
+            })
+
+            setMessages(modifiedMessages);
+        }
+    }
+
+    const removeMessage = async (id) => {
+        const { status } = await sendRemoveMessageAction(id);
+
+        if(status === 204) {
+            setMessages(messages.filter(m => m.id !== id));
+        }
+    };
+
     return (
         <ChatWindow
             receiverName={member?.userName}
             messages={messages}
-            handleMessageSending={handleSubmit}
+            handleMessageSending={handleMessageSending}
             onIsAtButtonUpdate={onIsAtButtonUpdate}
+            removeMessage={removeMessage}
+            handleMessageEdit={handleMessageEdit}
         />
     )
 }

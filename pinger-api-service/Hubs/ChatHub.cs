@@ -111,8 +111,10 @@ namespace pinger_api_service
 
 
                 var contactedUserInfoToSend = new {
-                    Owner = receiver,
-                    ContactedUser = sender,
+                    ContactedUser = new {
+                        Id = sender.Id,
+                        userName = sender.UserName
+                    }
                 };
 
                 await SendToMulitpleClients(filteredConnectionInformations, "NewUserContactAdded", contactedUserInfoToSend);
@@ -124,9 +126,11 @@ namespace pinger_api_service
                 Id = sentMessage.Id,
                 Receiver = new {
                     Id = sentMessage.Receiver.Id,
+                    UserName = sentMessage.Receiver.UserName,
                 },
                 Sender = new {
-                    Id = sentMessage.Sender.Id
+                    Id = sentMessage.Sender.Id,
+                    UserName = sentMessage.Sender.UserName
                 },
                 SentAt = sentMessage.SentAt,
                 Body = sentMessage.Body,
@@ -141,6 +145,10 @@ namespace pinger_api_service
             foreach(ConnectionInformation connectionInfo in connectionInformation) {
                 await Clients.Client(connectionInfo.ConnectionId).SendAsync(method, message);   
             }
+        }
+
+        public async Task Ping() {
+            await Clients.Client(Context.ConnectionId).SendAsync("Pong");
         }
 
         public async Task SendGroupMessage(int channelId, string message)
@@ -171,7 +179,8 @@ namespace pinger_api_service
             var sentMessageDto = new {
                 Id = sentMessage.Id,
                 Sender = new {
-                    Id = sentMessage.Sender.Id
+                    Id = sentMessage.Sender.Id,
+                    UserName = sentMessage.Sender.UserName
                 },
                 ChannelId = sentMessage.Channel.Id,
                 SentAt = sentMessage.SentAt,

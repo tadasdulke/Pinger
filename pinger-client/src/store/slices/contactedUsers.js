@@ -7,6 +7,12 @@ const contactedUsersSlice = createSlice({
     },
     reducers: {
       addContactedUser: (state, action) => {
+        const userAlreadyExists = state.users.some(u => u.id === action.payload.id);
+
+        if(userAlreadyExists) {
+          return state;
+        }
+
         const modifiedUser = {
           ...action.payload,
           highlighted: false

@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import { Container, Row, Col } from 'react-grid-system';
 import {HubConnectionBuilder} from "@microsoft/signalr";
 import { Outlet } from 'react-router-dom';
@@ -7,6 +7,7 @@ import ChatOptionsMenu from './ChatOptionsMenu'
 
 const Chat = () => {
     const connection = new HubConnectionBuilder().withUrl("http://localhost:5122/hubs/chat").build()
+    
     useEffect(() => {
         (async () => {
             await apiClient.refreshToken();

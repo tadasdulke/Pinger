@@ -7,6 +7,7 @@ namespace pinger_api_service
         private readonly ApplicationDbContext _dbContext;
         private readonly ApplicationUserManager _applicationUserManager;
         private readonly IChatSpaceManager _chatSpaceManager;
+        
 
         public PrivateMessagesManager(
             ApplicationDbContext dbContext, 
@@ -52,6 +53,25 @@ namespace pinger_api_service
                 .Where(pm => (pm.Sender.Id == senderId) || (pm.Sender.Id == receiverId))
                 .Where(pm => pm.ChatSpace.Id == chatspaceId)
                 .ToList();
+        }
+
+        public async Task<PrivateMessage?> RemovePrivateMessage(long messageId, string senderId)
+        {
+            PrivateMessage? privateMessageToRemove = _dbContext.PrivateMessage
+                .Include(pm => pm.Sender)
+                .Include(pm => pm.Receiver)
+                .ThenInclude(receiver => receiver.ConnectionInformations)
+                .Where(pm => pm.Id == messageId)
+                .Where(pm => pm.Sender.Id == senderId)
+                .FirstOrDefault();
+
+            if(privateMessageToRemove is null) {
+                return null;
+            }
+
+            _dbContext.PrivateMessage.Remove(privateMessageToRemove);
+            await _dbContext.SaveChangesAsync();
+            return privateMessageToRemove;
         }
     }
 }

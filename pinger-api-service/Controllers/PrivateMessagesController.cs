@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace pinger_api_service
 {
@@ -10,12 +12,19 @@ namespace pinger_api_service
         private ApplicationDbContext _dbContext;
         private IPrivateMessagesManager _privateMessagesManager;
         private readonly ApplicationUserManager _userManager;
+        private readonly IHubContext<ChatHub> _hubContext;
 
-        public PrivateMessagesController(ApplicationDbContext dbContext, ApplicationUserManager userManager, IPrivateMessagesManager privateMessagesManager)
+        public PrivateMessagesController(
+            ApplicationDbContext dbContext, 
+            ApplicationUserManager userManager, 
+            IPrivateMessagesManager privateMessagesManager,
+            IHubContext<ChatHub> hubContext    
+        )
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _privateMessagesManager = privateMessagesManager;
+            _hubContext = hubContext;
         }
 
         [Authorize]
@@ -28,6 +37,88 @@ namespace pinger_api_service
             List<PrivateMessage> privateMessages = _privateMessagesManager.GetPrivateMessages(senderId, receiverId, chatSpaceId);
             
             return privateMessages;
+        }
+
+        [Authorize]
+        [HttpDelete]
+        [Route("{messageId}")]
+        public async Task<IActionResult> RemovePrivateMessage([FromRoute] long messageId)
+        {
+            string senderId = _userManager.GetUserId(User);
+            PrivateMessage? privateMessage = await _privateMessagesManager.RemovePrivateMessage(messageId, senderId);
+
+            if(privateMessage is null) {
+                return NotFound();
+            }
+
+            
+            List<ConnectionInformation> receiverConnectionInformation = privateMessage.Receiver.ConnectionInformations.ToList(); 
+            List<string> connectionIds = receiverConnectionInformation.Select(ci => ci.ConnectionId).ToList();
+
+            var removedMessageDto = new {
+                Id = privateMessage.Id,
+                Receiver = new {
+                    Id = privateMessage.Receiver.Id,
+                    UserName = privateMessage.Receiver.UserName,
+                },
+                Sender = new {
+                    Id = privateMessage.Sender.Id,
+                    UserName = privateMessage.Sender.UserName,
+                },
+                SentAt = privateMessage.SentAt,
+                Body = privateMessage.Body,
+            };
+
+            await _hubContext.Clients.Clients(connectionIds).SendAsync("PrivateMessageRemoved", removedMessageDto);
+
+
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpPut]
+        [Route("{messageId}")]
+        public async Task<IActionResult> UpdatePrivateMessage([FromRoute] long messageId, [FromBody] UpdatePrivateMessageRequest updatePrivateMessageRequest)
+        {
+            string senderId = _userManager.GetUserId(User);
+            PrivateMessage? messageToEdit = _dbContext.PrivateMessage
+                .Include(pm => pm.Receiver)
+                .ThenInclude(receiver => receiver.ConnectionInformations)
+                .Include(pm => pm.Sender)
+                .Where(pm => pm.Sender.Id == senderId)
+                .Where(pm => pm.Id == messageId)
+                .FirstOrDefault();
+
+            if(messageToEdit is null) {
+                return NotFound();
+            }
+
+            messageToEdit.Body = updatePrivateMessageRequest.Body;
+            _dbContext.PrivateMessage.Update(messageToEdit);
+            await _dbContext.SaveChangesAsync();
+
+            
+            List<ConnectionInformation> receiverConnectionInformation = messageToEdit.Receiver.ConnectionInformations.ToList(); 
+            List<string> connectionIds = receiverConnectionInformation.Select(ci => ci.ConnectionId).ToList();
+
+            var updateMessageDto = new {
+                Id = messageToEdit.Id,
+                Receiver = new {
+                    Id = messageToEdit.Receiver.Id,
+                    UserName = messageToEdit.Receiver.UserName,
+                },
+                Sender = new {
+                    Id = messageToEdit.Sender.Id,
+                    UserName = messageToEdit.Sender.UserName,
+                },
+                SentAt = messageToEdit.SentAt,
+                Body = messageToEdit.Body,
+            };
+
+            await _hubContext.Clients.Clients(connectionIds).SendAsync("PrivateMessageUpdated", updateMessageDto);
+
+
+            return NoContent();
         }
     }
 } 

@@ -16,8 +16,44 @@ const getPrivateMessagesEndpoint = (instance) => {
         };
     };
 
+    const removePrivateMessage = async (messageId) => {
+        const response = await instance.delete(`${API_SERVICE_ENDPOINTS.PRIVATE_MESSAGES}/${messageId}`, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const {status, data} = response;
+
+        return {
+            status,
+            data
+        };
+    };
+
+    const updatePrivateMessage = async (messageId, body) => {
+        const response = await instance.put(`${API_SERVICE_ENDPOINTS.PRIVATE_MESSAGES}/${messageId}`, 
+        {
+            body
+        },
+        {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const {status, data} = response;
+
+        return {
+            status,
+            data
+        };
+    };
+
     return {
         getPrivateMessages,
+        removePrivateMessage,
+        updatePrivateMessage
     }
 }
 

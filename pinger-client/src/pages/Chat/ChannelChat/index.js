@@ -78,8 +78,8 @@ const ChannelChat = ({errorHandler}) => {
 
     const handleAdditionalLoad = () => {
         setFetchingOptions({
-            step: 50,
-            offset: fetchingOptions.offset + 50, 
+            step: 10,
+            offset: fetchingOptions.offset + fetchingOptions.step, 
         })
     }
 

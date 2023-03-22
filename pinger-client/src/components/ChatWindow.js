@@ -1,17 +1,62 @@
 import React, { useState, useRef, useEffect } from 'react';
 import cx from 'classnames'
-import { useSelector, useDispatch } from 'react-redux';
 import { useOnScreen } from '@Common'
+import { useSelector } from 'react-redux';
+import { DropDown } from '@Components'
+import { ReactSVG } from 'react-svg';
 
-const Message = ({body, isMessageSent}) => (
-    <div className={cx("p-[10px] mt-[10px] bg-green-500 rounded-[5px] max-w-[49%] break-words", isMessageSent ? "self-start" : "self-end")}>
-        {body}
-    </div>
-)
+const Message = ({body, sender, id, removeMessage, initiateEditionMode}) => {
+    const { userId } = useSelector(state => state.auth)
 
-const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, lazyLoadComponent, onIsAtButtonUpdate}) => {
-    const { userId: senderId } = useSelector(state => state.auth)
+    return (
+        <div className={cx("p-[10px] mt-[10px] flex justify-between text-white group")}>
+            <div className="flex max-w-[90%]">
+                <div className="mr-[10px] max-w-[40px] max-h-[40px]">
+                    <img src="http://localhost:5122/public/profile-pic.png" width="100%" height="100%"/>
+                </div>
+                <div className="flex flex-col">
+                    <div className="font-medium">
+                        {sender?.userName}
+                    </div>
+                    <div className="break-all">
+                        {body}
+                    </div>
+                </div>
+            </div>
+            <div className={cx("flex-col hidden", {
+                "group-hover:flex": sender.id === userId
+            })}>
+                <DropDown 
+                    activationElement={(toggle) => (
+                        <button onClick={toggle}>
+                            <ReactSVG 
+                                src="http://localhost:5122/public/icons/three-dots-vertical.svg" 
+                                beforeInjection={(svg) => {
+                                    svg.setAttribute('width', '24px')
+                                    svg.setAttribute('height', '24px')
+                                }}
+                            />
+                        </button>
+                    )}
+                    options={[
+                        {
+                            buttonText: "Remove",
+                            action: (toggle) => {removeMessage(id); toggle()}
+                        },
+                        {
+                            buttonText: "Edit",
+                            action: (toggle) => {initiateEditionMode(id); toggle()}
+                        },
+                    ]}
+                />
+            </div>
+        </div>
+    )}
+
+const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, lazyLoadComponent, onIsAtButtonUpdate, removeMessage, handleMessageEdit}) => {
     const [messageValue, setMessageValue] = useState('');
+    const [selectedMessage, setSelectedMessage] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
     const [seeNewMessagesButtonVisible, setSeeNewMessagesButtonVisible] = useState(false);
     const messageEndRef = useRef();
     const scrollRef = useRef();
@@ -19,6 +64,13 @@ const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, 
 
     const scrollToBottom = (options) => {
         messageEndRef.current?.scrollIntoView(options)
+    }
+
+    const initiateEditionMode = (id) => {
+        const messageToEdit = messages.find(m => m.id === id);
+        setMessageValue(messageToEdit.body)
+        setSelectedMessage(messageToEdit)
+        setIsEditing(true);
     }
 
     useEffect(() => {
@@ -44,6 +96,14 @@ const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, 
         onIsAtButtonUpdate && onIsAtButtonUpdate(isAtBottom)
     }, [isAtBottom])
 
+
+    const handleMessageEditProxy = (event) => {
+        handleMessageEdit(event, selectedMessage)
+        setSelectedMessage(null);
+        setIsEditing(false);
+        setMessageValue('')
+    }
+
     return (
         <div className="flex justify-between flex-col h-full">
             <div className="flex justify-between bg-tuna p-[20px] text-white">
@@ -66,14 +126,17 @@ const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, 
                                 <Message
                                     key={id}
                                     body={body}
-                                    isMessageSent={sender?.id === senderId}
+                                    sender={sender}
+                                    id={id}
+                                    removeMessage={removeMessage}
+                                    initiateEditionMode={initiateEditionMode}
                                 />
                             ))}
                         <div ref={messageEndRef} />
                     </div>
                 </div>
             </div>
-            <form onSubmit={(event) => handleMessageSending(event, scrollToBottom)} className="flex bg-tuna p-[10px]">
+            <form onSubmit={(event) => isEditing ? handleMessageEditProxy(event) : handleMessageSending(event, scrollToBottom)} className="flex bg-tuna p-[10px]">
                 <input 
                     type="text" 
                     className="w-full"
