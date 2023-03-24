@@ -12,7 +12,7 @@ const DropDown = ({activationElement, options}) => {
         <button
             key={index}
             className="flex justify-between text-left w-full rounded-[5px] whitespace-nowrap hover:bg-slate-300 p-[16px] mr-[10px]" 
-            onClick={() => action(toggle) || setCurrentComponentFunc(componentToRender)}
+            onClick={() => action && action(toggle) || setCurrentComponentFunc(componentToRender)}
         >
             {svg && 
                 <ReactSVG 

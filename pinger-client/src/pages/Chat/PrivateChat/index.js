@@ -102,9 +102,8 @@ const PrivateChat = ({errorHandler}) => {
         connection.invoke("SendPrivateMessage", receiverId, messageValue)
     }
     
-    const handleMessageSending = (event, scrollToBottom) => {
-        event.preventDefault();
-        sendMessage(event.target.message.value)
+    const handleMessageSending = (message, scrollToBottom) => {
+        sendMessage(message)
         scrollToBottom();
     }
 
@@ -118,9 +117,8 @@ const PrivateChat = ({errorHandler}) => {
     }
 
 
-    const handleMessageEdit = async (event, {id}) => {
-        event.preventDefault();
-        const editedMessage = event.target.message.value;
+    const handleMessageEdit = async (message, {id}) => {
+        const editedMessage = message;
         const { status } = await sendUpdateMessageAction(id, editedMessage);
 
         if(status === 204) {
@@ -129,6 +127,7 @@ const PrivateChat = ({errorHandler}) => {
                     return {
                         ...message,
                         body: editedMessage,
+                        edited: true,
                     }
                 }
 

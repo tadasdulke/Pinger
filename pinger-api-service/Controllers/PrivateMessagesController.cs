@@ -94,6 +94,7 @@ namespace pinger_api_service
             }
 
             messageToEdit.Body = updatePrivateMessageRequest.Body;
+            messageToEdit.Edited = true;
             _dbContext.PrivateMessage.Update(messageToEdit);
             await _dbContext.SaveChangesAsync();
 
@@ -113,6 +114,7 @@ namespace pinger_api_service
                 },
                 SentAt = messageToEdit.SentAt,
                 Body = messageToEdit.Body,
+                Edited = messageToEdit.Edited,
             };
 
             await _hubContext.Clients.Clients(connectionIds).SendAsync("PrivateMessageUpdated", updateMessageDto);

@@ -24,9 +24,8 @@ const ChannelChat = ({errorHandler}) => {
     const convertedChannelId = parseInt(channelId)
     const { connection } = useOutletContext();
 
-    const sendMessage = (event, scrollToBottom) => {
-        event.preventDefault()
-        connection.invoke("SendGroupMessage", convertedChannelId, event.target.message.value)
+    const sendMessage = (message, scrollToBottom) => {
+        connection.invoke("SendGroupMessage", convertedChannelId, message)
         scrollToBottom();
     }
     

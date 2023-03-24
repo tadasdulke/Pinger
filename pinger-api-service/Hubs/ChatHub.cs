@@ -134,6 +134,7 @@ namespace pinger_api_service
                 },
                 SentAt = sentMessage.SentAt,
                 Body = sentMessage.Body,
+                Edited = sentMessage.Edited,
             };
 
             await Clients.Client(Context.ConnectionId).SendAsync("MessageSent", sentMessageObj);

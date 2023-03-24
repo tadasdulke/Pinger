@@ -41,6 +41,7 @@ namespace pinger_api_service
             var messages = _dbContext.ChannelMessage
                 .OrderByDescending(cm => cm.SentAt)
                 .Include(cm => cm.Channel)
+                .Include(cm => cm.Sender)
                 .Where(cm => cm.Channel.Id == channelId)
                 .Skip(offset)
                 .Take(step)

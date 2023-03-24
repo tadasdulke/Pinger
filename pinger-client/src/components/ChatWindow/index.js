@@ -4,22 +4,27 @@ import { useOnScreen } from '@Common'
 import { useSelector } from 'react-redux';
 import { DropDown } from '@Components'
 import { ReactSVG } from 'react-svg';
+import { renderToString } from 'react-dom/server';
+import InputEmoji from 'react-input-emoji'
 
-const Message = ({body, sender, id, removeMessage, initiateEditionMode}) => {
+import './index.css'
+
+const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited}) => {
     const { userId } = useSelector(state => state.auth)
 
     return (
         <div className={cx("p-[10px] mt-[10px] flex justify-between text-white group")}>
             <div className="flex max-w-[90%]">
-                <div className="mr-[10px] max-w-[40px] max-h-[40px]">
+                <div className="mr-[10px] max-w-[40px] max-h-[40px] min-w-[40px] min-h-[40px]">
                     <img src="http://localhost:5122/public/profile-pic.png" width="100%" height="100%"/>
                 </div>
                 <div className="flex flex-col">
-                    <div className="font-medium">
-                        {sender?.userName}
+                    <div className="flex items-center">
+                        <span className="font-medium mr-[5px]">{sender?.userName}</span>
+                        {edited && <span className="text-xs">(Edited)</span>}
                     </div>
                     <div className="break-all">
-                        {body}
+                        <div dangerouslySetInnerHTML={{ __html: body }} />
                     </div>
                 </div>
             </div>
@@ -97,10 +102,15 @@ const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, 
     }, [isAtBottom])
 
 
-    const handleMessageEditProxy = (event) => {
-        handleMessageEdit(event, selectedMessage)
+    const handleMessageEditProxy = () => {
+        handleMessageEdit(messageValue, selectedMessage)
         setSelectedMessage(null);
         setIsEditing(false);
+        setMessageValue('')
+    }
+
+    const handleMessageSendProxy = () => {
+        handleMessageSending(messageValue, scrollToBottom)
         setMessageValue('')
     }
 
@@ -122,13 +132,14 @@ const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, 
                 <div ref={scrollRef} className="absolute overflow-y-auto bottom-0 top-0 left-0 right-0">
                     <div className="px-[10px] flex flex-col">
                             {lazyLoadComponent}
-                            {messages.map(({id, body, sender}) => (
+                            {messages.map(({id, body, sender, edited}) => (
                                 <Message
                                     key={id}
                                     body={body}
                                     sender={sender}
                                     id={id}
                                     removeMessage={removeMessage}
+                                    edited={edited}
                                     initiateEditionMode={initiateEditionMode}
                                 />
                             ))}
@@ -136,21 +147,16 @@ const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, 
                     </div>
                 </div>
             </div>
-            <form onSubmit={(event) => isEditing ? handleMessageEditProxy(event) : handleMessageSending(event, scrollToBottom)} className="flex bg-tuna p-[10px]">
-                <input 
-                    type="text" 
-                    className="w-full"
-                    name="message"
-                    value={messageValue} 
-                    onChange={(e) => setMessageValue(e.target.value)} 
+            <div className="p-[10px] bg-tuna">
+                <InputEmoji
+                    value={messageValue}
+                    onChange={setMessageValue}
+                    cleanOnEnter
+                    borderRadius={5}
+                    onEnter={isEditing ? handleMessageEditProxy : handleMessageSendProxy}
+                    placeholder="Type a message"
                 />
-                <button 
-                    className="p-[3px] rounded-[3px] ml-[5px] text-white bg-green-500" 
-                    type="submit"
-                >
-                    Send
-                </button>
-            </form>
+            </div>
         </div>
     )
 }
