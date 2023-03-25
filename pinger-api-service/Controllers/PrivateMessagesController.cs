@@ -35,7 +35,7 @@ namespace pinger_api_service
             string senderId = _userManager.GetUserId(User);
             int chatSpaceId = _userManager.GetChatSpaceId(User);
             List<PrivateMessage> privateMessages = _privateMessagesManager.GetPrivateMessages(senderId, receiverId, chatSpaceId);
-            
+        
             return privateMessages;
         }
 
@@ -85,6 +85,7 @@ namespace pinger_api_service
                 .Include(pm => pm.Receiver)
                 .ThenInclude(receiver => receiver.ConnectionInformations)
                 .Include(pm => pm.Sender)
+                .Include(pm => pm.PrivateMessageFiles)
                 .Where(pm => pm.Sender.Id == senderId)
                 .Where(pm => pm.Id == messageId)
                 .FirstOrDefault();
@@ -115,6 +116,10 @@ namespace pinger_api_service
                 SentAt = messageToEdit.SentAt,
                 Body = messageToEdit.Body,
                 Edited = messageToEdit.Edited,
+                PrivateMessageFiles = messageToEdit.PrivateMessageFiles.Select(pmf => new {
+                    Id = pmf.Id,
+                    Name = pmf.Name,
+                })
             };
 
             await _hubContext.Clients.Clients(connectionIds).SendAsync("PrivateMessageUpdated", updateMessageDto);

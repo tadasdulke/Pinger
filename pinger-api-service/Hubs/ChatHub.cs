@@ -76,7 +76,7 @@ namespace pinger_api_service
             await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task SendPrivateMessage(string receiverId, string message)
+        public async Task SendPrivateMessage(string receiverId, string message, int[] fileIds)
         {
             int chatspaceId = _userManager.GetChatSpaceId(Context.User);
             string senderId = _userManager.GetUserId(Context.User);
@@ -87,7 +87,7 @@ namespace pinger_api_service
                 .FirstOrDefaultAsync(u => u.Id == receiverId);
             List<ConnectionInformation> filteredConnectionInformations = receiver.ConnectionInformations.Where(ci => ci.ChatSpace.Id == chatspaceId).ToList();
 
-            var sentMessage = await _privateMessageManager.AddPrivateMessage(senderId, receiverId, chatspaceId, message);
+            var sentMessage = await _privateMessageManager.AddPrivateMessage(senderId, receiverId, chatspaceId, message, fileIds);
 
             // Add contacted user for receiver if not added
             
@@ -135,6 +135,10 @@ namespace pinger_api_service
                 SentAt = sentMessage.SentAt,
                 Body = sentMessage.Body,
                 Edited = sentMessage.Edited,
+                PrivateMessageFiles = sentMessage.PrivateMessageFiles.Select(pmf => new {
+                    Id = pmf.Id,
+                    Name = pmf.Name,
+                })
             };
 
             await Clients.Client(Context.ConnectionId).SendAsync("MessageSent", sentMessageObj);

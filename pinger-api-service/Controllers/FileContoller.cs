@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using System.Diagnostics;
 
 namespace pinger_api_service.Controllers;
 
@@ -15,17 +16,6 @@ public class FileController : ControllerBase
     {
         _dbContext = dbContext;
         _userManager = userManager;
-    }
-
-    [HttpGet]
-    [Authorize]
-    [Route("download-public/{filename}")]
-    public async Task<IActionResult> DownloadPublic(string filename)
-    {
-        // var filePath = Path.Combine("/app/data/public", filename);
-
-        // return PhysicalFile(filePath, "image/jpeg");
-        throw new NotImplementedException();
     }
 
     [HttpPost]
@@ -47,48 +37,76 @@ public class FileController : ControllerBase
         return Ok(new { fileName = file.FileName, size }); // Possible XSS vuln with filename. Fix this
     }
 
-    [Authorize]
-    [HttpPost]
-    [Route("upload-private")]
-    public async Task<IActionResult> UploadPrivate(IFormFile file)
-    {
-        string userId = _userManager.GetUserId(User);
+    // [Authorize]
+    // [HttpPost]
+    // [Route("upload-private")]
+    // public async Task<ActionResult<File>> UploadPrivate(IFormFile file)
+    // {
+    //     string userId = _userManager.GetUserId(User);
+    //     long size = file.Length;
+    //     string fileName = file.FileName;
         
-        long size = file.Length;
+    //     if(size > 2000000) {
+    //         return BadRequest();
+    //     }
 
-        if (size > 0)
-        {
-            var directoryPath = Path.Combine("/app/data/private", userId);
-            System.IO.Directory.CreateDirectory(directoryPath);
+    //     string directoryPath = Path.Combine(Environment.CurrentDirectory, "data/private/", userId);
+    //     System.IO.Directory.CreateDirectory(directoryPath);
 
-            var filePath = Path.Combine(directoryPath, file.FileName);
-            using (var stream = System.IO.File.Create(filePath))
-            {
-                await file.CopyToAsync(stream);
-            }
+    //     var filePath = Path.Combine(directoryPath, fileName);
+
+    //     if (size >= 0)
+    //     {
+    //         using (var stream = System.IO.File.Create(filePath))
+    //         {
+    //             await file.CopyToAsync(stream);
+    //         }
+    //     }
+
+    //     File newFile = new File{
+    //         Path = Path.Combine("data/private", userId, filePath)
+    //     };
+
+    //     await _dbContext.File.AddAsync(newFile);
+    //     await _dbContext.SaveChangesAsync();
+
+    //     return newFile;
+    // }
+
+    [Authorize]
+    [HttpGet]
+    [Route("private-file/{fileName}")]
+    public IActionResult GetDocumentBytes(string fileName)
+    {
+        string filePath = Path.Combine(Environment.CurrentDirectory, "data/private", fileName);
+
+        if(!System.IO.File.Exists(filePath)) {
+            return NotFound(); 
         }
 
-        return Ok(new { fileName = file.FileName, size }); // Possible XSS vuln with filename. Fix this
+        byte[] byteArray = System.IO.File.ReadAllBytes(filePath);
+        return new FileContentResult(byteArray, "application/pdf");
     }
 
     [Authorize]
-    [HttpPost]
-    [Route("remove-private")]
-    public async Task<IActionResult> RemovePrivate([FromBody] DeleteFile deletedFile)
+    [HttpDelete]
+    [Route("private-file/{fileName}")]
+    public async Task<IActionResult> RemovePrivate([FromRoute] string fileName)
     {
-        if(deletedFile.FileName.Trim() == String.Empty || deletedFile.FileName is null) {
+        if(fileName.Trim() == String.Empty || fileName is null) {
             return BadRequest();
         }
 
         string userId = _userManager.GetUserId(User);
-        string filePath = Path.Combine("/app/data/private", userId, deletedFile.FileName);
+        string filePath = Path.Combine(Environment.CurrentDirectory, "data/private", userId, fileName);
+        var fileExists = System.IO.File.Exists(filePath);
         
-        if(System.IO.File.Exists(filePath)) {
+        if(fileExists) {
             System.IO.File.Delete(filePath);
         } else {
             return NotFound();
         }
 
-        return Ok(new { fileName = deletedFile.FileName }); // Possible XSS vuln with filename. Fix this
+        return Ok(new { fileName = fileName });
     }
 }

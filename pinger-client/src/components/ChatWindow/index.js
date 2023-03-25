@@ -8,7 +8,7 @@ import { DropDown, FileUploadButton, FileList } from '@Components'
 
 import './index.css'
 
-const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited}) => {
+const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited, privateMessageFiles}) => {
     const { userId } = useSelector(state => state.auth)
 
     return (
@@ -22,9 +22,23 @@ const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited})
                         <span className="font-medium mr-[5px]">{sender?.userName}</span>
                         {edited && <span className="text-xs">(Edited)</span>}
                     </div>
-                    <div className="break-all">
-                        <div dangerouslySetInnerHTML={{ __html: body }} />
+                    <div className={cx("break-all", {
+                        "mb-[10px]": privateMessageFiles.length > 0
+                    })}>
+                        {body}
                     </div>
+                    {privateMessageFiles.map(({id, name}) => (
+                        <div key={id} className="flex items-center">
+                            <ReactSVG 
+                                src="http://localhost:5122/public/icons/file.svg" 
+                                beforeInjection={(svg) => {
+                                    svg.setAttribute('width', '24px')
+                                    svg.setAttribute('height', '24px')
+                                }}
+                            />
+                            <a href={`http://localhost:5122/api/private-message-file/${id}`} target="_blank" download={name} className="text-white ml-[10px]">{name}</a>
+                        </div>
+                    ))}
                 </div>
             </div>
             <div className={cx("flex-col hidden", {
@@ -65,10 +79,11 @@ const ChatWindow = ({
     lazyLoadComponent, 
     onIsAtButtonUpdate, 
     removeMessage, 
-    handleMessageEdit
+    handleMessageEdit,
+    handleFilesUpload,
+    files
 }) => {
     const [messageValue, setMessageValue] = useState('');
-    const [files, setFiles] = useState([]);
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [seeNewMessagesButtonVisible, setSeeNewMessagesButtonVisible] = useState(false);
@@ -141,12 +156,13 @@ const ChatWindow = ({
                 <div ref={scrollRef} className="absolute overflow-y-auto bottom-0 top-0 left-0 right-0">
                     <div className="px-[10px] flex flex-col">
                             {lazyLoadComponent}
-                            {messages.map(({id, body, sender, edited}) => (
+                            {messages.map(({id, body, sender, edited, privateMessageFiles}) => (
                                 <Message
                                     key={id}
                                     body={body}
                                     sender={sender}
                                     id={id}
+                                    privateMessageFiles={privateMessageFiles}
                                     removeMessage={removeMessage}
                                     edited={edited}
                                     initiateEditionMode={initiateEditionMode}
@@ -168,11 +184,11 @@ const ChatWindow = ({
                     />
                     <FileUploadButton
                         files={files}
-                        setFiles={setFiles}
+                        uploadFiles={handleFilesUpload}
                     />
                 </div>
                 {files.length > 0 && (
-                    <FileList files={files} setFiles={setFiles}  />  
+                    <FileList files={files}  />  
                 )}
             </div>
         </div>

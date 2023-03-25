@@ -8,6 +8,8 @@ import getPrivateMessages from './services/getPrivateMessages';
 import useFetchChatSpaceMember from './hooks/useFetchChatSpaceMember'
 import { updateChatType, updateIsAtButton } from '@Store/slices/chat';
 import { removeUserHighlight } from '@Store/slices/contactedUsers';
+import { useUploadPrivateFiles } from '@Hooks'
+
 import useRemovePrivateMessage from './hooks/useRemovePrivateMessage'
 import useUpdatePrivateMessage from './hooks/useUpdatePrivateMessage'
 
@@ -19,6 +21,7 @@ const PrivateChat = ({errorHandler}) => {
     const { member } = useFetchChatSpaceMember(errorHandler, receiverId, null, [receiverId]);
     const { sendRemoveMessageAction } = useRemovePrivateMessage(errorHandler)
     const { sendUpdateMessageAction } = useUpdatePrivateMessage(errorHandler)
+    const { files, uploadFiles } = useUploadPrivateFiles()
     
     useEffect(() => {
         const callBack = (data) => {
@@ -98,12 +101,13 @@ const PrivateChat = ({errorHandler}) => {
         }
     }, [member])
 
-    const sendMessage = (messageValue) => {
-        connection.invoke("SendPrivateMessage", receiverId, messageValue)
+    const sendMessage = (messageValue, fileIds) => {
+        connection.invoke("SendPrivateMessage", receiverId, messageValue, fileIds)
     }
     
     const handleMessageSending = (message, scrollToBottom) => {
-        sendMessage(message)
+        const fileIds = files.map(({fileId}) => fileId);
+        sendMessage(message, fileIds)
         scrollToBottom();
     }
 
@@ -154,6 +158,8 @@ const PrivateChat = ({errorHandler}) => {
             onIsAtButtonUpdate={onIsAtButtonUpdate}
             removeMessage={removeMessage}
             handleMessageEdit={handleMessageEdit}
+            handleFilesUpload={(addedFiles) => uploadFiles(addedFiles, receiverId)}
+            files={files}
         />
     )
 }

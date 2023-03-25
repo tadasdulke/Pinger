@@ -36,6 +36,7 @@ module.exports = {
       '@Router': path.resolve(__dirname, 'src/router'),
       '@Utils': path.resolve(__dirname, 'src/utils'),
       '@Services': path.resolve(__dirname, 'src/services'),
+      '@Hooks': path.resolve(__dirname, 'src/hooks'),
     },
   },
   plugins: [

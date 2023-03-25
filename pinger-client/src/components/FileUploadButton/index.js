@@ -3,15 +3,16 @@ import { ReactSVG } from 'react-svg';
 
 import './index.css'
 
-const FileUploadButton = ({files, setFiles}) => {
+const FileUploadButton = ({files, uploadFiles}) => {
+
     const addFiles = (filesToAdd) => {
-        const filteredFiles = [...filesToAdd].filter(({name}) => !files.find(f => f.name === name));
-        setFiles([...files, ...filteredFiles])
+        const filteredFilesToAdd = [...filesToAdd].filter(({name}) => !files.find(f => f.file.name === name));
+        uploadFiles(filteredFilesToAdd);
     }
 
     return (
         <>
-            <label for="file-upload" class="custom-file-upload">
+            <label htmlFor="file-upload" className="custom-file-upload">
                 <ReactSVG 
                     src="http://localhost:5122/public/icons/add-file.svg" 
                     beforeInjection={(svg) => {

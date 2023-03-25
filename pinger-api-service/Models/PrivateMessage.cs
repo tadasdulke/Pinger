@@ -16,5 +16,6 @@ namespace pinger_api_service
         public DateTime SentAt { get; set; }
         public bool Edited { get; set; }
         public string Body {get; set;}
+        public ICollection<PrivateMessageFile> PrivateMessageFiles { get; set; }
     }
 }

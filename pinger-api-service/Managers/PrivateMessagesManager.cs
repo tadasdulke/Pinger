@@ -20,7 +20,13 @@ namespace pinger_api_service
             _chatSpaceManager = chatSpaceManager;
         }
 
-        public async Task<PrivateMessage> AddPrivateMessage(string senderId, string receiverId, int chatspaceId, string body)
+        public async Task<PrivateMessage> AddPrivateMessage(
+            string senderId, 
+            string receiverId, 
+            int chatspaceId, 
+            string body,
+            int[] fileIds
+        )
         {
             User sender = await _dbContext.Users.Where(u => u.Id == senderId).FirstOrDefaultAsync();
             User receiver = await _dbContext.Users.Where(u => u.Id == receiverId).FirstOrDefaultAsync();
@@ -30,12 +36,20 @@ namespace pinger_api_service
                 return null;
             }
 
+            List<PrivateMessageFile> privateMessageFiles = await _dbContext.PrivateMessageFile
+                .Include(pmf => pmf.Owner)
+                .Include(pmf => pmf.Receiver)
+                .Where(pmf => pmf.Owner.Id == senderId)
+                .Where(pmf => fileIds.Contains(pmf.Id))
+                .ToListAsync();
+
             PrivateMessage privateMessage = new PrivateMessage();
             privateMessage.Receiver = receiver;
             privateMessage.Sender = sender;
             privateMessage.ChatSpace = chatSpace;
             privateMessage.SentAt = DateTime.Now;
             privateMessage.Body = body;
+            privateMessage.PrivateMessageFiles = privateMessageFiles;
 
             await _dbContext.PrivateMessage.AddAsync(privateMessage);
             await _dbContext.SaveChangesAsync();
@@ -49,6 +63,7 @@ namespace pinger_api_service
                 .Include(pm => pm.Receiver)
                 .Include(pm => pm.Sender)
                 .Include(pm => pm.ChatSpace)
+                .Include(pm => pm.PrivateMessageFiles)
                 .Where(pm => (pm.Receiver.Id == receiverId) || (pm.Receiver.Id == senderId))
                 .Where(pm => (pm.Sender.Id == senderId) || (pm.Sender.Id == receiverId))
                 .Where(pm => pm.ChatSpace.Id == chatspaceId)
