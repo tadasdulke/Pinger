@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import cx from 'classnames'
-import { useOnScreen } from '@Common'
-import { useSelector } from 'react-redux';
-import { DropDown } from '@Components'
 import { ReactSVG } from 'react-svg';
-import { renderToString } from 'react-dom/server';
 import InputEmoji from 'react-input-emoji'
+import { useSelector } from 'react-redux';
+import { useOnScreen } from '@Common'
+import { DropDown, FileUploadButton, FileList } from '@Components'
 
 import './index.css'
 
@@ -58,8 +57,18 @@ const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited})
         </div>
     )}
 
-const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, lazyLoadComponent, onIsAtButtonUpdate, removeMessage, handleMessageEdit}) => {
+const ChatWindow = ({
+    receiverName, 
+    messages, 
+    handleMessageSending, 
+    chatActions, 
+    lazyLoadComponent, 
+    onIsAtButtonUpdate, 
+    removeMessage, 
+    handleMessageEdit
+}) => {
     const [messageValue, setMessageValue] = useState('');
+    const [files, setFiles] = useState([]);
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [seeNewMessagesButtonVisible, setSeeNewMessagesButtonVisible] = useState(false);
@@ -148,14 +157,23 @@ const ChatWindow = ({receiverName, messages, handleMessageSending, chatActions, 
                 </div>
             </div>
             <div className="p-[10px] bg-tuna">
-                <InputEmoji
-                    value={messageValue}
-                    onChange={setMessageValue}
-                    cleanOnEnter
-                    borderRadius={5}
-                    onEnter={isEditing ? handleMessageEditProxy : handleMessageSendProxy}
-                    placeholder="Type a message"
-                />
+                <div className="flex items-center">
+                    <InputEmoji
+                        value={messageValue}
+                        onChange={setMessageValue}
+                        cleanOnEnter
+                        borderRadius={5}
+                        onEnter={isEditing ? handleMessageEditProxy : handleMessageSendProxy}
+                        placeholder="Type a message"
+                    />
+                    <FileUploadButton
+                        files={files}
+                        setFiles={setFiles}
+                    />
+                </div>
+                {files.length > 0 && (
+                    <FileList files={files} setFiles={setFiles}  />  
+                )}
             </div>
         </div>
     )
