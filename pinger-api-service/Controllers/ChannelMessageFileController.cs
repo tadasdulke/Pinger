@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore;
 namespace pinger_api_service.Controllers;
 
 [ApiController]
-[Route("api/private-message-file")]
-public class PrivateMesssageFileController : ControllerBase
+[Route("api/channel-message-file")]
+public class FileMessageFileController : ControllerBase
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly ApplicationUserManager _userManager;
 
-    public PrivateMesssageFileController(ApplicationDbContext dbContext, ApplicationUserManager userManager)
+    public FileMessageFileController(ApplicationDbContext dbContext, ApplicationUserManager userManager)
     {
         _dbContext = dbContext;
         _userManager = userManager;
@@ -19,13 +19,13 @@ public class PrivateMesssageFileController : ControllerBase
 
     [Authorize]
     [HttpPost]
-    public async Task<ActionResult<PrivateMessageFile>> Upload([FromForm] IFormFile file, [FromForm] string receiverId)
+    public async Task<ActionResult<ChannelMessageFile>> Upload([FromForm] IFormFile file, [FromForm] int channelId)
     {
         string userId = _userManager.GetUserId(User);
-        User? receiver = await _userManager.FindByIdAsync(receiverId);
-        User? sender = await _userManager.FindByIdAsync(userId);
+        User? owner = await _userManager.FindByIdAsync(userId);
+        Channel? channel = await _dbContext.Channel.FirstOrDefaultAsync(c => c.Id == channelId);
 
-        if(receiver is null) {
+        if(channel is null) {
             return NotFound();
         }
 
@@ -36,7 +36,7 @@ public class PrivateMesssageFileController : ControllerBase
             return BadRequest(new { ErrorMessage = "File size cannot exceed 2MB" });
         }
 
-        string basePath = Path.Combine("data/private/", userId + "-" + receiverId);
+        string basePath = Path.Combine("data/private/", channelId.ToString());
         string directoryPath = Path.Combine(Environment.CurrentDirectory, basePath);
         System.IO.Directory.CreateDirectory(directoryPath);
 
@@ -53,46 +53,52 @@ public class PrivateMesssageFileController : ControllerBase
             }
         }
 
-        PrivateMessageFile privateMessageFile = new PrivateMessageFile{
+        ChannelMessageFile channelMessageFile = new ChannelMessageFile{
             Name=fileName,
             Path=filePath,
-            Owner = sender,
-            Receiver = receiver,
+            Owner = owner,
+            Channel = channel,
             ContentType = file.ContentType
         };
 
-        await _dbContext.PrivateMessageFile.AddAsync(privateMessageFile);
+        await _dbContext.ChannelMessageFile.AddAsync(channelMessageFile);
         await _dbContext.SaveChangesAsync();
 
-        return privateMessageFile;
+        return channelMessageFile;
     }
 
     [Authorize]
     [HttpGet]
     [Route("{fileId}")]
-    public async Task<IActionResult> GetDocumentBytes([FromRoute] int fileId)
+    public async Task<IActionResult> GetDocument([FromRoute] int fileId)
     {
         string userId = _userManager.GetUserId(User);
-        PrivateMessageFile? privateMessageFile = await _dbContext.PrivateMessageFile
-            .Include(pmf => pmf.Owner)
-            .Include(pmf => pmf.Receiver)
-            .Where(pmf => pmf.Owner.Id == userId || pmf.Receiver.Id == userId)
+        ChannelMessageFile? channelMessageFile = await _dbContext.ChannelMessageFile
+            .Include(cmf => cmf.Owner)
+            .Include(cmf => cmf.Channel)
+            .ThenInclude(c => c.Members)
             .Where(pmf => pmf.Id == fileId)
             .FirstOrDefaultAsync();
     
-        if(privateMessageFile is null) {
+        if(channelMessageFile is null) {
             return NotFound();
         }
 
-        string filePath = Path.Combine(privateMessageFile.Path);
+        bool canAccess = channelMessageFile.Owner.Id == userId || channelMessageFile.Channel.Members.Any(m => m.Id == userId);
+
+        if(canAccess) {
+            return Unauthorized();
+        }
+
+        string filePath = Path.Combine(channelMessageFile.Path);
 
         if(!System.IO.File.Exists(filePath)) {
             return NotFound(); 
         }
 
-        Response.Headers.Add("Content-Disposition", $"attachment;filename={privateMessageFile.Name}");
+        Response.Headers.Add("Content-Disposition", $"attachment;filename={channelMessageFile.Name}");
 
         byte[] byteArray = System.IO.File.ReadAllBytes(filePath);
-        return new FileContentResult(byteArray, privateMessageFile.ContentType);
+        return new FileContentResult(byteArray, channelMessageFile.ContentType);
     }
 }

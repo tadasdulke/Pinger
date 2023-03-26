@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { ReactSVG } from 'react-svg';
 
-const DropDown = ({activationElement, options}) => {
-    const [expanded, setExpanded] = useState(false);
-
+const DropDown = ({activationElement, options, setExpanded, expanded}) => {
     const [currentComponentFunc, setCurrentComponentFunc] = useState(null)
 
     const toggle = () => setExpanded(!expanded)

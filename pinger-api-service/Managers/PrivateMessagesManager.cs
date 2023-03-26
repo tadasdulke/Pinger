@@ -76,6 +76,7 @@ namespace pinger_api_service
                 .Include(pm => pm.Sender)
                 .Include(pm => pm.Receiver)
                 .ThenInclude(receiver => receiver.ConnectionInformations)
+                .Include(pm => pm.PrivateMessageFiles)
                 .Where(pm => pm.Id == messageId)
                 .Where(pm => pm.Sender.Id == senderId)
                 .FirstOrDefault();
@@ -84,6 +85,9 @@ namespace pinger_api_service
                 return null;
             }
 
+            List<PrivateMessageFile> privateMessageFiles = privateMessageToRemove.PrivateMessageFiles.ToList();
+
+            _dbContext.RemoveRange(privateMessageFiles);
             _dbContext.PrivateMessage.Remove(privateMessageToRemove);
             await _dbContext.SaveChangesAsync();
             return privateMessageToRemove;

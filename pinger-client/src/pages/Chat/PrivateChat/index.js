@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import { useOutletContext, useParams } from 'react-router-dom'
 import { useDispatch } from 'react-redux';
-import { useFetchData, withErrorWrapper } from '@Common';
+import { useFetchData, withErrorWrapper, useApiAction } from '@Common';
 import { changeChatOccupierInfo } from '@Store/slices/chat';
 import { ChatWindow } from '@Components'
 import getPrivateMessages from './services/getPrivateMessages';
@@ -9,6 +9,7 @@ import useFetchChatSpaceMember from './hooks/useFetchChatSpaceMember'
 import { updateChatType, updateIsAtButton } from '@Store/slices/chat';
 import { removeUserHighlight } from '@Store/slices/contactedUsers';
 import { useUploadPrivateFiles } from '@Hooks'
+import { uploadPrivateFile } from '@Services';
 
 import useRemovePrivateMessage from './hooks/useRemovePrivateMessage'
 import useUpdatePrivateMessage from './hooks/useUpdatePrivateMessage'
@@ -21,7 +22,10 @@ const PrivateChat = ({errorHandler}) => {
     const { member } = useFetchChatSpaceMember(errorHandler, receiverId, null, [receiverId]);
     const { sendRemoveMessageAction } = useRemovePrivateMessage(errorHandler)
     const { sendUpdateMessageAction } = useUpdatePrivateMessage(errorHandler)
-    const { files, uploadFiles } = useUploadPrivateFiles()
+    const { sendAction: uploadPrivateFileAction } = useApiAction(
+        (file, receiverId) => uploadPrivateFile(file, receiverId),
+    )
+    const { files, uploadFiles, setFiles } = useUploadPrivateFiles(uploadPrivateFileAction)
     
     useEffect(() => {
         const callBack = (data) => {
@@ -105,10 +109,19 @@ const PrivateChat = ({errorHandler}) => {
         connection.invoke("SendPrivateMessage", receiverId, messageValue, fileIds)
     }
     
-    const handleMessageSending = (message, scrollToBottom) => {
-        const fileIds = files.map(({fileId}) => fileId);
-        sendMessage(message, fileIds)
+    const handleMessageSending = (message, scrollToBottom, setMessageValue) => {
+        const allFilesLoaded = files.every(({loaded}) => loaded === true);
+
+        if(!allFilesLoaded) {
+            return;
+        }
+
+        const loadedFileIds = files.filter(({error}) => error === null).map(({fileId}) => fileId);
+
+        sendMessage(message, loadedFileIds)
         scrollToBottom();
+        setFiles([]);
+        setMessageValue('');
     }
 
     useEffect(() => {

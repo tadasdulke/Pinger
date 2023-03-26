@@ -1,12 +1,6 @@
 import { useState } from 'react';
-import { useApiAction } from '@Common';
-import { uploadPrivateFile } from '@Services';
 
-const useUploadPrivateFiles = () => {
-    const { sendAction } = useApiAction(
-        (file, receiverId) => uploadPrivateFile(file, receiverId),
-    )
-    
+const useUploadPrivateFiles = (uploadAction) => {
     const [files, setFiles] = useState([]);
 
     const updateFile = (fileToUpdate) => {
@@ -22,8 +16,8 @@ const useUploadPrivateFiles = () => {
         )
     }
 
-    const handleFileUpload  = async ({file}, receiverId) => {
-        const { status, data } = await sendAction(file, receiverId);
+    const handleFileUpload  = async ({file}, relatedUsersData) => {
+        const { status, data } = await uploadAction(file, relatedUsersData);
 
         if(status === 200) {
             const { id } = data;
@@ -31,7 +25,7 @@ const useUploadPrivateFiles = () => {
             return {
                 file,
                 loaded: true,
-                error: false,
+                error: null,
                 fileId: id,
             }
         }
@@ -39,22 +33,22 @@ const useUploadPrivateFiles = () => {
         return {
             file,
             loaded: true,
-            error: "Failed to upload",
+            error: data.errorMessage || "Failed to upload",
             fileId: null
         }
     }
 
-    const uploadFiles = async (filesToUpload, receiverId) => {
+    const uploadFiles = async (filesToUpload, relatedUsersData) => {
         const transformedFiles = filesToUpload.map(file => ({
             file,
             loaded: false,
-            error: false,
+            error: null,
             fileId: null,
         }))
 
         setFiles([...files, ...transformedFiles]);
 
-        transformedFiles.map((item) => handleFileUpload(item, receiverId)).forEach(async(promise) => {
+        transformedFiles.map((item) => handleFileUpload(item, relatedUsersData)).forEach(async(promise) => {
             const file = await promise;
             updateFile(file)
         })
@@ -63,6 +57,7 @@ const useUploadPrivateFiles = () => {
     return {
         uploadFiles,
         files,
+        setFiles
     }
 }
 

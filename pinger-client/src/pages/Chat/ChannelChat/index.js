@@ -11,10 +11,13 @@ import AddUsersToChannel from './components/AddUsersToChannel'
 import updateChannelMessageReadTime from './services/updateChannelMessageReadTime'
 import { updateChatType, changeChatOccupierInfo, updateIsAtButton } from '@Store/slices/chat';
 import { removeChannelHighlight } from '@Store/slices/channels';
+import { uploadChannelMessageFile } from '@Services';
+import { useUploadPrivateFiles } from '@Hooks'
 
 
 const ChannelChat = ({errorHandler}) => {
     const dispatch = useDispatch();
+    const [expanded, setExpanded] = useState(false);
     const [messages, setMessages] = useState([]);
     const [fetchingOptions, setFetchingOptions] = useState({
         step: 50,
@@ -23,9 +26,21 @@ const ChannelChat = ({errorHandler}) => {
     const { channelId } = useParams();
     const convertedChannelId = parseInt(channelId)
     const { connection } = useOutletContext();
+    const { sendAction: uploadChannelMessageFileAction } = useApiAction(
+        (file, channelId) => uploadChannelMessageFile(file, channelId),
+    )
+    const { files, uploadFiles, setFiles } = useUploadPrivateFiles(uploadChannelMessageFileAction)
 
     const sendMessage = (message, scrollToBottom) => {
-        connection.invoke("SendGroupMessage", convertedChannelId, message)
+        const allFilesLoaded = files.every(({loaded}) => loaded === true);
+
+        if(!allFilesLoaded) {
+            return;
+        }
+
+        const loadedFileIds = files.filter(({error}) => error === null).map(({fileId}) => fileId);
+
+        connection.invoke("SendGroupMessage", convertedChannelId, message, loadedFileIds)
         scrollToBottom();
     }
     
@@ -112,9 +127,13 @@ const ChannelChat = ({errorHandler}) => {
                     load more
                 </button>
             }
+            handleFilesUpload={(addedFiles) => uploadFiles(addedFiles, convertedChannelId)}
+            files={files}
             chatActions={
                 <>
-                    <DropDown 
+                    <DropDown
+                        expanded={expanded}
+                        setExpanded={setExpanded}
                         activationElement={(toggle) => (
                             <button onClick={toggle}>
                                 <ReactSVG 

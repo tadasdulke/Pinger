@@ -42,6 +42,7 @@ namespace pinger_api_service
                 .OrderByDescending(cm => cm.SentAt)
                 .Include(cm => cm.Channel)
                 .Include(cm => cm.Sender)
+                .Include(cm => cm.ChannelMessageFiles)
                 .Where(cm => cm.Channel.Id == channelId)
                 .Skip(offset)
                 .Take(step)

@@ -13,7 +13,13 @@ namespace pinger_api_service
             _userManager = userManager;
         }
 
-        public async Task<ChannelMessage> AddChannelMessage(string senderId, int channelId, DateTime sentAt, string body)
+        public async Task<ChannelMessage> AddChannelMessage(
+            string senderId, 
+            int channelId, 
+            DateTime sentAt, 
+            string body,
+            int[] fileIds
+        )
         {
             User sender = await _userManager.FindByIdAsync(senderId);
             Channel? channel = _dbContext.Channel.Include(channel => channel.Messages).FirstOrDefault(channel => channel.Id == channelId);
@@ -22,10 +28,18 @@ namespace pinger_api_service
                 return null;
             }
 
+            List<ChannelMessageFile> channelMessageFiles = await _dbContext.ChannelMessageFile
+                .Include(pmf => pmf.Owner)
+                .Where(pmf => pmf.Owner.Id == senderId)
+                .Where(pmf => fileIds.Contains(pmf.Id))
+                .ToListAsync();
+            
+
             ChannelMessage channelMessage = new ChannelMessage {
                 Sender = sender,
                 SentAt = sentAt,
-                Body = body
+                Body = body,
+                ChannelMessageFiles = channelMessageFiles
             };
 
             channel.Messages.Add(channelMessage);

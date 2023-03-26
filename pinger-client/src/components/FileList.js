@@ -1,5 +1,6 @@
 import React from 'react';
 import { ReactSVG } from 'react-svg';
+import cx from 'classnames'
 
 const  FileList = ({files}) => {
     const removeFile = ({name}) => {
@@ -21,8 +22,12 @@ const  FileList = ({files}) => {
                         />
                     </div>
                     <div className="flex justify-between w-full">
-                        <button type="button" className="ml-[10px] break-all text-left">
-                            <a key={fileId} href={`http://localhost:5122/api/private-message-file/${fileId}`} target="_blank" download={file.name} className="text-white mr-[10px]">{file.name}</a>
+                        <button type="button" disabled={!fileId} className="ml-[10px] text-left">
+                            {fileId ? 
+                                <a key={fileId} href={`http://localhost:5122/api/private-message-file/${fileId}`} target="_blank" download={file.name} className={cx("text-white mr-[10px] break-all")}>{file.name}</a>   
+                                :
+                                <span className="text-white mr-[10px] break-all">{file.name}</span>
+                            }
                             {!loaded && 
                                 (
                                     <span className="ml">
@@ -31,7 +36,7 @@ const  FileList = ({files}) => {
                                 )
                             }
                             {error && (
-                                <span className="text-red-600">
+                                <span className="text-red-600 break-words">
                                     {error}
                                 </span>
                             )}

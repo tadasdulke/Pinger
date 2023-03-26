@@ -10,9 +10,13 @@ import './index.css'
 
 const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited, privateMessageFiles}) => {
     const { userId } = useSelector(state => state.auth)
+    const [expanded, setExpanded] = useState(false);
 
     return (
-        <div className={cx("p-[10px] mt-[10px] flex justify-between text-white group")}>
+        <div 
+            className={cx("p-[10px] mt-[10px] flex justify-between text-white group")} 
+            onMouseLeave={() => setExpanded(false)}
+        >
             <div className="flex max-w-[90%]">
                 <div className="mr-[10px] max-w-[40px] max-h-[40px] min-w-[40px] min-h-[40px]">
                     <img src="http://localhost:5122/public/profile-pic.png" width="100%" height="100%"/>
@@ -22,12 +26,12 @@ const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited, 
                         <span className="font-medium mr-[5px]">{sender?.userName}</span>
                         {edited && <span className="text-xs">(Edited)</span>}
                     </div>
-                    <div className={cx("break-all", {
-                        "mb-[10px]": privateMessageFiles.length > 0
+                    <div className={cx("break-words", {
+                        "mb-[10px]": privateMessageFiles?.length > 0
                     })}>
                         {body}
                     </div>
-                    {privateMessageFiles.map(({id, name}) => (
+                    {privateMessageFiles?.map(({id, name}) => (
                         <div key={id} className="flex items-center">
                             <ReactSVG 
                                 src="http://localhost:5122/public/icons/file.svg" 
@@ -36,7 +40,7 @@ const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited, 
                                     svg.setAttribute('height', '24px')
                                 }}
                             />
-                            <a href={`http://localhost:5122/api/private-message-file/${id}`} target="_blank" download={name} className="text-white ml-[10px]">{name}</a>
+                            <a href={`http://localhost:5122/api/private-message-file/${id}`} target="_blank" download={name} className="text-white break-all hover:text-slate-300 ml-[10px]">{name}</a>
                         </div>
                     ))}
                 </div>
@@ -44,7 +48,9 @@ const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited, 
             <div className={cx("flex-col hidden", {
                 "group-hover:flex": sender.id === userId
             })}>
-                <DropDown 
+                <DropDown
+                    expanded={expanded}
+                    setExpanded={setExpanded}
                     activationElement={(toggle) => (
                         <button onClick={toggle}>
                             <ReactSVG 
@@ -134,8 +140,7 @@ const ChatWindow = ({
     }
 
     const handleMessageSendProxy = () => {
-        handleMessageSending(messageValue, scrollToBottom)
-        setMessageValue('')
+        handleMessageSending(messageValue, scrollToBottom, setMessageValue)
     }
 
     return (
@@ -156,7 +161,7 @@ const ChatWindow = ({
                 <div ref={scrollRef} className="absolute overflow-y-auto bottom-0 top-0 left-0 right-0">
                     <div className="px-[10px] flex flex-col">
                             {lazyLoadComponent}
-                            {messages.map(({id, body, sender, edited, privateMessageFiles}) => (
+                            {messages.map(({id, body, sender, edited, privateMessageFiles}) => ( //change to fit channel and dms needs
                                 <Message
                                     key={id}
                                     body={body}
@@ -182,12 +187,14 @@ const ChatWindow = ({
                         onEnter={isEditing ? handleMessageEditProxy : handleMessageSendProxy}
                         placeholder="Type a message"
                     />
-                    <FileUploadButton
+                    {!isEditing &&
+                        <FileUploadButton
                         files={files}
                         uploadFiles={handleFilesUpload}
                     />
+                    }
                 </div>
-                {files.length > 0 && (
+                {files?.length > 0 && (
                     <FileList files={files}  />  
                 )}
             </div>

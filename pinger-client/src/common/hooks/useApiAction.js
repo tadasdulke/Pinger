@@ -12,24 +12,22 @@ const useApiAction = (action, errorHandler = defaultErrorHandler, resolveErrorMe
 
   const sendAction = async (...args) => {
     try {
-      setLoaded(false);
+    setLoaded(false);
       const response = await action(...args);
       errorHandler.hideError();
 
       return response;
-    } catch ({ response: { status } }) {
+    } catch ({ response: { status, data } }) {
       const errorMessage = resolveErrorMessage === null
         ? DEFAULT_ERROR
         : resolveErrorMessage(status);
 
       errorHandler.showError(errorMessage);
       
-      return { status }
+      return { status, data }
     } finally {
       setLoaded(true);
     }
-
-    return null;
   };
 
   return {

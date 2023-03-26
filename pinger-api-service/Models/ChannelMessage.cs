@@ -11,5 +11,6 @@ namespace pinger_api_service
         public Channel Channel { get; set; }
         public DateTime SentAt { get; set; }
         public string Body {get; set;}
+        public ICollection<ChannelMessageFile> ChannelMessageFiles { get; set; }
     }
 }

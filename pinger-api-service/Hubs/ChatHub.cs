@@ -156,7 +156,7 @@ namespace pinger_api_service
             await Clients.Client(Context.ConnectionId).SendAsync("Pong");
         }
 
-        public async Task SendGroupMessage(int channelId, string message)
+        public async Task SendGroupMessage(int channelId, string message, int[] fileIds)
         {
             string senderId = _userManager.GetUserId(Context.User);
             Channel channel = _dbContext.Channel.FirstOrDefault(c => c.Id == channelId);
@@ -171,7 +171,8 @@ namespace pinger_api_service
                 senderId,
                 channelId,
                 DateTime.Now,
-                message
+                message,
+                fileIds
             );
 
             User? sender = await _dbContext.Users
@@ -189,7 +190,11 @@ namespace pinger_api_service
                 },
                 ChannelId = sentMessage.Channel.Id,
                 SentAt = sentMessage.SentAt,
-                Body = sentMessage.Body
+                Body = sentMessage.Body,
+                ChannelMessageFiles = sentMessage.ChannelMessageFiles.Select(pmf => new {
+                    Id = pmf.Id,
+                    Name = pmf.Name,
+                })
             };
 
             await Clients.Client(Context.ConnectionId).SendAsync("GroupMessageSent", sentMessageDto);
