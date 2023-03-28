@@ -122,27 +122,9 @@ namespace pinger_api_service
                 await _dbContext.SaveChangesAsync();
             }
 
-            var sentMessageObj = new {
-                Id = sentMessage.Id,
-                Receiver = new {
-                    Id = sentMessage.Receiver.Id,
-                    UserName = sentMessage.Receiver.UserName,
-                },
-                Sender = new {
-                    Id = sentMessage.Sender.Id,
-                    UserName = sentMessage.Sender.UserName
-                },
-                SentAt = sentMessage.SentAt,
-                Body = sentMessage.Body,
-                Edited = sentMessage.Edited,
-                PrivateMessageFiles = sentMessage.PrivateMessageFiles.Select(pmf => new {
-                    Id = pmf.Id,
-                    Name = pmf.Name,
-                })
-            };
-
-            await Clients.Client(Context.ConnectionId).SendAsync("MessageSent", sentMessageObj);
-            await SendToMulitpleClients(filteredConnectionInformations, "ReceiveMessage", sentMessageObj);
+            PrivateMessageDto privateMessageDto = new PrivateMessageDto(sentMessage);
+            await Clients.Client(Context.ConnectionId).SendAsync("MessageSent", privateMessageDto);
+            await SendToMulitpleClients(filteredConnectionInformations, "ReceiveMessage", privateMessageDto);
         }
 
         private async Task SendToMulitpleClients(List<ConnectionInformation> connectionInformation, string method, object message) 
@@ -182,23 +164,10 @@ namespace pinger_api_service
 
             List<string> senderConnectionIds = sender.ConnectionInformations.Select(ci => ci.ConnectionId).ToList();
 
-            var sentMessageDto = new {
-                Id = sentMessage.Id,
-                Sender = new {
-                    Id = sentMessage.Sender.Id,
-                    UserName = sentMessage.Sender.UserName
-                },
-                ChannelId = sentMessage.Channel.Id,
-                SentAt = sentMessage.SentAt,
-                Body = sentMessage.Body,
-                ChannelMessageFiles = sentMessage.ChannelMessageFiles.Select(pmf => new {
-                    Id = pmf.Id,
-                    Name = pmf.Name,
-                })
-            };
+            ChannelMessageDto channelMessageDto = new ChannelMessageDto(sentMessage);
 
-            await Clients.Client(Context.ConnectionId).SendAsync("GroupMessageSent", sentMessageDto);
-            await Clients.GroupExcept(groupName, senderConnectionIds).SendAsync("ReceiveGroupMessage", sentMessageDto);
+            await Clients.Client(Context.ConnectionId).SendAsync("GroupMessageSent", channelMessageDto);
+            await Clients.GroupExcept(groupName, senderConnectionIds).SendAsync("ReceiveGroupMessage", channelMessageDto);
         }
     }
 } 

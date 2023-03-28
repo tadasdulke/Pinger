@@ -2,9 +2,9 @@ import React from 'react';
 import { ReactSVG } from 'react-svg';
 import cx from 'classnames'
 
-const  FileList = ({files}) => {
-    const removeFile = ({name}) => {
-        const filteredFiles = files.filter(file => file.name !== name);
+const  FileList = ({files, setFiles}) => {
+    const removeFile = (name) => {
+        const filteredFiles = files.filter(({file}) => file.name !== name);
         setFiles(filteredFiles)
     }
 
@@ -41,7 +41,7 @@ const  FileList = ({files}) => {
                                 </span>
                             )}
                         </button>
-                        <button type="button" onClick={() => text-white()}>
+                        <button type="button" onClick={() => removeFile(file.name)}>
                             <ReactSVG 
                                 src="http://localhost:5122/public/icons/cross-small.svg" 
                                 beforeInjection={(svg) => {

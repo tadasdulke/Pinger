@@ -21,7 +21,7 @@ namespace pinger_api_service
 
         [Authorize]
         [HttpGet]
-        [Route("contacted-users")]
+        [Route("contacted-users")] 
         public async Task<ActionResult<List<ContactedUserInfoDto>>> GetContactedUsers()
         {
             string userId = _userManager.GetUserId(User);
@@ -39,14 +39,7 @@ namespace pinger_api_service
             
             List<ContactedUserInfo> contactedUsers = user.ContactedUsersInfo.Where(userInfo => userInfo.ChatSpace.Id == chatspaceId).ToList();
 
-            return contactedUsers.Select(cu => 
-                new ContactedUserInfoDto 
-                { 
-                    ContactedUser = new UserDto {
-                        Id = cu.ContactedUser.Id, UserName = cu.ContactedUser.UserName
-                    }
-                }
-            ).ToList();
+            return contactedUsers.Select(cu => new ContactedUserInfoDto(cu)).ToList();
         }
 
         [Authorize]

@@ -8,7 +8,7 @@ import { DropDown, FileUploadButton, FileList } from '@Components'
 
 import './index.css'
 
-const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited, privateMessageFiles}) => {
+const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited, files, fileDownloadEndpoint}) => {
     const { userId } = useSelector(state => state.auth)
     const [expanded, setExpanded] = useState(false);
 
@@ -26,12 +26,10 @@ const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited, 
                         <span className="font-medium mr-[5px]">{sender?.userName}</span>
                         {edited && <span className="text-xs">(Edited)</span>}
                     </div>
-                    <div className={cx("break-words", {
-                        "mb-[10px]": privateMessageFiles?.length > 0
-                    })}>
+                    <div className="break-words">
                         {body}
                     </div>
-                    {privateMessageFiles?.map(({id, name}) => (
+                    {files?.map(({id, name}) => (
                         <div key={id} className="flex items-center">
                             <ReactSVG 
                                 src="http://localhost:5122/public/icons/file.svg" 
@@ -40,7 +38,7 @@ const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited, 
                                     svg.setAttribute('height', '24px')
                                 }}
                             />
-                            <a href={`http://localhost:5122/api/private-message-file/${id}`} target="_blank" download={name} className="text-white break-all hover:text-slate-300 ml-[10px]">{name}</a>
+                            <a href={`http://localhost:5122/api/${fileDownloadEndpoint}/${id}`} target="_blank" download={name} className="text-white break-all hover:text-slate-300 ml-[10px]">{name}</a>
                         </div>
                     ))}
                 </div>
@@ -87,7 +85,9 @@ const ChatWindow = ({
     removeMessage, 
     handleMessageEdit,
     handleFilesUpload,
-    files
+    files,
+    setFiles,
+    fileDownloadEndpoint
 }) => {
     const [messageValue, setMessageValue] = useState('');
     const [selectedMessage, setSelectedMessage] = useState(null);
@@ -139,10 +139,6 @@ const ChatWindow = ({
         setMessageValue('')
     }
 
-    const handleMessageSendProxy = () => {
-        handleMessageSending(messageValue, scrollToBottom, setMessageValue)
-    }
-
     return (
         <div className="flex justify-between flex-col h-full">
             <div className="flex justify-between bg-tuna p-[20px] text-white">
@@ -161,16 +157,13 @@ const ChatWindow = ({
                 <div ref={scrollRef} className="absolute overflow-y-auto bottom-0 top-0 left-0 right-0">
                     <div className="px-[10px] flex flex-col">
                             {lazyLoadComponent}
-                            {messages.map(({id, body, sender, edited, privateMessageFiles}) => ( //change to fit channel and dms needs
+                            {messages.map((message) => (
                                 <Message
-                                    key={id}
-                                    body={body}
-                                    sender={sender}
-                                    id={id}
-                                    privateMessageFiles={privateMessageFiles}
+                                    key={message.id}
+                                    {...message}
                                     removeMessage={removeMessage}
-                                    edited={edited}
                                     initiateEditionMode={initiateEditionMode}
+                                    fileDownloadEndpoint={fileDownloadEndpoint}
                                 />
                             ))}
                         <div ref={messageEndRef} />
@@ -184,7 +177,7 @@ const ChatWindow = ({
                         onChange={setMessageValue}
                         cleanOnEnter
                         borderRadius={5}
-                        onEnter={isEditing ? handleMessageEditProxy : handleMessageSendProxy}
+                        onEnter={isEditing ? handleMessageEditProxy : () => handleMessageSending(messageValue, scrollToBottom, setMessageValue)}
                         placeholder="Type a message"
                     />
                     {!isEditing &&
@@ -195,7 +188,7 @@ const ChatWindow = ({
                     }
                 </div>
                 {files?.length > 0 && (
-                    <FileList files={files}  />  
+                    <FileList setFiles={setFiles} files={files}  />  
                 )}
             </div>
         </div>

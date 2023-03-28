@@ -13,7 +13,8 @@ import { updateChatType, changeChatOccupierInfo, updateIsAtButton } from '@Store
 import { removeChannelHighlight } from '@Store/slices/channels';
 import { uploadChannelMessageFile } from '@Services';
 import { useUploadPrivateFiles } from '@Hooks'
-
+import removeChannelMessage from './services/removeChannelMessage'
+import updateChannelMessage from './services/updateChannelMessage'
 
 const ChannelChat = ({errorHandler}) => {
     const dispatch = useDispatch();
@@ -29,9 +30,15 @@ const ChannelChat = ({errorHandler}) => {
     const { sendAction: uploadChannelMessageFileAction } = useApiAction(
         (file, channelId) => uploadChannelMessageFile(file, channelId),
     )
+    const { sendAction: updateChannelMessageAction } = useApiAction(
+        (messageId, body) => updateChannelMessage(messageId, body),
+    )
+    const { sendAction: removeChannelMessageAction } = useApiAction(
+        (messageId) => removeChannelMessage(messageId),
+    )
     const { files, uploadFiles, setFiles } = useUploadPrivateFiles(uploadChannelMessageFileAction)
 
-    const sendMessage = (message, scrollToBottom) => {
+    const sendMessage = (message, scrollToBottom, setMessageValue) => {
         const allFilesLoaded = files.every(({loaded}) => loaded === true);
 
         if(!allFilesLoaded) {
@@ -42,6 +49,8 @@ const ChannelChat = ({errorHandler}) => {
 
         connection.invoke("SendGroupMessage", convertedChannelId, message, loadedFileIds)
         scrollToBottom();
+        setFiles([]);
+        setMessageValue('');
     }
     
     useEffect(() => {
@@ -70,16 +79,31 @@ const ChannelChat = ({errorHandler}) => {
         return () => connection.off("GroupMessageSent", callBack);
     }, [messages])
 
+
+    useEffect(() => {
+        const callBack = (data) => {
+            const messageId = data.id;
+            setMessages(messages.filter(message => message.id !== messageId));
+        }
+
+        connection.on("RemoveChannelMessage", callBack);
+
+        return () => connection.off("GroupMessageSent", callBack);
+    }, [messages])
+
     const { loaded, result } = useFetchData(
         () => getChannel(channelId),
-        errorHandler
+        errorHandler,
+        null,
+        [channelId]
     )
+    
 
     const { result: channelMessagesResult } = useFetchData(
         () => getChannelMessages(channelId, fetchingOptions.offset, fetchingOptions.step),
         errorHandler,
         null,
-        [fetchingOptions]
+        [fetchingOptions, channelId]
     )
 
     useEffect(() => {
@@ -107,28 +131,58 @@ const ChannelChat = ({errorHandler}) => {
         dispatch(changeChatOccupierInfo({
             channelId: convertedChannelId
         }))
-    }, [])
+    }, [channelId])
 
 
     const onIsAtButtonUpdate = (isAtBottom) => {
         dispatch(updateIsAtButton(isAtBottom))
         dispatch(removeChannelHighlight(convertedChannelId))
     }
+    
+    const removeMessage = async (messageId) => {
+        const { status } = await removeChannelMessageAction(messageId);
 
+        if(status === 204) {
+            setMessages(messages.filter(m => m.id !== messageId));
+        }
+    }
+
+    const handleMessageEdit = async (editedMessage, {id}) => {
+        const { status } = await updateChannelMessageAction(id, editedMessage);
+
+        if(status === 204) {
+            const modifiedMessages = messages.map(message => {
+                if(message.id === id) {
+                    return {
+                        ...message,
+                        body: editedMessage,
+                        edited: true,
+                    }
+                }
+
+                return message;
+            })
+            setMessages(modifiedMessages);
+        }
+    }
 
     return ( 
         <ChatWindow
             receiverName={result?.data?.name}
             messages={messages}
             handleMessageSending={sendMessage}
+            removeMessage={removeMessage}
+            handleMessageEdit={handleMessageEdit}
             onIsAtButtonUpdate={onIsAtButtonUpdate}
             lazyLoadComponent={
                 <button onClick={handleAdditionalLoad}>
                     load more
                 </button>
             }
+            fileDownloadEndpoint="channel-message-file"
             handleFilesUpload={(addedFiles) => uploadFiles(addedFiles, convertedChannelId)}
             files={files}
+            setFiles={setFiles}
             chatActions={
                 <>
                     <DropDown

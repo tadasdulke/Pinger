@@ -86,7 +86,7 @@ public class FileMessageFileController : ControllerBase
 
         bool canAccess = channelMessageFile.Owner.Id == userId || channelMessageFile.Channel.Members.Any(m => m.Id == userId);
 
-        if(canAccess) {
+        if(!canAccess) {
             return Unauthorized();
         }
 

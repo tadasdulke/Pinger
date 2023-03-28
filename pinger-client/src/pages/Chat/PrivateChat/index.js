@@ -72,7 +72,7 @@ const PrivateChat = ({errorHandler}) => {
                     return data;
                 }
 
-                return message;
+                return message;  
             })
 
             setMessages(modifiedMessages)
@@ -115,7 +115,7 @@ const PrivateChat = ({errorHandler}) => {
         if(!allFilesLoaded) {
             return;
         }
-
+``
         const loadedFileIds = files.filter(({error}) => error === null).map(({fileId}) => fileId);
 
         sendMessage(message, loadedFileIds)
@@ -158,7 +158,7 @@ const PrivateChat = ({errorHandler}) => {
     const removeMessage = async (id) => {
         const { status } = await sendRemoveMessageAction(id);
 
-        if(status === 204) {
+        if(status === 204) { 
             setMessages(messages.filter(m => m.id !== id));
         }
     };
@@ -173,6 +173,8 @@ const PrivateChat = ({errorHandler}) => {
             handleMessageEdit={handleMessageEdit}
             handleFilesUpload={(addedFiles) => uploadFiles(addedFiles, receiverId)}
             files={files}
+            setFiles={setFiles}
+            fileDownloadEndpoint="private-message-file"
         />
     )
 }

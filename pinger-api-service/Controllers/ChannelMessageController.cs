@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace pinger_api_service
@@ -10,17 +11,23 @@ namespace pinger_api_service
     {
         private readonly ApplicationUserManager _userManager;
         private readonly ApplicationDbContext _dbContext;
+        private readonly IHubContext<ChatHub> _hubContext;
 
-        public ChatMessageController(ApplicationUserManager userManager, ApplicationDbContext dbContext)
+        public ChatMessageController(
+            ApplicationUserManager userManager, 
+            ApplicationDbContext dbContext,
+            IHubContext<ChatHub>  hubContext
+        )
         {
             _userManager = userManager;
             _dbContext = dbContext;
+            _hubContext = hubContext;
         }
 
         [Authorize]
         [HttpGet]
         [Route("{channelId}")]
-        public async Task<ActionResult<List<ChannelMessage>>> GetChannelMessages([FromRoute] int channelId, [FromQuery] int offset, [FromQuery] int step)
+        public async Task<ActionResult<List<ChannelMessageDto>>> GetChannelMessages([FromRoute] int channelId, [FromQuery] int offset, [FromQuery] int step)
         {
             string userId = _userManager.GetUserId(User);
             
@@ -49,7 +56,79 @@ namespace pinger_api_service
                 .Reverse()
                 .ToList();
 
-            return messages;
+            List<ChannelMessageDto> channelMessageFileDtos = messages.Select(cmf => new ChannelMessageDto(cmf)).ToList();
+
+            return channelMessageFileDtos;
+        }
+
+        [Authorize]
+        [HttpDelete]
+        [Route("{messageId}")]
+        public async Task<IActionResult> RemoveChannelMessage([FromRoute] int messageId)
+        {
+            string userId = _userManager.GetUserId(User);
+            User user = await _userManager.FindByIdAsync(userId);
+
+            if(user is null) {
+                return NotFound();
+            }
+
+            ChannelMessage? channelMessage = await _dbContext.ChannelMessage
+                .Include(cm => cm.Sender)
+                .Include(cm => cm.ChannelMessageFiles)
+                .Include(cm => cm.Channel)
+                .Where(cm => cm.Sender.Id == userId)
+                .Where(cm => cm.Id == messageId)
+                .FirstOrDefaultAsync();
+
+            if(channelMessage is null) {
+                return NotFound();
+            }
+
+            _dbContext.ChannelMessageFile.RemoveRange(channelMessage.ChannelMessageFiles);
+            _dbContext.ChannelMessage.Remove(channelMessage);
+            await _dbContext.SaveChangesAsync();
+
+            string groupName = $"{channelMessage.Channel.Id}-{channelMessage.Channel.Name}";
+
+            List<string> senderConnectionIds = channelMessage.Sender.ConnectionInformations.Select(ci => ci.ConnectionId).ToList();
+
+            await _hubContext.Clients.GroupExcept(groupName, senderConnectionIds).SendAsync("RemoveChannelMessage", new ChannelMessageDto(channelMessage));
+
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpPut]
+        [Route("{messageId}")]
+        public async Task<IActionResult> UpdateChannelMessage([FromRoute] long messageId, [FromBody] UpdatePrivateMessageRequest updatePrivateMessageRequest)
+        {
+            string senderId = _userManager.GetUserId(User);
+            ChannelMessage? channelMessage = _dbContext.ChannelMessage
+                .Include(pm => pm.Sender)
+                .ThenInclude(s => s.ConnectionInformations)
+                .Include(pm => pm.Channel)
+                .Include(pm => pm.ChannelMessageFiles)
+                .Where(pm => pm.Sender.Id == senderId)
+                .Where(pm => pm.Id == messageId)
+                .FirstOrDefault();
+
+            if(channelMessage is null) {
+                return NotFound();
+            }
+
+            channelMessage.Body = updatePrivateMessageRequest.Body;
+            channelMessage.Edited = true;
+            _dbContext.ChannelMessage.Update(channelMessage);
+            await _dbContext.SaveChangesAsync();
+
+            string groupName = $"{channelMessage.Channel.Id}-{channelMessage.Channel.Name}";
+
+            List<string> senderConnectionIds = channelMessage.Sender.ConnectionInformations.Select(ci => ci.ConnectionId).ToList();
+
+            await _hubContext.Clients.GroupExcept(groupName, senderConnectionIds).SendAsync("ChannelMessageUpdated", new ChannelMessageDto(channelMessage));
+
+            return NoContent();
         }
     }
 } 

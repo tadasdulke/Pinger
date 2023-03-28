@@ -30,13 +30,15 @@ namespace pinger_api_service
         [Authorize]
         [HttpGet]
         [Route("{receiverId}")]
-        public ActionResult<List<PrivateMessage>> GetPrivateMessages([FromRoute] string receiverId)
+        public ActionResult<List<PrivateMessageDto>> GetPrivateMessages([FromRoute] string receiverId)
         {
             string senderId = _userManager.GetUserId(User);
             int chatSpaceId = _userManager.GetChatSpaceId(User);
             List<PrivateMessage> privateMessages = _privateMessagesManager.GetPrivateMessages(senderId, receiverId, chatSpaceId);
-        
-            return privateMessages;
+    
+            List<PrivateMessageDto> privateMessageDtos = privateMessages.Select(pm => new PrivateMessageDto(pm)).ToList();
+
+            return privateMessageDtos;
         }
 
         [Authorize]
@@ -116,7 +118,7 @@ namespace pinger_api_service
                 SentAt = messageToEdit.SentAt,
                 Body = messageToEdit.Body,
                 Edited = messageToEdit.Edited,
-                PrivateMessageFiles = messageToEdit.PrivateMessageFiles.Select(pmf => new {
+                Files = messageToEdit.PrivateMessageFiles.Select(pmf => new {
                     Id = pmf.Id,
                     Name = pmf.Name,
                 })
