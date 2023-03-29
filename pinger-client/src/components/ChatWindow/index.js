@@ -98,15 +98,16 @@ const ChatWindow = ({
     handleFilesUpload,
     files,
     setFiles,
-    fileDownloadEndpoint
+    fileDownloadEndpoint,
+    seeNewMessagesButtonVisible,
+    setSeeNewMessagesButtonVisible,
+    isAtBottom,
+    messageEndRef
 }) => {
     const [messageValue, setMessageValue] = useState('');
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
-    const [seeNewMessagesButtonVisible, setSeeNewMessagesButtonVisible] = useState(false);
-    const messageEndRef = useRef();
     const scrollRef = useRef();
-    const isAtBottom = useOnScreen(messageEndRef);
 
     const scrollToBottom = (options) => {
         messageEndRef.current?.scrollIntoView(options)
@@ -122,8 +123,6 @@ const ChatWindow = ({
     useEffect(() => {
         if(isAtBottom) {
             scrollToBottom();
-        } else {
-            setSeeNewMessagesButtonVisible(true);
         }
     }, [messages])
 

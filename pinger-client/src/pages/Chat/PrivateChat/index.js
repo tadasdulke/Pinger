@@ -1,7 +1,7 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import { useOutletContext, useParams } from 'react-router-dom'
 import { useDispatch } from 'react-redux';
-import { useFetchData, withErrorWrapper, useApiAction } from '@Common';
+import { useFetchData, withErrorWrapper, useApiAction, useOnScreen } from '@Common';
 import { changeChatOccupierInfo } from '@Store/slices/chat';
 import { ChatWindow } from '@Components'
 import getPrivateMessages from './services/getPrivateMessages';
@@ -16,9 +16,13 @@ import useUpdatePrivateMessage from './hooks/useUpdatePrivateMessage'
 
 const PrivateChat = ({errorHandler}) => {
     const dispatch = useDispatch();
+    const messageEndRef = useRef();
+    const isAtBottom = useOnScreen(messageEndRef);
+
     const { connection } = useOutletContext();
     const { receiverId } = useParams();
     const [messages, setMessages] = useState([]);
+    const [seeNewMessagesButtonVisible, setSeeNewMessagesButtonVisible] = useState(false);
     const { member } = useFetchChatSpaceMember(errorHandler, receiverId, null, [receiverId]);
     const { sendRemoveMessageAction } = useRemovePrivateMessage(errorHandler)
     const { sendUpdateMessageAction } = useUpdatePrivateMessage(errorHandler)
@@ -32,12 +36,15 @@ const PrivateChat = ({errorHandler}) => {
             if(data.sender.id === receiverId) {
                 setMessages([...messages, data])
             }
+            if(!isAtBottom) {
+                setSeeNewMessagesButtonVisible(true)
+            }
         }
 
         connection.on("ReceiveMessage", callBack);
 
         return () => connection.off("ReceiveMessage", callBack);
-    }, [receiverId, messages])
+    }, [receiverId, messages, isAtBottom])
 
 
     useEffect(() => {
@@ -175,6 +182,10 @@ const PrivateChat = ({errorHandler}) => {
             files={files}
             setFiles={setFiles}
             fileDownloadEndpoint="private-message-file"
+            seeNewMessagesButtonVisible={seeNewMessagesButtonVisible}
+            setSeeNewMessagesButtonVisible={setSeeNewMessagesButtonVisible}
+            isAtBottom={isAtBottom}
+            messageEndRef={messageEndRef}
         />
     )
 }

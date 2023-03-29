@@ -1,9 +1,10 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import { useOutletContext, useParams } from 'react-router-dom'
 import { ChatWindow } from '@Components'
 import { ReactSVG } from 'react-svg';
 import { useDispatch, useSelector } from 'react-redux';
-import { useFetchData, withErrorWrapper, useApiAction } from '@Common'
+import cx from 'classnames'
+import { useFetchData, withErrorWrapper, useApiAction, useOnScreen } from '@Common'
 import { DropDown } from '@Components'
 import getChannel from './services/getChannel'
 import getChannelMessages from './services/getChannelMessages'
@@ -19,8 +20,12 @@ import updateChannelMessage from './services/updateChannelMessage'
 
 const ChannelChat = ({errorHandler}) => {
     const dispatch = useDispatch();
+    const [seeNewMessagesButtonVisible, setSeeNewMessagesButtonVisible] = useState(false);
+    const messageEndRef = useRef();
+    const isAtBottom = useOnScreen(messageEndRef);
     const [expanded, setExpanded] = useState(false);
     const [messages, setMessages] = useState([]);
+    const [hasMore, setHasMore] = useState([]);
     const { userId: currentUserId } = useSelector(state => state.auth)
     const [fetchingOptions, setFetchingOptions] = useState({
         step: 50,
@@ -57,16 +62,21 @@ const ChannelChat = ({errorHandler}) => {
     
     useEffect(() => {
         const callBack = (data) => {
-            setMessages([
-                ...messages,
-                data
-            ]);
+            if(convertedChannelId === data.channel.id) {
+                setMessages([
+                    ...messages,
+                    data
+                ]);
+                if(!isAtBottom) {
+                    setSeeNewMessagesButtonVisible(true);
+                }
+            }
         }
 
         connection.on("ReceiveGroupMessage", callBack);
 
         return () => connection.off("ReceiveGroupMessage", callBack);
-    }, [messages])
+    }, [messages, isAtBottom, convertedChannelId])
     
     useEffect(() => {
         const callBack = (data) => {
@@ -133,7 +143,8 @@ const ChannelChat = ({errorHandler}) => {
 
     useEffect(() => {
         if(channelMessagesResult && channelMessagesResult.data) {
-            setMessages([...channelMessagesResult.data, ...messages])
+            setMessages([...channelMessagesResult.data.messages, ...messages])
+            setHasMore(channelMessagesResult.data.hasMore)
         }
 
     }, [channelMessagesResult])
@@ -199,8 +210,12 @@ const ChannelChat = ({errorHandler}) => {
             removeMessage={removeMessage}
             handleMessageEdit={handleMessageEdit}
             onIsAtButtonUpdate={onIsAtButtonUpdate}
+            seeNewMessagesButtonVisible={seeNewMessagesButtonVisible}
+            setSeeNewMessagesButtonVisible={setSeeNewMessagesButtonVisible}
+            isAtBottom={isAtBottom}
+            messageEndRef={messageEndRef}
             lazyLoadComponent={
-                <button onClick={handleAdditionalLoad}>
+                <button className={cx({hidden: !hasMore})} onClick={handleAdditionalLoad}>
                     load more
                 </button>
             }
