@@ -49,6 +49,7 @@ namespace pinger_api_service
                 .OrderByDescending(cm => cm.SentAt)
                 .Include(cm => cm.Channel)
                 .Include(cm => cm.Sender)
+                .ThenInclude(sender => sender.ProfileImageFile)
                 .Include(cm => cm.ChannelMessageFiles)
                 .Where(cm => cm.Channel.Id == channelId)
                 .Skip(offset)
@@ -107,6 +108,8 @@ namespace pinger_api_service
             ChannelMessage? channelMessage = _dbContext.ChannelMessage
                 .Include(pm => pm.Sender)
                 .ThenInclude(s => s.ConnectionInformations)
+                .Include(pm => pm.Sender)
+                .ThenInclude(s => s.ProfileImageFile)
                 .Include(pm => pm.Channel)
                 .Include(pm => pm.ChannelMessageFiles)
                 .Where(pm => pm.Sender.Id == senderId)

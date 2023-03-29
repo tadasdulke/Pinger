@@ -9,6 +9,7 @@ namespace pinger_api_service
             this.Channel = new ChannelDto(channelMessage.Channel);
             this.SentAt = channelMessage.SentAt;
             this.Body = channelMessage.Body;
+            this.Edited = channelMessage.Edited;
             this.Files = channelMessage.ChannelMessageFiles.Select(cmf => new ChannelMessageFileDto(cmf)).ToList();
         }
 
@@ -17,6 +18,7 @@ namespace pinger_api_service
         public ChannelDto Channel { get; set; }
         public DateTime SentAt { get; set; }
         public string Body {get; set;}
+        public bool Edited { get; set; }
         public List<ChannelMessageFileDto> Files { get; set; }
     }
 }

@@ -11,6 +11,7 @@ namespace pinger_api_service
     {
         private ApplicationDbContext _dbContext;
         private IPrivateMessagesManager _privateMessagesManager;
+        private IFileManager _fileManager;
         private readonly ApplicationUserManager _userManager;
         private readonly IHubContext<ChatHub> _hubContext;
 
@@ -18,13 +19,15 @@ namespace pinger_api_service
             ApplicationDbContext dbContext, 
             ApplicationUserManager userManager, 
             IPrivateMessagesManager privateMessagesManager,
-            IHubContext<ChatHub> hubContext    
+            IHubContext<ChatHub> hubContext,   
+            IFileManager fileManager 
         )
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _privateMessagesManager = privateMessagesManager;
             _hubContext = hubContext;
+            _fileManager = fileManager;
         }
 
         [Authorize]
@@ -57,22 +60,12 @@ namespace pinger_api_service
             List<ConnectionInformation> receiverConnectionInformation = privateMessage.Receiver.ConnectionInformations.ToList(); 
             List<string> connectionIds = receiverConnectionInformation.Select(ci => ci.ConnectionId).ToList();
 
-            var removedMessageDto = new {
-                Id = privateMessage.Id,
-                Receiver = new {
-                    Id = privateMessage.Receiver.Id,
-                    UserName = privateMessage.Receiver.UserName,
-                },
-                Sender = new {
-                    Id = privateMessage.Sender.Id,
-                    UserName = privateMessage.Sender.UserName,
-                },
-                SentAt = privateMessage.SentAt,
-                Body = privateMessage.Body,
-            };
+            await _hubContext.Clients.Clients(connectionIds).SendAsync("PrivateMessageRemoved", new PrivateMessageDto(privateMessage));
 
-            await _hubContext.Clients.Clients(connectionIds).SendAsync("PrivateMessageRemoved", removedMessageDto);
-
+            foreach (PrivateMessageFile pmf in privateMessage.PrivateMessageFiles)
+            {
+                _fileManager.RemoveFile(pmf.Path);
+            }
 
             return NoContent();
         }
@@ -87,6 +80,7 @@ namespace pinger_api_service
                 .Include(pm => pm.Receiver)
                 .ThenInclude(receiver => receiver.ConnectionInformations)
                 .Include(pm => pm.Sender)
+                .ThenInclude(s => s.ProfileImageFile)
                 .Include(pm => pm.PrivateMessageFiles)
                 .Where(pm => pm.Sender.Id == senderId)
                 .Where(pm => pm.Id == messageId)
@@ -105,26 +99,7 @@ namespace pinger_api_service
             List<ConnectionInformation> receiverConnectionInformation = messageToEdit.Receiver.ConnectionInformations.ToList(); 
             List<string> connectionIds = receiverConnectionInformation.Select(ci => ci.ConnectionId).ToList();
 
-            var updateMessageDto = new {
-                Id = messageToEdit.Id,
-                Receiver = new {
-                    Id = messageToEdit.Receiver.Id,
-                    UserName = messageToEdit.Receiver.UserName,
-                },
-                Sender = new {
-                    Id = messageToEdit.Sender.Id,
-                    UserName = messageToEdit.Sender.UserName,
-                },
-                SentAt = messageToEdit.SentAt,
-                Body = messageToEdit.Body,
-                Edited = messageToEdit.Edited,
-                Files = messageToEdit.PrivateMessageFiles.Select(pmf => new {
-                    Id = pmf.Id,
-                    Name = pmf.Name,
-                })
-            };
-
-            await _hubContext.Clients.Clients(connectionIds).SendAsync("PrivateMessageUpdated", updateMessageDto);
+            await _hubContext.Clients.Clients(connectionIds).SendAsync("PrivateMessageUpdated", new PrivateMessageDto(messageToEdit));
 
 
             return NoContent();

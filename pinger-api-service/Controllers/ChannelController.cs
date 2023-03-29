@@ -68,7 +68,7 @@ namespace pinger_api_service
 
         [Authorize]
         [HttpGet]
-        public async Task<ActionResult<List<Channel>>> GetUsersChannels()
+        public async Task<ActionResult<List<ChannelDto>>> GetUsersChannels()
         {
             string userId = _userManager.GetUserId(User);
             int chatSpaceId = _userManager.GetChatSpaceId(User);
@@ -85,13 +85,14 @@ namespace pinger_api_service
             }
 
             List<Channel> channels = user.Channels.Where(c => c.ChatSpace.Id == chatSpaceId).ToList();
+            List<ChannelDto> channelDtos = channels.Select(c => new ChannelDto(c)).ToList();
 
-            return channels;
+            return channelDtos;
         }
 
         [Authorize]
         [HttpGet("{channelId}")]
-        public async Task<ActionResult<Channel>> GetChannel([FromRoute] int channelId)
+        public async Task<ActionResult<ChannelDto>> GetChannel([FromRoute] int channelId)
         {
             string userId = _userManager.GetUserId(User);
             int chatSpaceId = _userManager.GetChatSpaceId(User);
@@ -114,7 +115,7 @@ namespace pinger_api_service
                 return NotFound();
             }
 
-            return channel;
+            return new ChannelDto(channel);
         }
 
         [Authorize]
@@ -139,6 +140,43 @@ namespace pinger_api_service
             await _dbContext.SaveChangesAsync();
 
             return Ok();
+        }
+
+        [Authorize]
+        [HttpDelete("{channelId}/members/{userToDeleteId}")]
+        public async Task<IActionResult> RemoveMembersFromChannel([FromRoute] int channelId, [FromRoute] string userToDeleteId)
+        {
+            string userId = _userManager.GetUserId(User);
+
+            Channel? channel = await _dbContext.Channel
+                .Include(c => c.Members)
+                .Include(c => c.Owner)
+                .FirstOrDefaultAsync(c => c.Id == channelId);
+            
+            if(channel is null) {
+                return NotFound();
+            }
+
+            if(userId != channel.Owner.Id) {
+                return BadRequest();
+            }
+
+
+            if(userId == userToDeleteId) {
+                return BadRequest();
+            }
+
+            User? memberToDelete = channel.Members.FirstOrDefault(m => m.Id == userToDeleteId);
+
+            if(memberToDelete is null) {
+                return NotFound();
+            }
+
+            channel.Members.Remove(memberToDelete);
+            _dbContext.Channel.Update(channel);
+            await _dbContext.SaveChangesAsync();
+
+            return NoContent();
         }
 
     }

@@ -28,7 +28,7 @@ namespace pinger_api_service
             int[] fileIds
         )
         {
-            User sender = await _dbContext.Users.Where(u => u.Id == senderId).FirstOrDefaultAsync();
+            User sender = await _dbContext.Users.Include(u => u.ProfileImageFile).Where(u => u.Id == senderId).FirstOrDefaultAsync();
             User receiver = await _dbContext.Users.Where(u => u.Id == receiverId).FirstOrDefaultAsync();
             ChatSpace? chatSpace = _chatSpaceManager.GetChatSpaceById(chatspaceId);
 
@@ -62,6 +62,7 @@ namespace pinger_api_service
             return _dbContext.PrivateMessage
                 .Include(pm => pm.Receiver)
                 .Include(pm => pm.Sender)
+                .ThenInclude(sender => sender.ProfileImageFile)
                 .Include(pm => pm.ChatSpace)
                 .Include(pm => pm.PrivateMessageFiles)
                 .Where(pm => (pm.Receiver.Id == receiverId) || (pm.Receiver.Id == senderId))

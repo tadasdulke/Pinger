@@ -9,6 +9,6 @@ namespace pinger_api_service
         public string Name { get; set; }
         public string Path { get; set; }
         public string ContentType { get; set; }
-        public User Owner { get; set; }
+        public string Discriminator { get; set;}
     }
 }

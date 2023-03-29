@@ -10,11 +10,13 @@ public class PrivateMesssageFileController : ControllerBase
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly ApplicationUserManager _userManager;
+    private readonly IFileManager _fileManager;
 
-    public PrivateMesssageFileController(ApplicationDbContext dbContext, ApplicationUserManager userManager)
+    public PrivateMesssageFileController(ApplicationDbContext dbContext, ApplicationUserManager userManager, IFileManager fileManager)
     {
         _dbContext = dbContext;
         _userManager = userManager;
+        _fileManager = fileManager;
     }
 
     [Authorize]
@@ -29,36 +31,22 @@ public class PrivateMesssageFileController : ControllerBase
             return NotFound();
         }
 
-        long size = file.Length;
-        string fileName = file.FileName;
-        
-        if(size > 2000000) {
+        if(file.Length > 2000000) {
             return BadRequest(new { ErrorMessage = "File size cannot exceed 2MB" });
         }
 
-        string basePath = Path.Combine("data/private/", userId + "-" + receiverId);
-        string directoryPath = Path.Combine(Environment.CurrentDirectory, basePath);
-        System.IO.Directory.CreateDirectory(directoryPath);
-
-
-        Guid myuuid = Guid.NewGuid();
-        string uniqueFileName = myuuid.ToString();
-        var filePath = Path.Combine(basePath, uniqueFileName);
-
-        if (size >= 0)
-        {
-            using (var stream = System.IO.File.Create(filePath))
-            {
-                await file.CopyToAsync(stream);
-            }
+        if(file.Length <= 0) {
+            return BadRequest(new { ErrorMessage = "File size has to be larger that 0B" });
         }
 
+        LocalFile createdFile = await _fileManager.AddFile(file, "data/private/", userId + "-" + receiverId);
+
         PrivateMessageFile privateMessageFile = new PrivateMessageFile{
-            Name=fileName,
-            Path=filePath,
+            Name=createdFile.Name,
+            Path=createdFile.Path,
             Owner = sender,
             Receiver = receiver,
-            ContentType = file.ContentType
+            ContentType = createdFile.ContentType
         };
 
         await _dbContext.PrivateMessageFile.AddAsync(privateMessageFile);

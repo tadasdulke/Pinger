@@ -61,11 +61,27 @@ const getChannelEndpoints = (instance) => {
         };
     };
 
+    const removeUserFromChannel = async (channelId, memberId) => {
+        const response = await instance.delete(`${API_SERVICE_ENDPOINTS.CHANNELS}/${channelId}/members/${memberId}`, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const {status, data} = response;
+
+        return {
+            status,
+            data
+        };
+    };
+
     return {
         createChannel,
         getChannels,
         getChannel,
-        addUserToChannel
+        addUserToChannel,
+        removeUserFromChannel
     }
 }
 

@@ -21,7 +21,7 @@ namespace pinger_api_service
             int[] fileIds
         )
         {
-            User sender = await _userManager.FindByIdAsync(senderId);
+            User sender = await _dbContext.Users.Include(u => u.ProfileImageFile).Where(u => u.Id == senderId).FirstOrDefaultAsync();
             Channel? channel = _dbContext.Channel.Include(channel => channel.Messages).FirstOrDefault(channel => channel.Id == channelId);
 
             if(sender is null || channel is null) {

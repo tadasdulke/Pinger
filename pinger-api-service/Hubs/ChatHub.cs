@@ -87,7 +87,7 @@ namespace pinger_api_service
                 .FirstOrDefaultAsync(u => u.Id == receiverId);
             List<ConnectionInformation> filteredConnectionInformations = receiver.ConnectionInformations.Where(ci => ci.ChatSpace.Id == chatspaceId).ToList();
 
-            var sentMessage = await _privateMessageManager.AddPrivateMessage(senderId, receiverId, chatspaceId, message, fileIds);
+            PrivateMessage sentMessage = await _privateMessageManager.AddPrivateMessage(senderId, receiverId, chatspaceId, message, fileIds);
 
             // Add contacted user for receiver if not added
             
@@ -110,15 +110,8 @@ namespace pinger_api_service
                 };
 
 
-                var contactedUserInfoToSend = new {
-                    ContactedUser = new {
-                        Id = sender.Id,
-                        userName = sender.UserName
-                    }
-                };
-
-                await SendToMulitpleClients(filteredConnectionInformations, "NewUserContactAdded", contactedUserInfoToSend);
-                _dbContext.ContactedUserInfo.Add(contactedUserInfo);
+                await SendToMulitpleClients(filteredConnectionInformations, "NewUserContactAdded", new ContactedUserInfoDto(contactedUserInfo));
+                await _dbContext.ContactedUserInfo.AddAsync(contactedUserInfo);
                 await _dbContext.SaveChangesAsync();
             }
 

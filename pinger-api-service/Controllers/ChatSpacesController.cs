@@ -35,9 +35,11 @@ namespace pinger_api_service
             ChatSpace chatSpace = new ChatSpace();
             chatSpace.Name = newChatSpace.Name;
             chatSpace.Members.Add(owner);
+
             _dbContext.ChatSpace.Add(chatSpace);
             _dbContext.SaveChanges();
-            return Ok();
+            
+            return NoContent();
         }
 
         [Authorize]

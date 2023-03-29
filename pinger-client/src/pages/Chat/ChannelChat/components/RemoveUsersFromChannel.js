@@ -3,16 +3,15 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { Button, useFetchData, useApiAction, withErrorWrapper } from '@Common'
 import { searchChatSpaceMembers } from '@Services'
-import addUserToChannel from '../services/addUserToChannel';
+import removeUserFromChannel from '../services/removeUserFromChannel'
 
 const AddUsersToChannel =  ({errorHandler}) => {
     const { channelId } = useParams();
     const [searchField, setSearchField] = useState('');
     const { userId } = useSelector(state => state.auth);
 
-    const { sendAction } = useApiAction(
-        (newMemberId) => addUserToChannel(channelId, newMemberId),
-        errorHandler
+    const { sendAction: removeUserFromChannelAction } = useApiAction(
+        (messageId) => removeUserFromChannel(channelId, messageId),
     )
 
     const {loaded, result} = useFetchData(
@@ -37,7 +36,7 @@ const AddUsersToChannel =  ({errorHandler}) => {
                 {filteredUsers.map(({userName, id}) => (
                     <div key={id} className="flex justify-between items-center py-[10px]">
                         <span>{userName}</span>
-                        <Button onClick={async () => await sendAction(id)} className="px-[8px] py-[3px]">Add</Button>
+                        <Button onClick={async () => await removeUserFromChannelAction(id)} className="px-[8px] py-[3px] bg-red-600">Remove</Button>
                     </div>
                 ))}
             </div>

@@ -10,16 +10,18 @@ public class FileMessageFileController : ControllerBase
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly ApplicationUserManager _userManager;
+    private readonly IFileManager _fileManager;
 
-    public FileMessageFileController(ApplicationDbContext dbContext, ApplicationUserManager userManager)
+    public FileMessageFileController(ApplicationDbContext dbContext, ApplicationUserManager userManager, IFileManager fileManager)
     {
         _dbContext = dbContext;
         _userManager = userManager;
+        _fileManager = fileManager;
     }
 
     [Authorize]
     [HttpPost]
-    public async Task<ActionResult<ChannelMessageFile>> Upload([FromForm] IFormFile file, [FromForm] int channelId)
+    public async Task<ActionResult<ChannelMessageFileDto>> Upload([FromForm] IFormFile file, [FromForm] int channelId)
     {
         string userId = _userManager.GetUserId(User);
         User? owner = await _userManager.FindByIdAsync(userId);
@@ -29,42 +31,28 @@ public class FileMessageFileController : ControllerBase
             return NotFound();
         }
 
-        long size = file.Length;
-        string fileName = file.FileName;
-        
-        if(size > 2000000) {
+        if(file.Length > 2000000) {
             return BadRequest(new { ErrorMessage = "File size cannot exceed 2MB" });
         }
-
-        string basePath = Path.Combine("data/private/", channelId.ToString());
-        string directoryPath = Path.Combine(Environment.CurrentDirectory, basePath);
-        System.IO.Directory.CreateDirectory(directoryPath);
-
-
-        Guid myuuid = Guid.NewGuid();
-        string uniqueFileName = myuuid.ToString();
-        var filePath = Path.Combine(basePath, uniqueFileName);
-
-        if (size >= 0)
-        {
-            using (var stream = System.IO.File.Create(filePath))
-            {
-                await file.CopyToAsync(stream);
-            }
+        
+        if(file.Length <= 0) {
+            return BadRequest(new { ErrorMessage = "File must be bigger that 0B" });
         }
 
+        LocalFile createdLocalFile = await _fileManager.AddFile(file, "data/private/", channel.Id.ToString());
+
         ChannelMessageFile channelMessageFile = new ChannelMessageFile{
-            Name=fileName,
-            Path=filePath,
+            Name=createdLocalFile.Name,
+            Path=createdLocalFile.Path,
             Owner = owner,
             Channel = channel,
-            ContentType = file.ContentType
+            ContentType = createdLocalFile.ContentType
         };
 
         await _dbContext.ChannelMessageFile.AddAsync(channelMessageFile);
         await _dbContext.SaveChangesAsync();
 
-        return channelMessageFile;
+        return new ChannelMessageFileDto(channelMessageFile);
     }
 
     [Authorize]

@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
 import { ReactSVG } from 'react-svg';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { ROUTES } from "@Router";
 import UserSearchModal from './UserSearchModal';
 import DirectMessages from './DirectMessages';
 
@@ -11,7 +13,7 @@ const UserBar = () => {
     return (
         <div className="flex justify-between items-center p-[20px]">
             <p className="text-white">
-                {userName}
+                <Link to={`${ROUTES.USE_CHATSPACE}/${ROUTES.EDIT_PROFILE}`}>{userName}</Link>
                 {showModal && <UserSearchModal setShowModal={setShowModal} />}
             </p>
             <button onClick={() => setShowModal(true)}>

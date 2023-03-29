@@ -9,8 +9,11 @@ import { DropDown, FileUploadButton, FileList } from '@Components'
 import './index.css'
 
 const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited, files, fileDownloadEndpoint}) => {
+    const [profileImageLoaded, setProfileImageLoaded] = useState(false);
     const { userId } = useSelector(state => state.auth)
     const [expanded, setExpanded] = useState(false);
+
+    const profileImage = sender.profilePictureId ? `http://localhost:5122/api/public-file/${sender.profilePictureId}` : "http://localhost:5122/public/profile-pic.png"
 
     return (
         <div 
@@ -19,7 +22,15 @@ const Message = ({body, sender, id, removeMessage, initiateEditionMode, edited, 
         >
             <div className="flex max-w-[90%]">
                 <div className="mr-[10px] max-w-[40px] max-h-[40px] min-w-[40px] min-h-[40px]">
-                    <img src="http://localhost:5122/public/profile-pic.png" width="100%" height="100%"/>
+                    <img 
+                        src={profileImage}
+                        width="100%" 
+                        height="100%" 
+                        className={cx("rounded-full aspect-square", {
+                            hidden: !profileImageLoaded
+                        })}
+                        onLoad={() => setProfileImageLoaded(true)}
+                    />
                 </div>
                 <div className="flex flex-col">
                     <div className="flex items-center">
@@ -182,9 +193,9 @@ const ChatWindow = ({
                     />
                     {!isEditing &&
                         <FileUploadButton
-                        files={files}
-                        uploadFiles={handleFilesUpload}
-                    />
+                            files={files}
+                            uploadFiles={handleFilesUpload}
+                        />
                     }
                 </div>
                 {files?.length > 0 && (

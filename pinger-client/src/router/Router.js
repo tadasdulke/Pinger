@@ -8,6 +8,7 @@ import UnauthorizedRoute from './UnauthorizedRoute'
 import ManagedRoute from './ManagedRoute'
 import PrivateChat from '../pages/Chat/PrivateChat';
 import ChannelChat from '../pages/Chat/ChannelChat';
+import EditProfile from '../pages/Chat/EditProfile';
 
 const Router = () => {
   return (
@@ -78,6 +79,11 @@ const Router = () => {
           <Route
             path={`${ROUTES.CHANNEL_CHAT}/:channelId`}
             element={<ChannelChat />}
+          />
+          />
+          <Route
+            path={ROUTES.EDIT_PROFILE}
+            element={<EditProfile />}
           />
         </Route>
         <Route

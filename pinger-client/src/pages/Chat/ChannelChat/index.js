@@ -2,12 +2,13 @@ import React, {useEffect, useState} from 'react';
 import { useOutletContext, useParams } from 'react-router-dom'
 import { ChatWindow } from '@Components'
 import { ReactSVG } from 'react-svg';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useFetchData, withErrorWrapper, useApiAction } from '@Common'
 import { DropDown } from '@Components'
 import getChannel from './services/getChannel'
 import getChannelMessages from './services/getChannelMessages'
 import AddUsersToChannel from './components/AddUsersToChannel'
+import RemoveUserFromChannel from './components/RemoveUsersFromChannel'
 import updateChannelMessageReadTime from './services/updateChannelMessageReadTime'
 import { updateChatType, changeChatOccupierInfo, updateIsAtButton } from '@Store/slices/chat';
 import { removeChannelHighlight } from '@Store/slices/channels';
@@ -20,6 +21,7 @@ const ChannelChat = ({errorHandler}) => {
     const dispatch = useDispatch();
     const [expanded, setExpanded] = useState(false);
     const [messages, setMessages] = useState([]);
+    const { userId: currentUserId } = useSelector(state => state.auth)
     const [fetchingOptions, setFetchingOptions] = useState({
         step: 50,
         offset: 0,
@@ -91,7 +93,26 @@ const ChannelChat = ({errorHandler}) => {
         return () => connection.off("GroupMessageSent", callBack);
     }, [messages])
 
-    const { loaded, result } = useFetchData(
+    useEffect(() => {
+        const callBack = data => {
+            const modifiedMessages = messages.map(message => {
+                if(message.id === data.id) {
+                    return data;
+                }
+
+                return message;  
+            })
+
+            setMessages(modifiedMessages)
+        }
+
+        connection.on("ChannelMessageUpdated", callBack);
+
+        return () => connection.off("ChannelMessageUpdated", callBack)
+    }, [messages])
+
+
+    const { loaded, result: channelResponse } = useFetchData(
         () => getChannel(channelId),
         errorHandler,
         null,
@@ -105,6 +126,10 @@ const ChannelChat = ({errorHandler}) => {
         null,
         [fetchingOptions, channelId]
     )
+
+    useEffect(() => {
+        setMessages([])
+    }, [channelId])
 
     useEffect(() => {
         if(channelMessagesResult && channelMessagesResult.data) {
@@ -165,10 +190,10 @@ const ChannelChat = ({errorHandler}) => {
             setMessages(modifiedMessages);
         }
     }
-
+    
     return ( 
         <ChatWindow
-            receiverName={result?.data?.name}
+            receiverName={channelResponse?.data?.name}
             messages={messages}
             handleMessageSending={sendMessage}
             removeMessage={removeMessage}
@@ -205,7 +230,15 @@ const ChannelChat = ({errorHandler}) => {
                                     src: "http://localhost:5122/public/icons/add-user.svg"
                                 },
                                 buttonText: "Add user",
-                                componentToRender: <AddUsersToChannel connection={connection}/>
+                                componentToRender: <AddUsersToChannel/>
+                            },
+                            {
+                                svg: {
+                                    src: "http://localhost:5122/public/icons/add-user.svg"
+                                },
+                                disabled: channelResponse?.data?.owner?.id !== currentUserId,
+                                buttonText: "Remove user",
+                                componentToRender: <RemoveUserFromChannel/>
                             },
                         ]}
                     />

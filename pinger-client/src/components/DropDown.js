@@ -6,7 +6,7 @@ const DropDown = ({activationElement, options, setExpanded, expanded}) => {
 
     const toggle = () => setExpanded(!expanded)
 
-    const dropDownOptions = options?.map(({buttonText, svg, action, componentToRender}, index) => (
+    const dropDownOptions = options?.filter(({disabled}) => !disabled).map(({buttonText, svg, action, componentToRender}, index) => (
         <button
             key={index}
             className="flex justify-between text-left w-full rounded-[5px] whitespace-nowrap hover:bg-slate-300 p-[16px] mr-[10px]" 

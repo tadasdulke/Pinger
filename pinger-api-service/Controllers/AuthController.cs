@@ -130,7 +130,7 @@ namespace pinger_api_service
 
         [HttpPost]
         [Route("login")]
-        public async Task<ActionResult<User>> Login([FromBody] LoginModel model)
+        public async Task<ActionResult<UserDto>> Login([FromBody] LoginModel model)
         {
             var user = await _userManager.FindByNameAsync(model.Username);
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
@@ -179,7 +179,7 @@ namespace pinger_api_service
                     refreshTokenCookieOptions
                 );
 
-                return user;
+                return new UserDto(user);
             }
             return Unauthorized();
         }

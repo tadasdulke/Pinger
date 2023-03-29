@@ -8,5 +8,6 @@ export const ROUTES = {
     JOIN_CHATSPACE: '/join-chatspace',
     DIRECT_MESSAGE: 'direct-message',
     CREATE_CHANNEL: 'create-channel',
-    CHANNEL_CHAT: 'channel-chat'
+    CHANNEL_CHAT: 'channel-chat',
+    EDIT_PROFILE: 'edit-profile'
 }
