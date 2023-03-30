@@ -25,6 +25,7 @@
     "react-contenteditable": "^3.3.7",
     "react-dom": "^18.2.0",
     "react-grid-system": "^8.1.8",
+    "react-loader-spinner": "^5.3.4",
     "react-loading-skeleton": "^3.2.0",
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.8.1",

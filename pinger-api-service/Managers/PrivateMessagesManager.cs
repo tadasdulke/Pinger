@@ -57,20 +57,6 @@ namespace pinger_api_service
             return privateMessage;
         }
 
-        public List<PrivateMessage> GetPrivateMessages(string senderId, string receiverId, int chatspaceId)
-        {
-            return _dbContext.PrivateMessage
-                .Include(pm => pm.Receiver)
-                .Include(pm => pm.Sender)
-                .ThenInclude(sender => sender.ProfileImageFile)
-                .Include(pm => pm.ChatSpace)
-                .Include(pm => pm.PrivateMessageFiles)
-                .Where(pm => (pm.Receiver.Id == receiverId) || (pm.Receiver.Id == senderId))
-                .Where(pm => (pm.Sender.Id == senderId) || (pm.Sender.Id == receiverId))
-                .Where(pm => pm.ChatSpace.Id == chatspaceId)
-                .ToList();
-        }
-
         public async Task<PrivateMessage?> RemovePrivateMessage(long messageId, string senderId)
         {
             PrivateMessage? privateMessageToRemove = _dbContext.PrivateMessage

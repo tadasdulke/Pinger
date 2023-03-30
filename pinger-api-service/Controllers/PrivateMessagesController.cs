@@ -33,15 +33,43 @@ namespace pinger_api_service
         [Authorize]
         [HttpGet]
         [Route("{receiverId}")]
-        public ActionResult<List<PrivateMessageDto>> GetPrivateMessages([FromRoute] string receiverId)
+        public async Task<ActionResult<LazyLoadPrivateMessages>> GetPrivateMessages([FromRoute] string receiverId, [FromQuery] int offset, [FromQuery] int step)
         {
             string senderId = _userManager.GetUserId(User);
             int chatSpaceId = _userManager.GetChatSpaceId(User);
-            List<PrivateMessage> privateMessages = _privateMessagesManager.GetPrivateMessages(senderId, receiverId, chatSpaceId);
-    
-            List<PrivateMessageDto> privateMessageDtos = privateMessages.Select(pm => new PrivateMessageDto(pm)).ToList();
 
-            return privateMessageDtos;
+            List<PrivateMessage> privateMessages = _dbContext.PrivateMessage
+                .OrderByDescending(cm => cm.SentAt)
+                .Include(pm => pm.Receiver)
+                .Include(pm => pm.Sender)
+                .ThenInclude(sender => sender.ProfileImageFile)
+                .Include(pm => pm.ChatSpace)
+                .Include(pm => pm.PrivateMessageFiles)
+                .Where(pm => (pm.Receiver.Id == receiverId) || (pm.Receiver.Id == senderId))
+                .Where(pm => (pm.Sender.Id == senderId) || (pm.Sender.Id == receiverId))
+                .Where(pm => pm.ChatSpace.Id == chatSpaceId)
+                .Skip(offset)
+                .Take(step + 1)
+                .Reverse()
+                .ToList();
+
+            bool hasMore = privateMessages.Count > step;
+
+            if(offset > 0) {
+                privateMessages.RemoveAt(privateMessages.Count - 1);
+            }
+
+            LazyLoadPrivateMessages lazyLoadPrivateMessages = new LazyLoadPrivateMessages {
+                    Messages = privateMessages.Select(m => new PrivateMessageDto(m)).ToList(),
+                    HasMore = true
+            };
+
+            if(privateMessages.Count < step) {
+                lazyLoadPrivateMessages.HasMore = false;
+                return lazyLoadPrivateMessages;
+            }
+
+            return lazyLoadPrivateMessages;
         }
 
         [Authorize]

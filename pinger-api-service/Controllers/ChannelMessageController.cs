@@ -27,7 +27,7 @@ namespace pinger_api_service
         [Authorize]
         [HttpGet]
         [Route("{channelId}")]
-        public async Task<ActionResult<LazyLoadChannelMessages>> GetChannelMessages([FromRoute] int channelId, [FromQuery] int offset, [FromQuery] int step)
+        public async Task<ActionResult<LazyLoadChannelMessages>> GetChannelMessages([FromRoute] int channelId, [FromQuery] int offset, [FromQuery] int step, [FromQuery] int skip)
         {
             string userId = _userManager.GetUserId(User);
             
@@ -52,26 +52,28 @@ namespace pinger_api_service
                 .ThenInclude(sender => sender.ProfileImageFile)
                 .Include(cm => cm.ChannelMessageFiles)
                 .Where(cm => cm.Channel.Id == channelId)
-                .Skip(offset)
+                .Skip(offset + skip)
                 .Take(step + 1)
                 .Reverse()
                 .ToList();
             
             bool hasMore = messages.Count > step;
 
-            messages.RemoveAt(messages.Count - 1);
-
-            if(messages.Count < step) {
-                return new LazyLoadChannelMessages {
-                    Messages = messages.Select(m => new ChannelMessageDto(m)).ToList(),
-                    HasMore = false,
-                };
+            if(offset > 0) {
+                messages.RemoveAt(messages.Count - 1);
             }
 
-            return new LazyLoadChannelMessages {
+            LazyLoadChannelMessages lazyLoadChannelMessages = new LazyLoadChannelMessages {
                 Messages = messages.Select(m => new ChannelMessageDto(m)).ToList(),
                 HasMore = true,
             };
+
+            if(messages.Count < step) {
+                lazyLoadChannelMessages.HasMore = false;
+                return lazyLoadChannelMessages;
+            }
+
+            return lazyLoadChannelMessages;
         }
 
         [Authorize]

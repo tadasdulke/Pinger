@@ -1,9 +1,9 @@
 import { API_SERVICE_ENDPOINTS } from './config/constants';
 
 const getChannelMessageEndpoints = (instance) => {
-    const getChannelMessages = async (channelId, offset, step) => {
+    const getChannelMessages = async (channelId, offset, step, skip) => {
         const response = await instance.get(
-            `${API_SERVICE_ENDPOINTS.CHANNEL_MESSAGES}/${channelId}?offset=${offset}&&step=${step}`,
+            `${API_SERVICE_ENDPOINTS.CHANNEL_MESSAGES}/${channelId}?offset=${offset}&step=${step}&skip=${skip}`,
         {
             headers: {
                 'Content-Type': 'application/json',

@@ -1,7 +1,8 @@
 import React, {useState, useEffect, useRef} from 'react';
 import { useOutletContext, useParams } from 'react-router-dom'
 import { useDispatch } from 'react-redux';
-import { useFetchData, withErrorWrapper, useApiAction, useOnScreen } from '@Common';
+import cx from 'classnames'
+import { useFetchData, withErrorWrapper, useApiAction, useOnScreen, Button } from '@Common';
 import { changeChatOccupierInfo } from '@Store/slices/chat';
 import { ChatWindow } from '@Components'
 import getPrivateMessages from './services/getPrivateMessages';
@@ -16,9 +17,15 @@ import useUpdatePrivateMessage from './hooks/useUpdatePrivateMessage'
 
 const PrivateChat = ({errorHandler}) => {
     const dispatch = useDispatch();
+    const [messageValue, setMessageValue] = useState('');
     const messageEndRef = useRef();
     const isAtBottom = useOnScreen(messageEndRef);
+    const [hasMore, setHasMore] = useState(false);
 
+    const [fetchingOptions, setFetchingOptions] = useState({
+        step: 20,
+        offset: 0,
+    });
     const { connection } = useOutletContext();
     const { receiverId } = useParams();
     const [messages, setMessages] = useState([]);
@@ -31,6 +38,14 @@ const PrivateChat = ({errorHandler}) => {
     )
     const { files, uploadFiles, setFiles } = useUploadPrivateFiles(uploadPrivateFileAction)
     
+    useEffect(() => {
+        setHasMore(false);
+        setExpanded(false)
+        setFetchingOptions(defaultFetchingOptions)
+        setFiles([])
+        setMessageValue('');
+    })
+
     useEffect(() => {
         const callBack = (data) => {
             if(data.sender.id === receiverId) {
@@ -91,15 +106,16 @@ const PrivateChat = ({errorHandler}) => {
     }, [messages])
 
     const { loaded, result } = useFetchData(
-        () => getPrivateMessages(receiverId),
+        () => getPrivateMessages(receiverId, fetchingOptions.offset, fetchingOptions.step),
         errorHandler,
         null,
-        [receiverId]
+        [receiverId, fetchingOptions]
     )
     
     useEffect(() => {
         if(result && result.data) {
-            setMessages(result.data)
+            setMessages([...result.data.messages, ...messages])
+            setHasMore(result.data.hasMore)
         }
     }, [result])
 
@@ -115,6 +131,13 @@ const PrivateChat = ({errorHandler}) => {
     const sendMessage = (messageValue, fileIds) => {
         connection.invoke("SendPrivateMessage", receiverId, messageValue, fileIds)
     }
+
+    const handleAdditionalLoad = () => {
+        setFetchingOptions({
+            step: 10,
+            offset: fetchingOptions.offset + fetchingOptions.step, 
+        })
+    }
     
     const handleMessageSending = (message, scrollToBottom, setMessageValue) => {
         const allFilesLoaded = files.every(({loaded}) => loaded === true);
@@ -122,7 +145,6 @@ const PrivateChat = ({errorHandler}) => {
         if(!allFilesLoaded) {
             return;
         }
-``
         const loadedFileIds = files.filter(({error}) => error === null).map(({fileId}) => fileId);
 
         sendMessage(message, loadedFileIds)
@@ -174,6 +196,15 @@ const PrivateChat = ({errorHandler}) => {
         <ChatWindow
             receiverName={member?.userName}
             messages={messages}
+            setMessageValue={setMessageValue}
+            messageValue={messageValue}
+            lazyLoadComponent={
+                <div className="flex justify-center mt-[10px]">
+                    <Button className={cx("w-auto", {hidden: !hasMore})} onClick={handleAdditionalLoad}>
+                        Load more messages
+                    </Button>
+                </div>
+            }
             handleMessageSending={handleMessageSending}
             onIsAtButtonUpdate={onIsAtButtonUpdate}
             removeMessage={removeMessage}

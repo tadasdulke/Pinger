@@ -1,8 +1,8 @@
 import { API_SERVICE_ENDPOINTS } from './config/constants';
 
 const getPrivateMessagesEndpoint = (instance) => {
-    const getPrivateMessages = async (receiverId) => {
-        const response = await instance.get(`${API_SERVICE_ENDPOINTS.PRIVATE_MESSAGES}/${receiverId}`, {
+    const getPrivateMessages = async (receiverId, offset, step) => {
+        const response = await instance.get(`${API_SERVICE_ENDPOINTS.PRIVATE_MESSAGES}/${receiverId}?offset=${offset}&&step=${step}`, {
             headers: {
                 'Content-Type': 'application/json',
             },

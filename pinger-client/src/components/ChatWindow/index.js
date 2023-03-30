@@ -3,7 +3,7 @@ import cx from 'classnames'
 import { ReactSVG } from 'react-svg';
 import InputEmoji from 'react-input-emoji'
 import { useSelector } from 'react-redux';
-import { useOnScreen } from '@Common'
+import { RotatingLines } from 'react-loader-spinner'
 import { DropDown, FileUploadButton, FileList } from '@Components'
 
 import './index.css'
@@ -102,15 +102,20 @@ const ChatWindow = ({
     seeNewMessagesButtonVisible,
     setSeeNewMessagesButtonVisible,
     isAtBottom,
-    messageEndRef
+    messageValue,
+    setMessageValue,
+    messagesLoaded,
+    initiateObserver
 }) => {
-    const [messageValue, setMessageValue] = useState('');
+    const [messageEndRef, setMessageEndRef] = useState(null);
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const scrollRef = useRef();
 
     const scrollToBottom = (options) => {
-        messageEndRef.current?.scrollIntoView(options)
+        if(messageEndRef) {
+            messageEndRef.current?.scrollIntoView(options)
+        }
     }
 
     const initiateEditionMode = (id) => {
@@ -128,7 +133,7 @@ const ChatWindow = ({
 
     useEffect(() => {
         scrollToBottom();
-    }, [])
+    }, [messageEndRef])
 
     useEffect(() => {
         if(isAtBottom) 
@@ -149,6 +154,15 @@ const ChatWindow = ({
         setMessageValue('')
     }
 
+    const messageEndRefCallback = React.useCallback(node => {
+        if(node) {
+            const ref = {current: node};
+            initiateObserver(ref)
+            setMessageEndRef(ref);
+        }
+      }, [])
+
+
     return (
         <div className="flex justify-between flex-col h-full">
             <div className="flex justify-between bg-tuna p-[20px] text-white">
@@ -165,7 +179,20 @@ const ChatWindow = ({
                     </button>
                 }
                 <div ref={scrollRef} className="absolute overflow-y-auto bottom-0 top-0 left-0 right-0">
-                    <div className="px-[10px] flex flex-col">
+                    {!messagesLoaded ? 
+                    (
+                        <div className="w-full h-full flex justify-center items-center">
+                            <RotatingLines
+                                strokeColor="white"
+                                strokeWidth="5"
+                                animationDuration="0.75"
+                                width="50"
+                            />
+                        </div>
+                    )
+                    :
+                    (
+                        <div className="px-[10px] flex flex-col">
                             {lazyLoadComponent}
                             {messages.map((message) => (
                                 <Message
@@ -176,8 +203,10 @@ const ChatWindow = ({
                                     fileDownloadEndpoint={fileDownloadEndpoint}
                                 />
                             ))}
-                        <div ref={messageEndRef} />
-                    </div>
+                        <div ref={messageEndRefCallback} />
+                        </div>
+                    )
+                    }
                 </div>
             </div>
             <div className="p-[10px] bg-tuna">
