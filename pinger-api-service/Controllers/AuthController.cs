@@ -12,7 +12,7 @@ namespace pinger_api_service
     [ApiController]
     public class AuthenticateController : ControllerBase
     {
-        private readonly UserManager<User> _userManager;
+        private readonly ApplicationUserManager _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
 
@@ -84,6 +84,30 @@ namespace pinger_api_service
             return Ok();
         }
 
+        [HttpDelete]
+        [Route("revoke-token")]
+        public async Task<IActionResult> RevokeToken()
+        {
+            string? accessToken = Request.Cookies["X-Access-Token"];
+
+            var principal = GetPrincipalFromExpiredToken(accessToken);
+            if (principal == null)
+            {
+                return BadRequest();
+            }
+
+            string userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            User user = await _userManager.FindByIdAsync(userId);
+
+            user.RefreshToken = null;
+            await _userManager.UpdateAsync(user);
+            
+            Response.Cookies.Delete("X-Refresh-Token");
+            Response.Cookies.Delete("X-Access-Token");
+    
+            return NoContent();
+        }
+
         [HttpPut]
         [Route("append-claims")]
         public async Task<IActionResult> AppendNewClaimsToToken(AppendNewClaim appendNewClaim)
@@ -153,6 +177,9 @@ namespace pinger_api_service
                var refreshToken = GenerateRefreshToken();
 
                DateTime refreshTokenExpirityTime = DateTime.Now.AddDays(7);
+
+               File? profilePicture = _userManager.GetProfilePicture(user.Id); 
+               user.ProfileImageFile = profilePicture;
 
                user.RefreshToken = refreshToken;
                user.RefreshTokenExpiryTime = refreshTokenExpirityTime;

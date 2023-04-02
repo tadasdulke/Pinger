@@ -1,51 +1,74 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit';
 
 const channelsSlice = createSlice({
-    name: 'channels',
-    initialState: [],
-    reducers: {
-      addChannel: (state, action) => {
-        const {id, name} = action.payload;
+  name: 'channels',
+  initialState: [],
+  reducers: {
 
-        const modifiedChannel = {
-          id,
-          name,
-          highlighted: false
+    restore: () => {
+      return [];
+    },
+    addChannel: (state, action) => {
+      const { id, name } = action.payload;
+
+      const modifiedChannel = {
+        id,
+        name,
+        highlighted: false,
+      };
+
+      return [...state, modifiedChannel];
+    },
+    removeChannel: (state, action) => {
+      const { id } = action.payload;
+
+      return state.filter(({id: channelId}) => channelId !== id);
+    },
+    modifyChannelName: (state, action) => {
+      const { id, name } = action.payload;
+      return state.map((channel) => {
+        if (channel.id === id) {
+          return {
+            ...channel,
+            name
+          };
         }
 
-        return [...state, modifiedChannel]
-      },
-      highlightChannel: (state, action) => {
-        const channelId = action.payload;
+        return channel;
+      });
 
-        return state.map(channel => {
-          if(channel.id === channelId) {
-            return {
-              ...channel,
-              highlighted: true
-            }
-          }
+    },
+    highlightChannel: (state, action) => {
+      const channelId = action.payload;
 
-          return channel;
-        })
-      },
-      removeChannelHighlight: (state, action) => {
-        const channelId = action.payload;
+      return state.map((channel) => {
+        if (channel.id === channelId) {
+          return {
+            ...channel,
+            highlighted: true,
+          };
+        }
 
-        return state.map(channel => {
-          if(channel.id === channelId) {
-            return {
-              ...channel,
-              highlighted: false
-            }
-          }
+        return channel;
+      });
+    },
+    removeChannelHighlight: (state, action) => {
+      const channelId = action.payload;
 
-          return channel;
-        })
-      }
-    }
-})
+      return state.map((channel) => {
+        if (channel.id === channelId) {
+          return {
+            ...channel,
+            highlighted: false,
+          };
+        }
+
+        return channel;
+      });
+    },
+  },
+});
 
 export default channelsSlice.reducer;
 
-export const { addChannel, highlightChannel, removeChannelHighlight } = channelsSlice.actions;
+export const { addChannel, highlightChannel, removeChannelHighlight, modifyChannelName, restore, removeChannel } = channelsSlice.actions;

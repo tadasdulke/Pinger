@@ -2,7 +2,7 @@ import React from 'react';
 
 import { useErrorWrapperAlertState } from '../hooks';
 
-const withErrorWrapper = (Component) => (props) => {
+const withErrorWrapper = (Component) => function (props) {
   const {
     isErrorShown,
     errorMessage,

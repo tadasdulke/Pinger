@@ -59,8 +59,8 @@ namespace pinger_api_service
             
             bool hasMore = messages.Count > step;
 
-            if(offset > 0) {
-                messages.RemoveAt(messages.Count - 1);
+            if(hasMore) {
+                messages.RemoveAt(0);
             }
 
             LazyLoadChannelMessages lazyLoadChannelMessages = new LazyLoadChannelMessages {

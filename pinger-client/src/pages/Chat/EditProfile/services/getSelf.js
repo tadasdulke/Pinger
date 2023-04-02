@@ -1,7 +1,5 @@
 import apiClient from '@Api';
 
-const getSelf = async () => {
-    return await apiClient.getSelf();
-}
+const getSelf = async () => await apiClient.getSelf();
 
 export default getSelf;

@@ -1,1 +1,1 @@
-export { default as useUploadPrivateFiles } from './useUploadPrivateFiles' 
+export { default as useUploadPrivateFiles } from './useUploadPrivateFiles';

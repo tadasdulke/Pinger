@@ -33,6 +33,7 @@ namespace pinger_api_service
                 .ThenInclude(userInfo => userInfo.ChatSpace)
                 .Include(u => u.ContactedUsersInfo)
                 .ThenInclude(userInfo => userInfo.ContactedUser)
+                .ThenInclude(u => u.ProfileImageFile)
                 .FirstOrDefaultAsync(u => u.Id == userId);
                 
             if(user is null) {
@@ -46,7 +47,7 @@ namespace pinger_api_service
 
         [Authorize]
         [HttpPut]
-        public async Task<IActionResult> UpdateUser([FromForm] IFormFile? profileImage, [FromForm] string username)
+        public async Task<ActionResult<UserDto>> UpdateUser([FromForm] IFormFile? profileImage, [FromForm] string username)
         {
             string userId = _userManager.GetUserId(User);
             User? user = await _dbContext.Users.Include(u => u.ProfileImageFile).Where(u => u.Id == userId).FirstOrDefaultAsync();
@@ -57,11 +58,11 @@ namespace pinger_api_service
 
             user.UserName = username;
 
-            if(user.ProfileImageFile is not null) {
-                _fileManager.RemoveFile(user.ProfileImageFile.Path);
-            }
-
             if(profileImage is not null) {
+                if(user.ProfileImageFile is not null) {
+                    _fileManager.RemoveFile(user.ProfileImageFile.Path);
+                }
+
                 LocalFile profileFile = await _fileManager.AddFile(profileImage, "data/public", userId);
                 user.ProfileImageFile = new File{
                     Name = profileFile.Name,
@@ -70,10 +71,10 @@ namespace pinger_api_service
                 };
             }
             
-            await _userManager.UpdateAsync(user);
-            _dbContext.SaveChanges();
+            _dbContext.Users.Update(user);
+            await _dbContext.SaveChangesAsync();
 
-            return NoContent();
+            return new UserDto(user);
         }
 
         [Authorize]

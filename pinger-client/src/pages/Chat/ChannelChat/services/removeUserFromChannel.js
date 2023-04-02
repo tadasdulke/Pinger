@@ -1,7 +1,5 @@
 import apiClient from '@Api';
 
-const removeUserFromChannel = async (channelId, messageId) => {
-    return await apiClient.removeUserFromChannel(channelId, messageId);
-}
+const removeUserFromChannel = async (channelId, messageId) => await apiClient.removeUserFromChannel(channelId, messageId);
 
 export default removeUserFromChannel;

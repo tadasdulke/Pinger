@@ -29,7 +29,7 @@ namespace pinger_api_service
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateChannel(AddChannel channelToAdd)
+        public async Task<ActionResult<ChannelDto>> CreateChannel(AddChannel channelToAdd)
         {
             string userId = _userManager.GetUserId(User);
             User? owner = await _userManager.FindByIdAsync(userId);
@@ -63,7 +63,71 @@ namespace pinger_api_service
             await _dbContext.Channel.AddAsync(newChannel);
             await _dbContext.SaveChangesAsync();
 
-            return Ok();
+            return new ChannelDto(newChannel);
+        }
+
+        [Authorize]
+        [HttpPut]
+        [Route("{channelId}")]
+        public async Task<ActionResult<ChannelDto>> UpdateChannel([FromRoute] int channelId, [FromBody] UpdateChannel updateChannel)
+        {
+            string userId = _userManager.GetUserId(User);
+            Channel? channel = await _dbContext.Channel.Include(c => c.Owner).FirstOrDefaultAsync(c => c.Id == channelId);
+
+            if(channel is null) {
+                return NotFound();
+            }
+
+            if(channel.Owner.Id != userId) {
+                return Unauthorized();
+            }
+
+            channel.Name = updateChannel.Name;
+            _dbContext.Channel.Update(channel);
+            await _dbContext.SaveChangesAsync();
+
+            return new ChannelDto(channel);
+        }
+
+        [Authorize]
+        [HttpDelete]
+        [Route("{channelId}")]
+        public async Task<ActionResult<ChannelDto>> DeleteChannel([FromRoute] int channelId)
+        {
+            string userId = _userManager.GetUserId(User);
+            Channel? channel = await _dbContext.Channel
+                .Include(c => c.Owner)
+                .Include(c => c.Messages)
+                .ThenInclude(m => m.ChannelMessageFiles)
+                .Include(c => c.Members)
+                .ThenInclude(m => m.ConnectionInformations)
+                .FirstOrDefaultAsync(c => c.Id == channelId);
+
+            if(channel is null) {
+                return NotFound();
+            }
+
+            if(channel.Owner.Id != userId) {
+                return Unauthorized();
+            }
+            
+            List<ChannelMessageFile> channelMessageFiles = channel.Messages.Aggregate(
+                new List<ChannelMessageFile>(),
+                (acc, message) => acc.Concat(message.ChannelMessageFiles).ToList()
+            );
+
+            _dbContext.ChannelMessageFile.RemoveRange(channelMessageFiles);
+            _dbContext.ChannelMessage.RemoveRange(channel.Messages);
+            _dbContext.Channel.Remove(channel);
+            await _dbContext.SaveChangesAsync();
+
+            List<string?> connectionIds = channel.Members.Aggregate(
+                new List<string?>(),
+                (acc, member) => acc.Concat(member.ConnectionInformations.Select(ci => ci.ConnectionId)).ToList()
+            );
+            
+            await _chatHubContext.Clients.Clients(connectionIds).SendAsync("UserRemovedFromChannel", new ChannelDto(channel));
+            return new ChannelDto(channel);
         }
 
         [Authorize]
@@ -130,7 +194,9 @@ namespace pinger_api_service
                 return NotFound();
             }
 
-            User? newMember = await _userManager.FindByIdAsync(addUserToChannelRequest.NewMemberId);
+            User? newMember = await _userManager.Users
+                .Include(u => u.ConnectionInformations)
+                .FirstOrDefaultAsync(u => u.Id == addUserToChannelRequest.NewMemberId);
 
             if(newMember is null) {
                 return NotFound();
@@ -139,7 +205,28 @@ namespace pinger_api_service
             channel.Members.Add(newMember);
             await _dbContext.SaveChangesAsync();
 
-            return Ok();
+            List<string> connectionIds = newMember.ConnectionInformations.Select(ci => ci.ConnectionId).ToList();
+            await _chatHubContext.Clients.Clients(connectionIds).SendAsync("UserAddedToChannel", new ChannelDto(channel));
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpGet("{channelId}/members")]
+        public async Task<ActionResult<List<UserDto>>> GetChannelMembers([FromRoute] int channelId, [FromQuery] string? search)
+        {
+            Channel? channel = await _dbContext.Channel
+                .Include(c => c.Members)
+                .FirstOrDefaultAsync(c => c.Id == channelId);
+            
+            if(channel is null) {
+                return NotFound();
+            }
+
+            if(search is not null) {
+                return channel.Members.Where(m => m.UserName.Contains(search)).Select(u => new UserDto(u)).ToList();
+            }
+
+            return channel.Members.Select(m => new UserDto(m)).ToList();
         }
 
         [Authorize]
@@ -150,6 +237,7 @@ namespace pinger_api_service
 
             Channel? channel = await _dbContext.Channel
                 .Include(c => c.Members)
+                .ThenInclude(m => m.ConnectionInformations)
                 .Include(c => c.Owner)
                 .FirstOrDefaultAsync(c => c.Id == channelId);
             
@@ -175,6 +263,9 @@ namespace pinger_api_service
             channel.Members.Remove(memberToDelete);
             _dbContext.Channel.Update(channel);
             await _dbContext.SaveChangesAsync();
+
+            List<string> connectionIds = memberToDelete.ConnectionInformations.Select(ci => ci.ConnectionId).ToList();
+            await _chatHubContext.Clients.Clients(connectionIds).SendAsync("UserRemovedFromChannel", new ChannelDto(channel));
 
             return NoContent();
         }

@@ -5,14 +5,14 @@ import { DEFAULT_ERROR } from '../config/errorMessages';
 const defaultErrorHandler = {
   showError: () => null,
   hideError: () => null,
-}
+};
 
 const useApiAction = (action, errorHandler = defaultErrorHandler, resolveErrorMessage = null) => {
   const [loaded, setLoaded] = useState(true);
 
   const sendAction = async (...args) => {
     try {
-    setLoaded(false);
+      setLoaded(false);
       const response = await action(...args);
       errorHandler.hideError();
 
@@ -23,8 +23,8 @@ const useApiAction = (action, errorHandler = defaultErrorHandler, resolveErrorMe
         : resolveErrorMessage(status);
 
       errorHandler.showError(errorMessage);
-      
-      return { status, data }
+
+      return { status, data };
     } finally {
       setLoaded(true);
     }

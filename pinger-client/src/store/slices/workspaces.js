@@ -1,17 +1,20 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit';
 
 const workspaceSlice = createSlice({
-    name: 'workspaces',
-    initialState: {
-      currentWorkspaceId: null
+  name: 'workspaces',
+  initialState: {
+    currentWorkspaceId: null,
+  },
+  reducers: {
+    restore: (state) => {
+      state.currentWorkspaceId = null;
     },
-    reducers: {
-      changeCurrentWorkspaceId: (state, action) => {
-        state.currentWorkspaceId = action.payload
-      },
-    }
-})
+    changeCurrentWorkspaceId: (state, action) => {
+      state.currentWorkspaceId = action.payload;
+    },
+  },
+});
 
 export default workspaceSlice.reducer;
 
-export const { changeCurrentWorkspaceId } = workspaceSlice.actions;
+export const { changeCurrentWorkspaceId, restore } = workspaceSlice.actions;

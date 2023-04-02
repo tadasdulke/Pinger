@@ -1,7 +1,5 @@
 import apiClient from '@Api';
 
-const uploadChannelMessageFile = async (file, channelId) => {
-    return await apiClient.addChannelMessageFile(file, channelId)
-}
+const uploadChannelMessageFile = async (file, channelId) => await apiClient.addChannelMessageFile(file, channelId);
 
 export default uploadChannelMessageFile;

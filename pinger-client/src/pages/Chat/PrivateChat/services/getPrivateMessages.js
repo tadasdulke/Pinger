@@ -1,11 +1,11 @@
 import apiClient from '@Api';
 
-const getPrivateMessages = async (receiverId, offset, step) => {
-    if(!receiverId) {
-        return null;
-    }
+const getPrivateMessages = async (receiverId, offset, step, skip) => {
+  if (!receiverId) {
+    return null;
+  }
 
-    return await apiClient.getPrivateMessages(receiverId, offset, step);
-}
+  return await apiClient.getPrivateMessages(receiverId, offset, step, skip);
+};
 
 export default getPrivateMessages;

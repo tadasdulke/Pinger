@@ -25,7 +25,7 @@ const useFetchData = (
     } finally {
       setLoaded(true);
     }
-  }
+  };
 
   useEffect(() => {
     (async () => {
@@ -36,15 +36,15 @@ const useFetchData = (
   const setData = (data) => {
     setResult({
       ...result,
-      data: data
-    })
-  }
+      data,
+    });
+  };
 
   return {
     result,
     loaded,
     reload: core,
-    setData
+    setData,
   };
 };
 

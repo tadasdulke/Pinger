@@ -1,7 +1,7 @@
-import React from "react";
+import React from 'react';
 import cx from 'classnames';
 
-const TextInput = ({
+function TextInput({
   field,
   label,
   labelClassName,
@@ -11,7 +11,7 @@ const TextInput = ({
   form: { touched, errors },
   wrapperClassName,
   ...props
-}) => {
+}) {
   return (
     <div className={wrapperClassName}>
       <div>
@@ -24,8 +24,8 @@ const TextInput = ({
         <input
           id={id}
           type="text"
-          className={cx("w-full border border-tuna rounded-[3px] p-[8px]", {
-            "mt-[7px]": label
+          className={cx('w-full border border-tuna rounded-[3px] p-[8px]', {
+            'mt-[7px]': label,
           })}
           {...field}
           {...props}
@@ -39,6 +39,6 @@ const TextInput = ({
       )}
     </div>
   );
-};
+}
 
 export default TextInput;

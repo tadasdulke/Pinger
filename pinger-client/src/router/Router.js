@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { BaseLayout } from '@Components';
 import { ROUTES } from "@Router";
-import {Login, Register, ChatSpaces, CreateChatSpace, Chat, JoinChatSpace, CreateChannel } from '../pages'
+import {Login, Register, ChatSpaces, CreateChatSpace, Chat, JoinChatSpace, CreateChannel, EditChannel } from '../pages'
 import AuthorizedRoute from './AuthorizedRoute'
 import UnauthorizedRoute from './UnauthorizedRoute'
 import ManagedRoute from './ManagedRoute'
@@ -80,10 +80,13 @@ const Router = () => {
             path={`${ROUTES.CHANNEL_CHAT}/:channelId`}
             element={<ChannelChat />}
           />
-          />
           <Route
             path={ROUTES.EDIT_PROFILE}
             element={<EditProfile />}
+          />
+          <Route
+            path={`${ROUTES.EDIT_CHANNEL}/:channelId`}
+            element={<EditChannel />}
           />
         </Route>
         <Route

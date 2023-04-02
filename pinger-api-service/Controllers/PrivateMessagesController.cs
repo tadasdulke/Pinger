@@ -33,7 +33,7 @@ namespace pinger_api_service
         [Authorize]
         [HttpGet]
         [Route("{receiverId}")]
-        public async Task<ActionResult<LazyLoadPrivateMessages>> GetPrivateMessages([FromRoute] string receiverId, [FromQuery] int offset, [FromQuery] int step)
+        public async Task<ActionResult<LazyLoadPrivateMessages>> GetPrivateMessages([FromRoute] string receiverId, [FromQuery] int offset, [FromQuery] int step, [FromQuery] int skip)
         {
             string senderId = _userManager.GetUserId(User);
             int chatSpaceId = _userManager.GetChatSpaceId(User);
@@ -48,15 +48,15 @@ namespace pinger_api_service
                 .Where(pm => (pm.Receiver.Id == receiverId) || (pm.Receiver.Id == senderId))
                 .Where(pm => (pm.Sender.Id == senderId) || (pm.Sender.Id == receiverId))
                 .Where(pm => pm.ChatSpace.Id == chatSpaceId)
-                .Skip(offset)
+                .Skip(offset + skip)
                 .Take(step + 1)
                 .Reverse()
                 .ToList();
-
+            
             bool hasMore = privateMessages.Count > step;
 
-            if(offset > 0) {
-                privateMessages.RemoveAt(privateMessages.Count - 1);
+            if(hasMore) {
+                privateMessages.RemoveAt(0);
             }
 
             LazyLoadPrivateMessages lazyLoadPrivateMessages = new LazyLoadPrivateMessages {
