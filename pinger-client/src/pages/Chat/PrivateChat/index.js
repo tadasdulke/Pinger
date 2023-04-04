@@ -10,34 +10,35 @@ import { changeChatOccupierInfo, updateChatType, updateIsAtButton } from '@Store
 import { ChatWindow } from '@Components';
 import { removeUserHighlight } from '@Store/slices/contactedUsers';
 import { useUploadPrivateFiles } from '@Hooks';
-import { uploadPrivateFile } from '@Services';
+import { uploadPrivateFile, updateContactedUserReadTime } from '@Services';
 import useFetchChatSpaceMember from './hooks/useFetchChatSpaceMember';
-import getPrivateMessages from './services/getPrivateMessages';
-
 import useRemovePrivateMessage from './hooks/useRemovePrivateMessage';
 import useUpdatePrivateMessage from './hooks/useUpdatePrivateMessage';
 
+import {useMessages} from '../hooks';
+
 function PrivateChat({ errorHandler }) {
   const dispatch = useDispatch();
-  const [addedMessageCount, setAddedMessageCount] = useState(0);
-  const [initialMessagesLoaded, setInitialMessagesLoaded] = useState(false);
   const [messageValue, setMessageValue] = useState('');
   const { isIntersecting: isAtBottom, initiateObserver } = useOnScreen();
-
-  const [messages, setMessages] = useState([]);
-  const [hasMore, setHasMore] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-
-  const defaultFetchingOptions = {
-    step: 20,
-    offset: 0,
-  };
-  const [fetchingOptions, setFetchingOptions] = useState(defaultFetchingOptions);
   const { connection } = useOutletContext();
   const { receiverId } = useParams();
-  const [seeNewMessagesButtonVisible, setSeeNewMessagesButtonVisible] = useState(false);
-  const [additionalMessagesLoading, setAdditionalMessagesLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const { member } = useFetchChatSpaceMember(errorHandler, receiverId, null, [receiverId]);
+
+  const {
+    messages,
+    unreadMessages,
+    modifyMessage,
+    removeMessage,
+    handleAdditionalLoad,
+    initialMessagesLoaded,
+    hasMore,
+    additionalMessagesLoading,
+    setSeeNewMessagesButtonVisible,
+    seeNewMessagesButtonVisible
+  } = useMessages(connection, receiverId, isAtBottom, errorHandler);
+
   const { sendRemoveMessageAction } = useRemovePrivateMessage(errorHandler);
   const { sendUpdateMessageAction } = useUpdatePrivateMessage(errorHandler);
   const { sendAction: uploadPrivateFileAction } = useApiAction(
@@ -45,76 +46,8 @@ function PrivateChat({ errorHandler }) {
   );
   const { files, uploadFiles, setFiles } = useUploadPrivateFiles(uploadPrivateFileAction);
 
-  useEffect(() => {
-    setHasMore(false);
-    setExpanded(false);
-    setFetchingOptions(defaultFetchingOptions);
-    setFiles([]);
-    setMessageValue('');
-  }, [receiverId]);
-
-  useEffect(() => {
-    const callBack = (data) => {
-      if (data.sender.id === receiverId) {
-        setMessages([...messages, data]);
-        setAddedMessageCount(addedMessageCount + 1);
-        if (!isAtBottom) {
-          setSeeNewMessagesButtonVisible(true);
-        }
-      }
-    };
-
-    connection.on('ReceiveMessage', callBack);
-
-    return () => connection.off('ReceiveMessage', callBack);
-  }, [receiverId, messages, isAtBottom]);
-
-  useEffect(() => {
-    const callBack = (data) => {
-      setMessages([...messages, data]);
-      setAddedMessageCount(addedMessageCount + 1);
-    };
-
-    connection.on('MessageSent', callBack);
-
-    return () => connection.off('MessageSent', callBack);
-  }, [messages]);
-
-  useEffect(() => {
-    const callBack = (data) => {
-      const senderId = data.sender.id;
-
-      if (senderId === receiverId) {
-        const messageId = data.id;
-        setMessages(messages.filter((m) => m.id !== messageId));
-        setAddedMessageCount(addedMessageCount - 1);
-      }
-    };
-
-    connection.on('PrivateMessageRemoved', callBack);
-
-    return () => connection.off('PrivateMessageRemoved', callBack);
-  }, [messages]);
-
-  useEffect(() => {
-    const callBack = (data) => {
-      const modifiedMessages = messages.map((message) => {
-        if (message.id === data.id) {
-          return data;
-        }
-
-        return message;
-      });
-      setMessages(modifiedMessages);
-    };
-
-    connection.on('PrivateMessageUpdated', callBack);
-
-    return () => connection.off('PrivateMessageUpdated', callBack);
-  }, [messages]);
-
-  const { loaded, sendAction: getPrivateMessagesAction } = useApiAction(
-    (id, offset, step, skip) => getPrivateMessages(id, offset, step, skip),
+  const { sendAction: updateContactedUserReadTimeAction } = useApiAction(
+    () => updateContactedUserReadTime(receiverId),
     errorHandler,
   );
 
@@ -143,66 +76,48 @@ function PrivateChat({ errorHandler }) {
     }));
   }, [receiverId]);
 
-  const handleAdditionalLoad = async () => {
-    const updatedFetchingOptions = {
-      step: 10,
-      offset: fetchingOptions.offset + fetchingOptions.step,
-    };
-    setFetchingOptions(updatedFetchingOptions);
-    setAdditionalMessagesLoading(true);
-    const response = await getPrivateMessagesAction(receiverId, updatedFetchingOptions.offset, updatedFetchingOptions.step, addedMessageCount);
-    setAdditionalMessagesLoading(false);
-    setMessages([...response.data.messages, ...messages]);
-    setHasMore(response.data.hasMore);
-  };
 
   useEffect(() => {
-    setHasMore(false);
     setExpanded(false);
-    setFetchingOptions(defaultFetchingOptions);
     setFiles([]);
-    setInitialMessagesLoaded(false);
     setMessageValue('');
-
-    (async () => {
-      const response = await getPrivateMessagesAction(receiverId, defaultFetchingOptions.offset, defaultFetchingOptions.step, 0);
-      setMessages(response.data.messages);
-      setHasMore(response.data.hasMore);
-      setInitialMessagesLoaded(true);
-    })();
   }, [receiverId]);
 
-  const onIsAtButtonUpdate = (isAtBottom) => {
+  const onIsAtButtonUpdate = async (isAtBottom) => {
     dispatch(updateIsAtButton(isAtBottom));
     dispatch(removeUserHighlight(receiverId));
   };
 
+  useEffect(() => {
+    (async () => {
+      if(isAtBottom) {
+        await updateContactedUserReadTimeAction();
+      }
+    })();
+  }, [isAtBottom])
+
+  useEffect(() => {
+    (async () => {
+        if(messages && unreadMessages)
+        await updateContactedUserReadTimeAction();
+
+    })();
+  }, [messages, unreadMessages])
+
   const handleMessageEdit = async (message, { id }) => {
     const editedMessage = message;
-    const { status } = await sendUpdateMessageAction(id, editedMessage);
+    const { status, data } = await sendUpdateMessageAction(id, editedMessage);
 
-    if (status === 204) {
-      const modifiedMessages = messages.map((message) => {
-        if (message.id === id) {
-          return {
-            ...message,
-            body: editedMessage,
-            edited: true,
-          };
-        }
-
-        return message;
-      });
-
-      setMessages(modifiedMessages);
+    if (status === 200) {
+      modifyMessage(data)
     }
   };
 
-  const removeMessage = async (id) => {
-    const { status } = await sendRemoveMessageAction(id);
+  const handleMessageRemove = async (id) => {
+    const { status, data } = await sendRemoveMessageAction(id);
 
-    if (status === 204) {
-      setMessages(messages.filter((m) => m.id !== id));
+    if (status === 200) {
+      removeMessage(data);
     }
   };
 
@@ -227,11 +142,12 @@ function PrivateChat({ errorHandler }) {
           </div>
           <span className="ml-[10px]">{member?.userName}</span>
         </div>
-              )}
+      )}
       expanded={expanded}
       initiateObserver={initiateObserver}
       isAtBottom={isAtBottom}
       messages={messages}
+      unreadMessages={unreadMessages}
       setMessageValue={setMessageValue}
       messageValue={messageValue}
       messagesLoaded={initialMessagesLoaded}
@@ -250,10 +166,10 @@ function PrivateChat({ errorHandler }) {
               : 'Load more messages'}
           </Button>
         </div>
-              )}
+      )}
       handleMessageSending={handleMessageSending}
       onIsAtButtonUpdate={onIsAtButtonUpdate}
-      removeMessage={removeMessage}
+      removeMessage={handleMessageRemove}
       handleMessageEdit={handleMessageEdit}
       handleFilesUpload={(addedFiles) => uploadFiles(addedFiles, receiverId)}
       files={files}

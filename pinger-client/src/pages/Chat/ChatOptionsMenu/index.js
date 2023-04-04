@@ -6,7 +6,7 @@ import cx from 'classnames';
 import { useLoadedImage } from '@Common';
 import { ROUTES } from '@Router';
 import UserSearchModal from './UserSearchModal';
-import DirectMessages from './DirectMessages';
+import MessagingOptions from './MessagingOptions';
 
 function UserBar() {
   const [showModal, setShowModal] = useState(false);
@@ -52,7 +52,7 @@ function ChatOptionsMenu({ connection }) {
   return (
     <div className="h-full flex flex-col">
       <UserBar />
-      <DirectMessages connection={connection} />
+      <MessagingOptions connection={connection} />
     </div>
   );
 }

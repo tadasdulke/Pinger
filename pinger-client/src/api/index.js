@@ -10,6 +10,7 @@ import getChannelMessageEndpoints from './getChannelMessageEndpoints';
 import getChannelMessageReadTimesEndpoints from './getChannelMessageReadTimesEndpoints';
 import getPrivateMessageFileEndpoints from './getPrivateMessageFileEndpoints';
 import getChannelMessageFileEndpoints from './getChannelMessageFileEndpoints';
+import getContactedUsersEndpoints from './ getContactedUsersEndpoints';
 
 export const createPingerClient = () => {
   const instance = axios.create({
@@ -28,10 +29,9 @@ export const createPingerClient = () => {
     joinChatSpace,
     getChatSpaceMember,
   } = getChatSpaceEndpoints(instance);
-  const {
-    addContactedUser, getContactedUsers, getSelf, updateSelf,
-  } = getUserEndpoints(instance);
-  const { getPrivateMessages, removePrivateMessage, updatePrivateMessage } = getPrivateMessagesEndpoint(instance);
+  const { getSelf, updateSelf } = getUserEndpoints(instance);
+  const { addContactedUser, getContactedUsers, updateContactedUserReadTime } = getContactedUsersEndpoints(instance);
+  const { getPrivateMessages, removePrivateMessage, updatePrivateMessage, getUnreadPrivateMessages } = getPrivateMessagesEndpoint(instance);
   const { getChannelMessages, removeChannelMessage, updateChannelMessage } = getChannelMessageEndpoints(instance);
   const {
     createChannel, 
@@ -80,7 +80,9 @@ export const createPingerClient = () => {
     revokeToken,
     editChannel,
     removeChannel,
-    getChannelMembers
+    getChannelMembers,
+    updateContactedUserReadTime,
+    getUnreadPrivateMessages
   };
 };
 

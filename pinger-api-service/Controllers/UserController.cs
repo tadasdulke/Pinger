@@ -22,30 +22,6 @@ namespace pinger_api_service
         }
 
         [Authorize]
-        [HttpGet]
-        [Route("contacted-users")] 
-        public async Task<ActionResult<List<ContactedUserInfoDto>>> GetContactedUsers()
-        {
-            string userId = _userManager.GetUserId(User);
-            int chatspaceId = _userManager.GetChatSpaceId(User);
-            User? user = await _dbContext.Users
-                .Include(u => u.ContactedUsersInfo)
-                .ThenInclude(userInfo => userInfo.ChatSpace)
-                .Include(u => u.ContactedUsersInfo)
-                .ThenInclude(userInfo => userInfo.ContactedUser)
-                .ThenInclude(u => u.ProfileImageFile)
-                .FirstOrDefaultAsync(u => u.Id == userId);
-                
-            if(user is null) {
-                return NotFound();
-            }
-            
-            List<ContactedUserInfo> contactedUsers = user.ContactedUsersInfo.Where(userInfo => userInfo.ChatSpace.Id == chatspaceId).ToList();
-
-            return contactedUsers.Select(cu => new ContactedUserInfoDto(cu)).ToList();
-        }
-
-        [Authorize]
         [HttpPut]
         public async Task<ActionResult<UserDto>> UpdateUser([FromForm] IFormFile? profileImage, [FromForm] string username)
         {
@@ -89,45 +65,6 @@ namespace pinger_api_service
             }
 
             return new UserDto(user);    
-        }
-
-        [Authorize]
-        [HttpPost]
-        [Route("contacted-users")]
-        public async Task<IActionResult> AddContactedUser([FromBody] AddContactedUser contactedUserRequest)
-        {
-            string userId = _userManager.GetUserId(User);
-            User? user = await _dbContext.Users.Include(u => u.ContactedUsersInfo).ThenInclude(cuf => cuf.ContactedUser).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if(user is null) {
-                return NotFound();
-            }
-            
-            string contactedUserId = contactedUserRequest.contactedUserId;
-            User? contactedUser = await _userManager.FindByIdAsync(contactedUserId);
-            
-            if(contactedUser is null) {
-                return NotFound();
-            }
-            
-            bool userAlreadyAdded = user.ContactedUsersInfo.Any(item => item.ContactedUser.Id == contactedUserId); 
-            if(userAlreadyAdded) {
-                return NoContent();
-            }
-
-            int chatspaceId = _userManager.GetChatSpaceId(User);
-            ChatSpace? chatSpace = _chatSpaceManager.GetChatSpaceById(chatspaceId);
-            
-            if(chatSpace is null) {
-                return NotFound();
-            }
-
-            ContactedUserInfo contactedUserInfo = new ContactedUserInfo();
-            contactedUserInfo.ChatSpace = chatSpace;
-            contactedUserInfo.ContactedUser = contactedUser;
-            user.ContactedUsersInfo.Add(contactedUserInfo);
-            await _userManager.UpdateAsync(user);
-            return Ok();
         }
     }
 } 

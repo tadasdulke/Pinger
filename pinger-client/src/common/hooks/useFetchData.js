@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
 import { DEFAULT_ERROR } from '../config/errorMessages';
 
+const defaultErrorHandler = {
+  showError: () => null,
+  hideError: () => null,
+};
+
 const useFetchData = (
   fetchAction,
-  errorHandler,
+  errorHandler = defaultErrorHandler,
   resolveErrorMessage = null,
   deps = [],
 ) => {

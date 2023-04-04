@@ -93,6 +93,7 @@ function Message({
 function ChatWindow({
   receiverInfo,
   messages,
+  unreadMessages,
   handleMessageSending,
   chatActions,
   lazyLoadComponent,
@@ -124,8 +125,11 @@ function ChatWindow({
 
   const initiateEditionMode = (id) => {
     const messageToEdit = messages.find((m) => m.id === id);
-    setMessageValue(messageToEdit.body);
-    setSelectedMessage(messageToEdit);
+    const unreadMessageToEdit = unreadMessages.find((m) => m.id === id);
+    
+    const message = messageToEdit || unreadMessageToEdit;
+    setMessageValue(message.body);
+    setSelectedMessage(message);
     setIsEditing(true);
   };
 
@@ -208,7 +212,19 @@ function ChatWindow({
                     fileDownloadEndpoint={fileDownloadEndpoint}
                   />
                 ))}
-                <div ref={messageEndRefCallback} />
+                {unreadMessages && unreadMessages.length > 0 && <>
+                <div className="text-green-500 text-center">new messages</div>
+                  {unreadMessages?.map((message) => (
+                    <Message
+                      key={message.id}
+                      {...message}
+                      removeMessage={removeMessage}
+                      initiateEditionMode={initiateEditionMode}
+                      fileDownloadEndpoint={fileDownloadEndpoint}
+                    />
+                  ))}
+                </>}
+                <div ref={messageEndRefCallback} className="invisible">message end</div>
               </div>
             )}
         </div>

@@ -7,7 +7,7 @@ import {
 import { getChannelMembers } from '@Services';
 import removeUserFromChannel from '../services/removeUserFromChannel';
 
-function AddUsersToChannel({ errorHandler }) {
+function RemoveUsersFromChannel({ errorHandler }) {
   const { channelId } = useParams();
   const [searchField, setSearchField] = useState('');
   const { userId } = useSelector((state) => state.auth);
@@ -47,4 +47,4 @@ function AddUsersToChannel({ errorHandler }) {
   );
 }
 
-export default withErrorWrapper(AddUsersToChannel);
+export default withErrorWrapper(RemoveUsersFromChannel);

@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import {
   Button, useFetchData, useApiAction, withErrorWrapper,
 } from '@Common';
-import { searchChatSpaceMembers } from '@Services';
+import { searchChatSpaceMembers, getChannelMembers } from '@Services';
 import addUserToChannel from '../services/addUserToChannel';
 
 function AddUsersToChannel({ errorHandler }) {
@@ -24,7 +24,13 @@ function AddUsersToChannel({ errorHandler }) {
     [searchField],
   );
 
+  const { result: channeLMembersResult } = useFetchData(
+    () => getChannelMembers(channelId),
+    errorHandler,
+  );
+
   const filteredUsers = result?.data.filter((u) => u.id !== userId) || [];
+        // DISPLAY MEMBERS THAT ARE NOT ADDED 
 
   return (
     <div className="flex flex-col mt-[10px] w-[300px]">
