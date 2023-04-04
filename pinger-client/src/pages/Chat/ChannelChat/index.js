@@ -14,37 +14,27 @@ import {
 } from '@Common';
 import { updateChatType, changeChatOccupierInfo, updateIsAtButton } from '@Store/slices/chat';
 import { removeChannelHighlight, removeChannel as removeChannelFromState } from '@Store/slices/channels';
-import { uploadChannelMessageFile, getChannel } from '@Services';
+import { uploadChannelMessageFile, getChannel, updateChannelReadTime } from '@Services';
 import { useUploadPrivateFiles } from '@Hooks';
-import getChannelMessages from './services/getChannelMessages';
 import AddUsersToChannel from './components/AddUsersToChannel';
 import RemoveUserFromChannel from './components/RemoveUsersFromChannel';
 import removeChannelMessage from './services/removeChannelMessage';
 import updateChannelMessage from './services/updateChannelMessage'
 import removeChannel from './services/removeChannel'
 import RemoveChannelConfirmation from './components/RemoveChannelConfirmation';
+import useChannelMessages from './hooks/useChannelMessages';
 
 function ChannelChat({ errorHandler }) {
     const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [seeNewMessagesButtonVisible, setSeeNewMessagesButtonVisible] = useState(false);
   const { isIntersecting: isAtBottom, initiateObserver } = useOnScreen();
-  const [addedMessageCount, setAddedMessageCount] = useState(0);
   const [expanded, setExpanded] = useState(false);
-  const [additionalMessagesLoading, setAdditionalMessagesLoading] = useState(false);
-  const [initialMessagesLoaded, setInitialMessagesLoaded] = useState(false);
-  const [messages, setMessages] = useState([]);
   const [messageValue, setMessageValue] = useState('');
-  const [hasMore, setHasMore] = useState(false);
   const { userId: currentUserId } = useSelector((state) => state.auth);
-  const defaultFetchingOptions = {
-    step: 20,
-    offset: 0,
-  };
-  const [fetchingOptions, setFetchingOptions] = useState(defaultFetchingOptions);
   const { channelId } = useParams();
   const convertedChannelId = parseInt(channelId);
   const { connection } = useOutletContext();
+
   const { sendAction: uploadChannelMessageFileAction } = useApiAction(
     (file, channelId) => uploadChannelMessageFile(file, channelId),
   );
@@ -57,7 +47,31 @@ function ChannelChat({ errorHandler }) {
   const { loaded: channelRemoved, sendAction: removeChannelAction } = useApiAction(
     () => removeChannel(channelId),
   );
+
+  const { sendAction: updateChannelReadTimeAction } = useApiAction(
+      () => updateChannelReadTime(channelId),
+      errorHandler,
+  );
+
   const { files, uploadFiles, setFiles } = useUploadPrivateFiles(uploadChannelMessageFileAction);
+
+  const {
+    messages,
+    unreadMessages,
+    modifyMessage,
+    removeMessage,
+    handleAdditionalLoad,
+    initialMessagesLoaded,
+    hasMore,
+    additionalMessagesLoading,
+    setSeeNewMessagesButtonVisible,
+    seeNewMessagesButtonVisible
+  } = useChannelMessages(
+    connection, 
+    channelId, 
+    isAtBottom,
+    errorHandler
+  );
 
   const sendMessage = (message, scrollToBottom, setMessageValue) => {
     const allFilesLoaded = files.every(({ loaded }) => loaded === true);
@@ -74,86 +88,6 @@ function ChannelChat({ errorHandler }) {
     setMessageValue('');
   };
 
-  useEffect(() => {
-    const callBack = (data) => {
-      if (convertedChannelId === data.channel.id) {
-        setMessages([
-          ...messages,
-          data,
-        ]);
-        setAddedMessageCount(addedMessageCount + 1);
-        if (!isAtBottom) {
-          setSeeNewMessagesButtonVisible(true);
-        }
-      }
-    };
-
-    connection.on('ReceiveGroupMessage', callBack);
-
-    return () => connection.off('ReceiveGroupMessage', callBack);
-  }, [messages, isAtBottom, convertedChannelId]);
-
-  useEffect(() => {
-    const callBack = (data) => {
-      setMessages([
-        ...messages,
-        data,
-      ]);
-      setAddedMessageCount(addedMessageCount + 1);
-    };
-
-    connection.on('GroupMessageSent', callBack);
-
-    return () => connection.off('GroupMessageSent', callBack);
-  }, [messages]);
-
-  useEffect(() => {
-    const callBack = (data) => {
-      const messageId = data.id;
-      setMessages(messages.filter((message) => message.id !== messageId));
-      setAddedMessageCount(addedMessageCount - 1);
-    };
-
-    connection.on('RemoveChannelMessage', callBack);
-
-    return () => connection.off('GroupMessageSent', callBack);
-  }, [messages]);
-
-  useEffect(() => {
-    const callBack = (data) => {
-      const modifiedMessages = messages.map((message) => {
-        if (message.id === data.id) {
-          return data;
-        }
-
-        return message;
-      });
-
-      setMessages(modifiedMessages);
-    };
-
-    connection.on('ChannelMessageUpdated', callBack);
-
-    return () => connection.off('ChannelMessageUpdated', callBack);
-  }, [messages]);
-
-
-  useEffect(() => {
-    const callBack = (channel) => {
-      const {id} = channel;
-
-      if(convertedChannelId === id) {
-        navigate(ROUTES.USE_CHATSPACE)
-      }
-    };
-
-    connection.on('UserRemovedFromChannel', callBack);
-
-    return () => {
-      connection.off('UserRemovedFromChannel', callBack);
-    };
-  }, [channelId]);
-
   const { loaded, result: channelResponse } = useFetchData(
     () => getChannel(channelId),
     errorHandler,
@@ -161,39 +95,10 @@ function ChannelChat({ errorHandler }) {
     [channelId],
   );
 
-  const { sendAction: getChannelMessagesAction } = useApiAction(
-    (id, offset, step, skip) => getChannelMessages(id, offset, step, skip),
-    errorHandler,
-  );
-
-  const handleAdditionalLoad = async () => {
-    const updatedFetchingOptions = {
-      step: 10,
-      offset: fetchingOptions.offset + fetchingOptions.step,
-    };
-    setFetchingOptions(updatedFetchingOptions);
-    setAdditionalMessagesLoading(true);
-    const response = await getChannelMessagesAction(channelId, updatedFetchingOptions.offset, updatedFetchingOptions.step, addedMessageCount);
-    setAdditionalMessagesLoading(false);
-    setMessages([...response.data.messages, ...messages]);
-    setHasMore(response.data.hasMore);
-  };
-
   useEffect(() => {
-    setHasMore(false);
     setExpanded(false);
-    setInitialMessagesLoaded(false);
-    setFetchingOptions(defaultFetchingOptions);
     setFiles([]);
-    setAddedMessageCount(0);
     setMessageValue('');
-
-    (async () => {
-      const response = await getChannelMessagesAction(channelId, defaultFetchingOptions.offset, defaultFetchingOptions.step, 0);
-      setMessages(response.data.messages);
-      setHasMore(response.data.hasMore);
-      setInitialMessagesLoaded(true);
-    })();
   }, [channelId]);
 
   useEffect(() => {
@@ -208,31 +113,19 @@ function ChannelChat({ errorHandler }) {
     dispatch(removeChannelHighlight(convertedChannelId));
   };
 
-  const removeMessage = async (messageId) => {
-    const { status } = await removeChannelMessageAction(messageId);
+  const handleMessaageRemove = async (messageId) => {
+    const { status, data } = await removeChannelMessageAction(messageId);
 
-    if (status === 204) {
-      setMessages(messages.filter((m) => m.id !== messageId));
-      setAddedMessageCount(addedMessageCount - 1);
+    if(status === 200) {
+      removeMessage(data);
     }
   };
 
   const handleMessageEdit = async (editedMessage, { id }) => {
-    const { status } = await updateChannelMessageAction(id, editedMessage);
-
-    if (status === 204) {
-      const modifiedMessages = messages.map((message) => {
-        if (message.id === id) {
-          return {
-            ...message,
-            body: editedMessage,
-            edited: true,
-          };
-        }
-
-        return message;
-      });
-      setMessages(modifiedMessages);
+    const { status, data } = await updateChannelMessageAction(id, editedMessage);
+    
+    if(status === 200) {
+      modifyMessage(data);
     }
   };
 
@@ -244,12 +137,29 @@ function ChannelChat({ errorHandler }) {
     }
   }
 
+  useEffect(() => {
+    (async () => {
+      if(isAtBottom) {
+        await updateChannelReadTimeAction();
+      }
+    })();
+  }, [isAtBottom])
+
+  useEffect(() => {
+    (async () => {
+        if(messages && unreadMessages)
+        await updateChannelReadTimeAction();
+
+    })();
+  }, [messages, unreadMessages])
+
   return (
     <ChatWindow
       receiverInfo={channelResponse?.data?.name}
       messages={messages}
+      unreadMessages={unreadMessages}
       handleMessageSending={sendMessage}
-      removeMessage={removeMessage}
+      removeMessage={handleMessaageRemove}
       handleMessageEdit={handleMessageEdit}
       onIsAtButtonUpdate={onIsAtButtonUpdate}
       seeNewMessagesButtonVisible={seeNewMessagesButtonVisible}

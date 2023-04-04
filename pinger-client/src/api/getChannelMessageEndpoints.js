@@ -19,6 +19,24 @@ const getChannelMessageEndpoints = (instance) => {
     };
   };
 
+  const getUnreadChannelMessages = async (channelId) => {
+    const response = await instance.get(
+      `${API_SERVICE_ENDPOINTS.CHANNEL_MESSAGES}/unread/${channelId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    const { status, data } = response;
+
+    return {
+      status,
+      data,
+    };
+  };
+
   const removeChannelMessage = async (messageId) => {
     const response = await instance.delete(
       `${API_SERVICE_ENDPOINTS.CHANNEL_MESSAGES}/${messageId}`,
@@ -62,6 +80,7 @@ const getChannelMessageEndpoints = (instance) => {
     getChannelMessages,
     removeChannelMessage,
     updateChannelMessage,
+    getUnreadChannelMessages
   };
 };
 

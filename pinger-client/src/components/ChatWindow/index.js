@@ -81,6 +81,7 @@ function Message({
             },
             {
               buttonText: 'Edit',
+              disabled: !body,
               action: (toggle) => { initiateEditionMode(id); toggle(); },
             },
           ]}

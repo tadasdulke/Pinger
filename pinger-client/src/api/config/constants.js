@@ -16,4 +16,5 @@ export const API_SERVICE_ENDPOINTS = {
   CHANNEL_MESSAGE_READ_TIMES: '/api/channel-messages-read-times',
   PRIVATE_MESSAGE_FILES: '/api/private-message-file',
   CHANNEL_MESSAGE_FILES: '/api/channel-message-file',
+  CHANNEL_READ_TIMES: '/api/channel-read-times',
 };

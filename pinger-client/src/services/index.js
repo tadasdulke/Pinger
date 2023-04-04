@@ -6,3 +6,6 @@ export { default as getChannelMembers } from './getChannelMembers';
 export { default as getPrivateMessages } from './getPrivateMessages';
 export { default as updateContactedUserReadTime } from './updateContactedUserReadTime';
 export { default as getUnreadPrivateMessages } from './getUnreadPrivateMessages';
+export { default as getChannelMessages } from './getChannelMessages';
+export { default as updateChannelReadTime } from './updateChannelReadTime';
+export { default as getUnreadChannelMessages } from './getUnreadChannelMessages';

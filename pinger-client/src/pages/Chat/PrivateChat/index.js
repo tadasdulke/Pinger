@@ -4,18 +4,22 @@ import { useDispatch } from 'react-redux';
 import cx from 'classnames';
 import { RotatingLines } from 'react-loader-spinner';
 import {
-  withErrorWrapper, useApiAction, useOnScreen, Button, useLoadedImage,
+  withErrorWrapper, 
+  useApiAction, 
+  useOnScreen, 
+  Button, 
+  useLoadedImage,
 } from '@Common';
 import { changeChatOccupierInfo, updateChatType, updateIsAtButton } from '@Store/slices/chat';
 import { ChatWindow } from '@Components';
 import { removeUserHighlight } from '@Store/slices/contactedUsers';
 import { useUploadPrivateFiles } from '@Hooks';
 import { uploadPrivateFile, updateContactedUserReadTime } from '@Services';
+
 import useFetchChatSpaceMember from './hooks/useFetchChatSpaceMember';
 import useRemovePrivateMessage from './hooks/useRemovePrivateMessage';
 import useUpdatePrivateMessage from './hooks/useUpdatePrivateMessage';
-
-import {useMessages} from '../hooks';
+import usePrivateMessages from './hooks/usePrivateMessages';
 
 function PrivateChat({ errorHandler }) {
   const dispatch = useDispatch();
@@ -25,6 +29,11 @@ function PrivateChat({ errorHandler }) {
   const { receiverId } = useParams();
   const [expanded, setExpanded] = useState(false);
   const { member } = useFetchChatSpaceMember(errorHandler, receiverId, null, [receiverId]);
+
+  const { sendAction: updateContactedUserReadTimeAction } = useApiAction(
+      () => updateContactedUserReadTime(receiverId),
+      errorHandler,
+  );
 
   const {
     messages,
@@ -37,7 +46,12 @@ function PrivateChat({ errorHandler }) {
     additionalMessagesLoading,
     setSeeNewMessagesButtonVisible,
     seeNewMessagesButtonVisible
-  } = useMessages(connection, receiverId, isAtBottom, errorHandler);
+  } = usePrivateMessages(
+    connection, 
+    receiverId, 
+    isAtBottom,
+    errorHandler
+  );
 
   const { sendRemoveMessageAction } = useRemovePrivateMessage(errorHandler);
   const { sendUpdateMessageAction } = useUpdatePrivateMessage(errorHandler);
@@ -45,11 +59,6 @@ function PrivateChat({ errorHandler }) {
     (file, receiverId) => uploadPrivateFile(file, receiverId),
   );
   const { files, uploadFiles, setFiles } = useUploadPrivateFiles(uploadPrivateFileAction);
-
-  const { sendAction: updateContactedUserReadTimeAction } = useApiAction(
-    () => updateContactedUserReadTime(receiverId),
-    errorHandler,
-  );
 
   const sendMessage = (messageValue, fileIds) => {
     connection.invoke('SendPrivateMessage', receiverId, messageValue, fileIds);

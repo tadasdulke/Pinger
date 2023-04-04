@@ -26,6 +26,39 @@ namespace pinger_api_service
 
         [Authorize]
         [HttpGet]
+        [Route("unread/{channelId}")]
+        public async Task<ActionResult<List<ChannelMessageDto>>> GetUnreadMessages([FromRoute] int channelId)
+        {
+            string userId = _userManager.GetUserId(User);
+            
+            ChannelReadTime? channelReadTime = await _dbContext.ChannelReadTimes
+                .Include(crt => crt.Owner)
+                .Include(crt => crt.Channel)
+                .Where(crt => crt.Owner.Id == userId)
+                .FirstOrDefaultAsync(crt => crt.Channel.Id == channelId);
+
+            if(channelReadTime is null) {
+                return NotFound();
+            }
+
+            var LastReadTime = channelReadTime.LastReadTime;
+
+            List<ChannelMessage> messages = _dbContext.ChannelMessage
+                .OrderByDescending(cm => cm.SentAt)
+                .Include(cm => cm.Channel)
+                .Include(cm => cm.Sender)
+                .ThenInclude(sender => sender.ProfileImageFile)
+                .Include(cm => cm.ChannelMessageFiles)
+                .Where(cm => cm.Channel.Id == channelId)
+                .Where(pm => pm.SentAt > LastReadTime)
+                .Reverse()
+                .ToList();
+            
+            return messages.Select(m => new ChannelMessageDto(m)).ToList();
+        }
+
+        [Authorize]
+        [HttpGet]
         [Route("{channelId}")]
         public async Task<ActionResult<LazyLoadChannelMessages>> GetChannelMessages([FromRoute] int channelId, [FromQuery] int offset, [FromQuery] int step, [FromQuery] int skip)
         {
@@ -45,6 +78,18 @@ namespace pinger_api_service
                 return NotFound();
             }
 
+            ChannelReadTime? channelReadTime = await _dbContext.ChannelReadTimes
+                .Include(crt => crt.Owner)
+                .Include(crt => crt.Channel)
+                .Where(crt => crt.Owner.Id == userId)
+                .FirstOrDefaultAsync(crt => crt.Channel.Id == channelId);
+
+            if(channelReadTime is null) {
+                return NotFound();
+            }
+
+            DateTime? LastReadTime = channelReadTime.LastReadTime;
+
             List<ChannelMessage> messages = _dbContext.ChannelMessage
                 .OrderByDescending(cm => cm.SentAt)
                 .Include(cm => cm.Channel)
@@ -52,6 +97,7 @@ namespace pinger_api_service
                 .ThenInclude(sender => sender.ProfileImageFile)
                 .Include(cm => cm.ChannelMessageFiles)
                 .Where(cm => cm.Channel.Id == channelId)
+                .Where(pm => pm.SentAt <= LastReadTime)
                 .Skip(offset + skip)
                 .Take(step + 1)
                 .Reverse()
@@ -79,7 +125,7 @@ namespace pinger_api_service
         [Authorize]
         [HttpDelete]
         [Route("{messageId}")]
-        public async Task<IActionResult> RemoveChannelMessage([FromRoute] int messageId)
+        public async Task<ActionResult<ChannelMessageDto>> RemoveChannelMessage([FromRoute] int messageId)
         {
             string userId = _userManager.GetUserId(User);
             User user = await _userManager.FindByIdAsync(userId);
@@ -110,13 +156,13 @@ namespace pinger_api_service
 
             await _hubContext.Clients.GroupExcept(groupName, senderConnectionIds).SendAsync("RemoveChannelMessage", new ChannelMessageDto(channelMessage));
 
-            return NoContent();
+            return new ChannelMessageDto(channelMessage);
         }
 
         [Authorize]
         [HttpPut]
         [Route("{messageId}")]
-        public async Task<IActionResult> UpdateChannelMessage([FromRoute] long messageId, [FromBody] UpdatePrivateMessageRequest updatePrivateMessageRequest)
+        public async Task<ActionResult<ChannelMessageDto>> UpdateChannelMessage([FromRoute] long messageId, [FromBody] UpdatePrivateMessageRequest updatePrivateMessageRequest)
         {
             string senderId = _userManager.GetUserId(User);
             ChannelMessage? channelMessage = _dbContext.ChannelMessage
@@ -145,7 +191,7 @@ namespace pinger_api_service
 
             await _hubContext.Clients.GroupExcept(groupName, senderConnectionIds).SendAsync("ChannelMessageUpdated", new ChannelMessageDto(channelMessage));
 
-            return NoContent();
+            return new ChannelMessageDto(channelMessage);
         }
     }
 } 

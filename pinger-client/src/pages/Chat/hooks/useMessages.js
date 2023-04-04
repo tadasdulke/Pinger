@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useApiAction } from '@Common'
-import { getPrivateMessages, updateContactedUserReadTime, getUnreadPrivateMessages } from '@Services';
 
-const useMessages = (connection, receiverId, isAtBottom, errorHandler) => {
+const useMessages = (receiverId, getMessagesAction, getUnreadMessagesAction) => {
     const [messages, setMessages] = useState(null);
     const [unreadMessages, setUnreadMessages] = useState(null);
     const [addedMessageCount, setAddedMessageCount] = useState(0);
@@ -15,21 +13,6 @@ const useMessages = (connection, receiverId, isAtBottom, errorHandler) => {
     const [initialMessagesLoaded, setInitialMessagesLoaded] = useState(false);
     const [hasMore, setHasMore] = useState(false);
     const [additionalMessagesLoading, setAdditionalMessagesLoading] = useState(false);
-    
-    const { sendAction: getPrivateMessagesAction } = useApiAction(
-        (id, offset, step, skip) => getPrivateMessages(id, offset, step, skip),
-        errorHandler,
-    );
-
-    const { sendAction: getUnreadPrivateMessagesAction } = useApiAction(
-        (id) => getUnreadPrivateMessages(id),
-        errorHandler,
-    );
-
-    const { sendAction: updateContactedUserReadTimeAction } = useApiAction(
-        () => updateContactedUserReadTime(receiverId),
-        errorHandler,
-    );
 
     const addMessage = (message) => {
         if(unreadMessages.length > 0) {
@@ -42,7 +25,7 @@ const useMessages = (connection, receiverId, isAtBottom, errorHandler) => {
     const modifyMessage = (data) => {
         const foundInMessages = messages.some(m => m.id === data.id);
         const foundInUnread = unreadMessages.some(m => m.id === data.id);
-
+        
         if(foundInUnread) {
             setUnreadMessages(
                 unreadMessages.map((message) => {
@@ -84,7 +67,7 @@ const useMessages = (connection, receiverId, isAtBottom, errorHandler) => {
         };
         setFetchingOptions(updatedFetchingOptions);
         setAdditionalMessagesLoading(true);
-        const response = await getPrivateMessagesAction(receiverId, updatedFetchingOptions.offset, updatedFetchingOptions.step, addedMessageCount);
+        const response = await getMessagesAction(receiverId, updatedFetchingOptions.offset, updatedFetchingOptions.step, addedMessageCount);
         setAdditionalMessagesLoading(false);
         setMessages([...response.data.messages, ...messages]);
         setHasMore(response.data.hasMore);
@@ -96,8 +79,8 @@ const useMessages = (connection, receiverId, isAtBottom, errorHandler) => {
         setInitialMessagesLoaded(false);
 
         (async () => {
-            const messagesResponse = await getPrivateMessagesAction(receiverId, defaultFetchingOptions.offset, defaultFetchingOptions.step, 0);
-            const unreadMessagesResponse = await getUnreadPrivateMessagesAction(receiverId);
+            const messagesResponse = await getMessagesAction(receiverId, defaultFetchingOptions.offset, defaultFetchingOptions.step, 0);
+            const unreadMessagesResponse = await getUnreadMessagesAction(receiverId);
             if(messagesResponse.status === 200 && unreadMessagesResponse.status === 200) {
             const {messages, hasMore} = messagesResponse.data;
             const unreadMessages = unreadMessagesResponse.data;
@@ -110,73 +93,10 @@ const useMessages = (connection, receiverId, isAtBottom, errorHandler) => {
         })();
     }, [receiverId]);
 
-    useEffect(() => {
-        const callBack = async (data) => {
-            if(data.receiver.id !== receiverId) {
-                return;
-            }
-            addMessage(data);
-            setAddedMessageCount(addedMessageCount + 1);
-            await updateContactedUserReadTimeAction();
-        };
-    
-        connection.on('MessageSent', callBack);
-    
-        return () => connection.off('MessageSent', callBack);
-    }, [receiverId, messages, unreadMessages]);
-
-
-    useEffect(() => {
-        const callBack = (data) => {
-            if(data.receiver.id !== receiverId) {
-                return;
-            }
-            modifyMessage(data)
-        };
-    
-        connection.on('PrivateMessageUpdated', callBack);
-    
-        return () => connection.off('PrivateMessageUpdated', callBack);
-      }, [receiverId, messages, unreadMessages]);
-
-    useEffect(() => {
-        const callBack = (data) => {
-            if(data.receiver.id !== receiverId) {
-                return;
-            }
-            removeMessage(data)
-            setAddedMessageCount(addedMessageCount - 1);
-        }
-        connection.on('PrivateMessageRemoved', callBack);
-    
-        return () => connection.off('PrivateMessageRemoved', callBack);
-    }, [receiverId, messages, unreadMessages]);
-
-    useEffect(() => {
-        const callBack = async (data) => {
-            if(data.sender.id !== receiverId) {
-                return;
-            }
-
-            addMessage(data);
-            setAddedMessageCount(addedMessageCount + 1);
-            if (!isAtBottom) {
-                setSeeNewMessagesButtonVisible(true);
-            }
-            if(isAtBottom) {
-              await updateContactedUserReadTimeAction();
-            }
-        };
-    
-        connection.on('ReceiveMessage', callBack);
-    
-        return () => connection.off('ReceiveMessage', callBack);
-      }, [receiverId, messages, unreadMessages, isAtBottom]);
-
     return {
         messages,
         unreadMessages,
-        addedMessageCount,
+        addMessage,
         modifyMessage,
         removeMessage,
         handleAdditionalLoad,
@@ -185,6 +105,8 @@ const useMessages = (connection, receiverId, isAtBottom, errorHandler) => {
         additionalMessagesLoading,
         setSeeNewMessagesButtonVisible,
         seeNewMessagesButtonVisible,
+        addedMessageCount,
+        setAddedMessageCount
     }
 
 }

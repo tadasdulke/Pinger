@@ -2,12 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace pinger_api_service
 {
-    public class DirectMessagesReadTimes
+    public class ChannelReadTime
     {
         [Key]
         public int Id { get; set; }
         public User Owner { get; set; }
-        public DateTime ReadTime { get; set; }
-        public User Receiver { get; set; }
+        public DateTime? LastReadTime { get; set; }
+        public Channel? Channel { get; set; } //remove nulable
     }
 }
