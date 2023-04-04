@@ -16,8 +16,8 @@ const getChannelEndpoints = (instance) => {
     };
   };
 
-  const getChannels = async () => {
-    const response = await instance.get(API_SERVICE_ENDPOINTS.CHANNELS, {
+  const getChannels = async (search) => {
+    const response = await instance.get(`${API_SERVICE_ENDPOINTS.CHANNELS}${search ? `?search=${search}` : ''}`, {
       headers: {
         'Content-Type': 'application/json',
       },

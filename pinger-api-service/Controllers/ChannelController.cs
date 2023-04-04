@@ -111,11 +111,17 @@ namespace pinger_api_service
                 return Unauthorized();
             }
             
+            List<ChannelReadTime> channelReadTimes = await _dbContext.ChannelReadTimes
+                .Include(crt => crt.Channel)
+                .Where(crt => crt.Channel.Id == channelId)
+                .ToListAsync();
+
             List<ChannelMessageFile> channelMessageFiles = channel.Messages.Aggregate(
                 new List<ChannelMessageFile>(),
                 (acc, message) => acc.Concat(message.ChannelMessageFiles).ToList()
             );
 
+            _dbContext.ChannelReadTimes.RemoveRange(channelReadTimes);
             _dbContext.ChannelMessageFile.RemoveRange(channelMessageFiles);
             _dbContext.ChannelMessage.RemoveRange(channel.Messages);
             _dbContext.Channel.Remove(channel);
@@ -132,7 +138,7 @@ namespace pinger_api_service
 
         [Authorize]
         [HttpGet]
-        public async Task<ActionResult<List<ChannelDto>>> GetUsersChannels()
+        public async Task<ActionResult<List<ChannelDto>>> GetUsersChannels([FromQuery] string? search)
         {
             string userId = _userManager.GetUserId(User);
             int chatSpaceId = _userManager.GetChatSpaceId(User);
@@ -149,6 +155,11 @@ namespace pinger_api_service
             }
 
             List<Channel> channels = user.Channels.Where(c => c.ChatSpace.Id == chatSpaceId).ToList();
+
+            if(search is not null) {
+                channels = channels.Where(c => c.Name.Contains(search.ToLower())).ToList();
+            }
+
             List<ChannelDto> channelDtos = channels.Select(c => new ChannelDto(c)).ToList();
 
             return channelDtos;

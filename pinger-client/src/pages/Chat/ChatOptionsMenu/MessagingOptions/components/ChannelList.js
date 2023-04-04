@@ -3,8 +3,7 @@ import { ReactSVG } from 'react-svg';
 import { useDispatch, useSelector } from 'react-redux';
 import { addChannel, highlightChannel, removeChannel } from '@Store/slices/channels';
 import { useFetchData, withErrorWrapper } from '@Common';
-import { getUnreadChannelMessages } from '@Services';
-import getChannels from '../services/getChannels';
+import { getUnreadChannelMessages, getChannels } from '@Services';
 import { ROUTES } from '@Router';
 import ListItem from './ListItem';
 

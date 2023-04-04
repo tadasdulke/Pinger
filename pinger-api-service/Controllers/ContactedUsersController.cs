@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace pinger_api_service
@@ -11,12 +12,19 @@ namespace pinger_api_service
         private ApplicationDbContext _dbContext;
         private IChatSpaceManager _chatSpaceManager;
         private readonly ApplicationUserManager _userManager;
+        private readonly IHubContext<ChatHub> _hubContext;
 
-        public ContactedUsersController(ApplicationDbContext dbContext, ApplicationUserManager userManager, IChatSpaceManager chatSpaceManager)
+        public ContactedUsersController(
+            ApplicationDbContext dbContext, 
+            ApplicationUserManager userManager, 
+            IChatSpaceManager chatSpaceManager,
+            IHubContext<ChatHub>  hubContext
+        )
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _chatSpaceManager = chatSpaceManager;
+            _hubContext = hubContext;
         }
 
         [Authorize]
@@ -69,14 +77,18 @@ namespace pinger_api_service
         public async Task<IActionResult> AddContactedUser([FromBody] AddContactedUser contactedUserRequest)
         {
             string userId = _userManager.GetUserId(User);
-            User? user = await _dbContext.Users.Include(u => u.ContactedUsersInfo).ThenInclude(cuf => cuf.ContactedUser).FirstOrDefaultAsync(u => u.Id == userId);
+            User? user = await _dbContext.Users
+                .Include(u => u.ConnectionInformations)
+                .Include(u => u.ContactedUsersInfo)
+                .ThenInclude(cuf => cuf.ContactedUser)
+                .FirstOrDefaultAsync(u => u.Id == userId);
 
             if(user is null) {
                 return NotFound();
             }
             
             string contactedUserId = contactedUserRequest.contactedUserId;
-            User? contactedUser = await _userManager.FindByIdAsync(contactedUserId);
+            User? contactedUser = await _dbContext.Users.Include(u => u.ProfileImageFile).FirstOrDefaultAsync(u => u.Id == contactedUserId);
             
             if(contactedUser is null) {
                 return NotFound();
@@ -99,6 +111,10 @@ namespace pinger_api_service
             contactedUserInfo.ContactedUser = contactedUser;
             user.ContactedUsersInfo.Add(contactedUserInfo);
             await _userManager.UpdateAsync(user);
+
+            List<string> connectionIds = user.ConnectionInformations.Select(ci => ci.ConnectionId).ToList();
+
+            await _hubContext.Clients.Clients(connectionIds).SendAsync("NewUserContactAdded", new ContactedUserInfoDto(contactedUserInfo));
             return Ok();
         }
     }

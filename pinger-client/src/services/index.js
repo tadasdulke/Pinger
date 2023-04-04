@@ -9,3 +9,4 @@ export { default as getUnreadPrivateMessages } from './getUnreadPrivateMessages'
 export { default as getChannelMessages } from './getChannelMessages';
 export { default as updateChannelReadTime } from './updateChannelReadTime';
 export { default as getUnreadChannelMessages } from './getUnreadChannelMessages';
+export { default as getChannels } from './getChannels';
