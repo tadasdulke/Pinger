@@ -12,7 +12,7 @@ import {
   useOnScreen,
   ButtonWithLoader
 } from '@Common';
-import { updateChatType, changeChatOccupierInfo, updateIsAtButton } from '@Store/slices/chat';
+import { updateChatType, changeChatOccupierInfo, updateIsAtButton, restore } from '@Store/slices/chat';
 import { removeChannelHighlight, removeChannel as removeChannelFromState } from '@Store/slices/channels';
 import { uploadChannelMessageFile, getChannel, updateChannelReadTime } from '@Services';
 import { useUploadPrivateFiles } from '@Hooks';
@@ -106,6 +106,8 @@ function ChannelChat({ errorHandler }) {
     dispatch(changeChatOccupierInfo({
       channelId: convertedChannelId,
     }));
+
+    return () => dispatch(restore())
   }, [channelId]);
 
   const onIsAtButtonUpdate = (isAtBottom) => {
@@ -152,6 +154,22 @@ function ChannelChat({ errorHandler }) {
 
     })();
   }, [messages, unreadMessages])
+
+  useEffect(() => {
+    const callBack = (channel) => {
+      const {id} = channel;
+
+      if(convertedChannelId === id) {
+        navigate(ROUTES.USE_CHATSPACE)
+      }
+    };
+
+    connection.on('UserRemovedFromChannel', callBack);
+
+    return () => {
+      connection.off('UserRemovedFromChannel', callBack);
+    };
+  }, [convertedChannelId]);
 
   return (
     <ChatWindow

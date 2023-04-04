@@ -105,23 +105,6 @@ const useChannelMessages = (
     
         return () => connection.off('ChannelMessageUpdated', callBack);
       }, [convertedChannelId, unreadMessages, messages]);
-    
-    
-      useEffect(() => {
-        const callBack = (channel) => {
-          const {id} = channel;
-    
-          if(convertedChannelId === id) {
-            navigate(ROUTES.USE_CHATSPACE)
-          }
-        };
-    
-        connection.on('UserRemovedFromChannel', callBack);
-    
-        return () => {
-          connection.off('UserRemovedFromChannel', callBack);
-        };
-      }, [convertedChannelId]);
 
     return {
         messages,

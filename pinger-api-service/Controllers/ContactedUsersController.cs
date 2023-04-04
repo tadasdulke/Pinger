@@ -37,9 +37,7 @@ namespace pinger_api_service
                 return NotFound();
             }
             
-            List<ContactedUserInfo> contactedUsers = user.ContactedUsersInfo.Where(userInfo => userInfo.ChatSpace.Id == chatspaceId).ToList();
-
-            return contactedUsers.Select(cu => new ContactedUserInfoDto(cu)).ToList();
+            return user.ContactedUsersInfo.Select(cu => new ContactedUserInfoDto(cu)).ToList();
         }
 
         [Authorize]

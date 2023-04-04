@@ -85,7 +85,13 @@ namespace pinger_api_service
                 .FirstOrDefaultAsync(crt => crt.Channel.Id == channelId);
 
             if(channelReadTime is null) {
-                return NotFound();
+                channelReadTime = new ChannelReadTime{
+                    Owner = user,
+                    LastReadTime = DateTime.Now,
+                    Channel = channel,
+                };
+                _dbContext.ChannelReadTimes.Add(channelReadTime);
+                await _dbContext.SaveChangesAsync();
             }
 
             DateTime? LastReadTime = channelReadTime.LastReadTime;

@@ -3,9 +3,11 @@ import { ReactSVG } from 'react-svg';
 import { useDispatch, useSelector } from 'react-redux';
 import { addChannel, highlightChannel, removeChannel } from '@Store/slices/channels';
 import { useFetchData, withErrorWrapper } from '@Common';
+import { getUnreadChannelMessages } from '@Services';
 import getChannels from '../services/getChannels';
 import { ROUTES } from '@Router';
 import ListItem from './ListItem';
+
 
 const ChannelList = ({connection, errorHandler}) => {
   const dispatch = useDispatch();
@@ -18,12 +20,24 @@ const ChannelList = ({connection, errorHandler}) => {
       errorHandler,
     );
   
+    const checkForUnreadMessages = async (channels) => {
+      const unreadMsgs = await Promise.all(channels.map(({id}) => getUnreadChannelMessages(id)));
+      unreadMsgs.forEach((unreadMsg, index) => {
+        if(unreadMsg.data.length > 0) {
+          dispatch(highlightChannel(channels[index].id));
+        }
+      })
+    }
 
   useEffect(() => {
     if (channelsResult && channelsResult.data) {
       channelsResult.data.forEach((channel) => {
         dispatch(addChannel(channel));
       });
+
+      (async () => {
+        await checkForUnreadMessages(channelsResult.data); 
+      })();
     }
   }, [channelsResult]);
 

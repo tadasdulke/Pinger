@@ -10,7 +10,7 @@ import {
   Button, 
   useLoadedImage,
 } from '@Common';
-import { changeChatOccupierInfo, updateChatType, updateIsAtButton } from '@Store/slices/chat';
+import { changeChatOccupierInfo, updateChatType, updateIsAtButton, restore } from '@Store/slices/chat';
 import { ChatWindow } from '@Components';
 import { removeUserHighlight } from '@Store/slices/contactedUsers';
 import { useUploadPrivateFiles } from '@Hooks';
@@ -83,6 +83,8 @@ function PrivateChat({ errorHandler }) {
     dispatch(changeChatOccupierInfo({
       userId: receiverId,
     }));
+
+    return () => dispatch(restore())
   }, [receiverId]);
 
 

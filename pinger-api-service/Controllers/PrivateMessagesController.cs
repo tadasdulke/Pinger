@@ -77,6 +77,8 @@ namespace pinger_api_service
         )
         {
             string senderId = _userManager.GetUserId(User);
+            User user = await _userManager.FindByIdAsync(senderId);
+            
             ContactedUserInfo? contactedUserInfo = await _dbContext.ContactedUserInfo
                 .Include(cui => cui.Owner)
                 .Include(cui => cui.ContactedUser)
@@ -85,6 +87,13 @@ namespace pinger_api_service
 
             if(contactedUserInfo is null) {
                 return NotFound();
+            }
+
+            if(contactedUserInfo.LastReadTime is null) {
+                contactedUserInfo.LastReadTime = DateTime.Now;
+
+                _dbContext.ContactedUserInfo.Update(contactedUserInfo);
+                await _dbContext.SaveChangesAsync();
             }
 
             int chatSpaceId = _userManager.GetChatSpaceId(User);
