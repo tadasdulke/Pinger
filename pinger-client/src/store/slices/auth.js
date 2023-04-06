@@ -9,6 +9,14 @@ const authSlice = createSlice({
     profilePictureId: null,
   },
   reducers: {
+    restore: () => {
+      return {
+        isAuthenticated: false,
+        userName: null,
+        userId: null,
+        profilePictureId: null,
+      }
+    },
     authenticate: (state) => {
       state.isAuthenticated = true;
     },
@@ -30,5 +38,5 @@ const authSlice = createSlice({
 export default authSlice.reducer;
 
 export const {
-  authenticate, logout, setUserName, setUserId, setProfilePictureId,
+  authenticate, logout, setUserName, setUserId, setProfilePictureId, restore
 } = authSlice.actions;

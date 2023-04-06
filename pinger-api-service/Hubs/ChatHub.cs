@@ -96,7 +96,9 @@ namespace pinger_api_service
                 .Include(cui => cui.ContactedUser)
                 .Include(cui => cui.Owner)
                 .Where(cui => cui.Owner.Id == receiverId)
+                .Where(cui => cui.ChatSpace.Id == chatspaceId)
                 .ToListAsync();
+
             bool alreadyContacted = contactedUserInfos.Any(cu => cu.ContactedUser.Id == senderId);
             
             if(!alreadyContacted) {

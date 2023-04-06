@@ -67,7 +67,12 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IChatSpaceManager, ChatSpaceManager>();
 builder.Services.AddScoped<IPrivateMessagesManager, PrivateMessagesManager>();
 builder.Services.AddScoped<IChannelMessageManager, ChannelMessageManager>();
+builder.Services.AddScoped<IChannelManager, ChannelManager>();
 builder.Services.AddScoped<IFileManager, FileManager>();
+builder.Services.AddScoped<IChatHubConnectionManager, ChatHubConnectionManager>();
+builder.Services.AddScoped<IChannelReadTimeManager, ChannelReadTimeManager>();
+builder.Services.AddScoped<IConnectionInformationManager, ConnectionInformationManager>();
+builder.Services.AddScoped<IChannelMessageFileManager, ChannelMessageFileManager>();
 
 builder.WebHost.ConfigureKestrel(options =>
 {

@@ -1,22 +1,28 @@
 import React from 'react';
 import { Formik, Field, Form } from 'formik';
 import * as Yup from 'yup';
-
+import { useNavigate } from 'react-router-dom'
+import { ROUTES } from '@Router'
 import {
   Button, withErrorWrapper, TextInput, useApiAction,
 } from '@Common';
 import createChatSpace from './services/createChatSpace';
 
 function CreateChatSpaceForm({ errorHandler }) {
+  const navigate = useNavigate();
   const FIELDS = {
     NAME: 'name',
   };
 
-  const { loaded, sendAction } = useApiAction((name) => createChatSpace(name), errorHandler);
+  const { sendAction } = useApiAction((name) => createChatSpace(name), errorHandler);
 
   const handleSubmit = async (values) => {
     const name = values[FIELDS.NAME];
-    const response = await sendAction(name);
+    const {status} = await sendAction(name);
+    
+    if(status === 204) {
+      navigate(ROUTES.CHATSPACES)
+    }
   };
 
   return (
@@ -28,7 +34,7 @@ function CreateChatSpaceForm({ errorHandler }) {
         initialValues={{ [FIELDS.NAME]: '' }}
         onSubmit={handleSubmit}
         validationSchema={Yup.object().shape({
-          [FIELDS.NAME]: Yup.string().required('Required'),
+          [FIELDS.NAME]: Yup.string().trim().required('Required'),
         })}
       >
         {({ values, handleChange }) => (

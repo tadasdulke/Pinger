@@ -50,7 +50,12 @@ function ChatSpaces({ errorHandler }) {
         <Col xs={12}>
           <Row justify="center">
             {chatSpaces?.data?.map(({ name, id }) => (
-              <ChatSpace onClick={() => selectWorkspace(id)} name={name} key={id} />
+              <ChatSpace 
+                image={<div className="text-white flex justify-center items-center h-full text-3xl">{name[0].toUpperCase()}</div>}  
+                onClick={() => selectWorkspace(id)} 
+                name={name} 
+                key={id}
+               />
             ))}
             <JoinChatSpace />
             <CreateChatSpace />

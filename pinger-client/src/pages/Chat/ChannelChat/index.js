@@ -221,7 +221,7 @@ function ChannelChat({ errorHandler }) {
           options={[
             {
               buttonText: 'Add user',
-              componentToRender: <AddUsersToChannel />,
+              componentToRender: (toggle) => <AddUsersToChannel toggle={toggle} />,
             },
             {
               disabled: channelResponse?.data?.owner?.id !== currentUserId,

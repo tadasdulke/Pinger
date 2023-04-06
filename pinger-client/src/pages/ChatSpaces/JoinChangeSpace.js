@@ -20,7 +20,7 @@ function JoinChatSpace() {
             svg.setAttribute('width', '100%');
           }}
         />
-              )}
+      )}
     />
   );
 }

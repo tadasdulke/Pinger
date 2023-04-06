@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 
 namespace pinger_api_service
 {
@@ -10,18 +8,25 @@ namespace pinger_api_service
     public class ChatMessageController : ControllerBase
     {
         private readonly ApplicationUserManager _userManager;
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IHubContext<ChatHub> _hubContext;
+        private readonly IChannelReadTimeManager _channelReadTimeManager;
+        private readonly IChannelMessageManager _channelMessageManager;
+        private readonly IChatHubConnectionManager _chatHubConnectionManager;
+        private readonly IChannelManager _channelManager;
 
         public ChatMessageController(
             ApplicationUserManager userManager, 
             ApplicationDbContext dbContext,
-            IHubContext<ChatHub>  hubContext
+            IChannelReadTimeManager channelReadTimeManager,
+            IChannelMessageManager channelMessageManager,
+            IChannelManager channelManager,
+            IChatHubConnectionManager chatHubConnectionManager
         )
         {
             _userManager = userManager;
-            _dbContext = dbContext;
-            _hubContext = hubContext;
+            _channelReadTimeManager = channelReadTimeManager;
+            _channelMessageManager = channelMessageManager;
+            _channelManager = channelManager;
+            _chatHubConnectionManager = chatHubConnectionManager;
         }
 
         [Authorize]
@@ -30,29 +35,27 @@ namespace pinger_api_service
         public async Task<ActionResult<List<ChannelMessageDto>>> GetUnreadMessages([FromRoute] int channelId)
         {
             string userId = _userManager.GetUserId(User);
-            
-            ChannelReadTime? channelReadTime = await _dbContext.ChannelReadTimes
-                .Include(crt => crt.Owner)
-                .Include(crt => crt.Channel)
-                .Where(crt => crt.Owner.Id == userId)
-                .FirstOrDefaultAsync(crt => crt.Channel.Id == channelId);
+            User? user = await _userManager.GetUserAsync(userId);
 
-            if(channelReadTime is null) {
-                return NotFound();
+            if(user is null) {
+                return NotFound(new Error("User not found"));
             }
 
-            var LastReadTime = channelReadTime.LastReadTime;
+            Channel? channel = await _channelManager.GetChannelAsync(channelId);
 
-            List<ChannelMessage> messages = _dbContext.ChannelMessage
-                .OrderByDescending(cm => cm.SentAt)
-                .Include(cm => cm.Channel)
-                .Include(cm => cm.Sender)
-                .ThenInclude(sender => sender.ProfileImageFile)
-                .Include(cm => cm.ChannelMessageFiles)
-                .Where(cm => cm.Channel.Id == channelId)
-                .Where(pm => pm.SentAt > LastReadTime)
-                .Reverse()
-                .ToList();
+            if(channel is null) {
+                return NotFound(new Error("Channel not found"));
+            }
+            
+            ChannelReadTime? channelReadTime = await _channelReadTimeManager.GetUsersChannelReadTime(user, channel);
+
+            if(channelReadTime is null) {
+                return NotFound(new Error("Channel readtime not found"));
+            }
+
+            DateTime? LastReadTime = channelReadTime.LastReadTime;
+
+            List<ChannelMessage> messages = await _channelMessageManager.GetChannelMessagesAfterTime(LastReadTime, channelId);
             
             return messages.Select(m => new ChannelMessageDto(m)).ToList();
         }
@@ -63,51 +66,29 @@ namespace pinger_api_service
         public async Task<ActionResult<LazyLoadChannelMessages>> GetChannelMessages([FromRoute] int channelId, [FromQuery] int offset, [FromQuery] int step, [FromQuery] int skip)
         {
             string userId = _userManager.GetUserId(User);
-            
-            User? user = await _dbContext.Users
-                .Include(u => u.Channels)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+            User? user = await _userManager.GetUserAsync(userId);
 
             if(user is null) {
-                return NotFound();
+                return NotFound(new Error("User not found"));
             }
 
             Channel? channel = user.Channels.FirstOrDefault(c => c.Id == channelId);
 
             if(channel is null) {
-                return NotFound();
+                return NotFound("Channel not found");
             }
 
-            ChannelReadTime? channelReadTime = await _dbContext.ChannelReadTimes
-                .Include(crt => crt.Owner)
-                .Include(crt => crt.Channel)
-                .Where(crt => crt.Owner.Id == userId)
-                .FirstOrDefaultAsync(crt => crt.Channel.Id == channelId);
-
-            if(channelReadTime is null) {
-                channelReadTime = new ChannelReadTime{
-                    Owner = user,
-                    LastReadTime = DateTime.Now,
-                    Channel = channel,
-                };
-                _dbContext.ChannelReadTimes.Add(channelReadTime);
-                await _dbContext.SaveChangesAsync();
-            }
+            ChannelReadTime channelReadTime = await _channelReadTimeManager.GetUsersChannelReadTime(user, channel);
 
             DateTime? LastReadTime = channelReadTime.LastReadTime;
 
-            List<ChannelMessage> messages = _dbContext.ChannelMessage
-                .OrderByDescending(cm => cm.SentAt)
-                .Include(cm => cm.Channel)
-                .Include(cm => cm.Sender)
-                .ThenInclude(sender => sender.ProfileImageFile)
-                .Include(cm => cm.ChannelMessageFiles)
-                .Where(cm => cm.Channel.Id == channelId)
-                .Where(pm => pm.SentAt <= LastReadTime)
-                .Skip(offset + skip)
-                .Take(step + 1)
-                .Reverse()
-                .ToList();
+            List<ChannelMessage> messages = await _channelMessageManager.GetChannelMessagesBeforeTime(
+                LastReadTime,
+                channelId,
+                offset,
+                skip,
+                step
+            );
             
             bool hasMore = messages.Count > step;
 
@@ -134,33 +115,20 @@ namespace pinger_api_service
         public async Task<ActionResult<ChannelMessageDto>> RemoveChannelMessage([FromRoute] int messageId)
         {
             string userId = _userManager.GetUserId(User);
-            User user = await _userManager.FindByIdAsync(userId);
+            User? user = await _userManager.FindByIdAsync(userId);
 
             if(user is null) {
-                return NotFound();
+                return NotFound(new Error("User not found"));
             }
 
-            ChannelMessage? channelMessage = await _dbContext.ChannelMessage
-                .Include(cm => cm.Sender)
-                .Include(cm => cm.ChannelMessageFiles)
-                .Include(cm => cm.Channel)
-                .Where(cm => cm.Sender.Id == userId)
-                .Where(cm => cm.Id == messageId)
-                .FirstOrDefaultAsync();
+            ChannelMessage? channelMessage = await _channelMessageManager.GetChannelMessageAsync(messageId, userId);
 
             if(channelMessage is null) {
-                return NotFound();
+                return NotFound(new Error("Message not found"));
             }
 
-            _dbContext.ChannelMessageFile.RemoveRange(channelMessage.ChannelMessageFiles);
-            _dbContext.ChannelMessage.Remove(channelMessage);
-            await _dbContext.SaveChangesAsync();
-
-            string groupName = $"{channelMessage.Channel.Id}-{channelMessage.Channel.Name}";
-
-            List<string> senderConnectionIds = channelMessage.Sender.ConnectionInformations.Select(ci => ci.ConnectionId).ToList();
-
-            await _hubContext.Clients.GroupExcept(groupName, senderConnectionIds).SendAsync("RemoveChannelMessage", new ChannelMessageDto(channelMessage));
+            await _channelMessageManager.RemoveChannelMessage(new List<ChannelMessage>{channelMessage});
+            await _chatHubConnectionManager.NotifyUserRemovedMessage(channelMessage.Channel, channelMessage.Sender, channelMessage);
 
             return new ChannelMessageDto(channelMessage);
         }
@@ -171,31 +139,14 @@ namespace pinger_api_service
         public async Task<ActionResult<ChannelMessageDto>> UpdateChannelMessage([FromRoute] long messageId, [FromBody] UpdatePrivateMessageRequest updatePrivateMessageRequest)
         {
             string senderId = _userManager.GetUserId(User);
-            ChannelMessage? channelMessage = _dbContext.ChannelMessage
-                .Include(pm => pm.Sender)
-                .ThenInclude(s => s.ConnectionInformations)
-                .Include(pm => pm.Sender)
-                .ThenInclude(s => s.ProfileImageFile)
-                .Include(pm => pm.Channel)
-                .Include(pm => pm.ChannelMessageFiles)
-                .Where(pm => pm.Sender.Id == senderId)
-                .Where(pm => pm.Id == messageId)
-                .FirstOrDefault();
+            ChannelMessage? channelMessage = await _channelMessageManager.GetChannelMessageAsync(messageId, senderId);
 
             if(channelMessage is null) {
-                return NotFound();
+                return NotFound(new Error("Message not found"));
             }
 
-            channelMessage.Body = updatePrivateMessageRequest.Body;
-            channelMessage.Edited = true;
-            _dbContext.ChannelMessage.Update(channelMessage);
-            await _dbContext.SaveChangesAsync();
-
-            string groupName = $"{channelMessage.Channel.Id}-{channelMessage.Channel.Name}";
-
-            List<string> senderConnectionIds = channelMessage.Sender.ConnectionInformations.Select(ci => ci.ConnectionId).ToList();
-
-            await _hubContext.Clients.GroupExcept(groupName, senderConnectionIds).SendAsync("ChannelMessageUpdated", new ChannelMessageDto(channelMessage));
+            await _channelMessageManager.UpdateChannelMessageAsync(channelMessage, updatePrivateMessageRequest.Body);
+            await _chatHubConnectionManager.NotifyUserUpdatedMessage(channelMessage.Channel, channelMessage.Sender, channelMessage);
 
             return new ChannelMessageDto(channelMessage);
         }

@@ -33,11 +33,18 @@ namespace pinger_api_service
             string ownerId = _userManager.GetUserId(User);
             User owner = await _userManager.FindByIdAsync(ownerId);
             ChatSpace chatSpace = new ChatSpace();
-            chatSpace.Name = newChatSpace.Name;
+            chatSpace.Name = newChatSpace.Name.Trim();
+
+            bool chatSpaceAlreadyExists = _dbContext.ChatSpace.Any(chatSpace => chatSpace.Name.ToLower() == newChatSpace.Name.Trim().ToLower());
+
+            if(chatSpaceAlreadyExists) {
+                return BadRequest("Chatspace already exists");
+            }
+
             chatSpace.Members.Add(owner);
 
             _dbContext.ChatSpace.Add(chatSpace);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
             
             return NoContent();
         }

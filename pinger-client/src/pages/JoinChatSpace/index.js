@@ -5,10 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@Router';
 import getChatSpaces from './serivces/getChatSpaces';
 import useJoinChatSpace from './hooks/useJoinChatSpace';
+import getUserChatSpaces from '../ChatSpaces/services/getUserChatSpaces';
 
 function ChatSpaceRow({ name, chatspaceId, onClick }) {
   return (
-    <button onClick={() => onClick(chatspaceId)} className="flex items-center text-white p-[10px]">
+    <button onClick={() => onClick(chatspaceId)} className="flex w-full items-center text-white p-[10px] hover:bg-tuna-darker">
       {name}
     </button>
   );
@@ -16,8 +17,13 @@ function ChatSpaceRow({ name, chatspaceId, onClick }) {
 
 function JoinChatSpace({ errorHandler }) {
   const navigate = useNavigate();
-  const { loaded, result } = useFetchData(
+  const { loaded: allChatSpacesLoaded, result: allChatSpaces } = useFetchData(
     getChatSpaces,
+    errorHandler,
+  );
+
+  const { loaded: joinedChatSpacesLoaded, result: joinedChatSpaces } = useFetchData(
+    getUserChatSpaces,
     errorHandler,
   );
 
@@ -30,13 +36,27 @@ function JoinChatSpace({ errorHandler }) {
     }
   };
 
+  const resolveChatSpaces = () => {
+    if(!allChatSpaces || !joinedChatSpaces) {
+      return null;
+    }
+
+    return allChatSpaces.data.filter(chatSpace => !joinedChatSpaces.data.some(joinedChatSpace => joinedChatSpace.id === chatSpace.id) )
+  }
+
+  const chatspacesToDisplay = resolveChatSpaces();
+
   return (
     <Container>
       <Row>
         <Col xs={12}>
-          {result && result.data.map(({ id, name }) => (
-            <ChatSpaceRow chatspaceId={id} onClick={onClick} name={name} />
+          <h1 className="text-3xl mb-[30px] text-white mt-[10px]">
+            Choose chatspace to join
+          </h1>
+          {chatspacesToDisplay?.map(({ id, name }) => (
+            <ChatSpaceRow key={id} chatspaceId={id} onClick={onClick} name={name} />
           ))}
+          {chatspacesToDisplay?.length <= 0 && <p className="text-white">There are no available chatspaces</p>}
         </Col>
       </Row>
     </Container>

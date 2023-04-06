@@ -39,13 +39,17 @@ namespace pinger_api_service
                 .Include(u => u.ContactedUsersInfo)
                 .ThenInclude(userInfo => userInfo.ContactedUser)
                 .ThenInclude(u => u.ProfileImageFile)
+                .Include(u => u.ContactedUsersInfo)
+                .ThenInclude(userInfo => userInfo.ChatSpace)
                 .FirstOrDefaultAsync(u => u.Id == userId);
                 
             if(user is null) {
                 return NotFound();
             }
+
+            List<ContactedUserInfo> filteredContactedUsers = user.ContactedUsersInfo.Where(cui => cui.ChatSpace.Id == chatspaceId).ToList();
             
-            return user.ContactedUsersInfo.Select(cu => new ContactedUserInfoDto(cu)).ToList();
+            return filteredContactedUsers.Select(cu => new ContactedUserInfoDto(cu)).ToList();
         }
 
         [Authorize]
@@ -54,6 +58,7 @@ namespace pinger_api_service
         public async Task<IActionResult> UpdateContactedUserReadTime([FromRoute] string contactedUserId)
         {
             string ownerId = _userManager.GetUserId(User);
+            
             ContactedUserInfo? contactedUserInfo = await _dbContext.ContactedUserInfo
                 .Include(cui => cui.Owner)
                 .Include(cui => cui.ContactedUser)
@@ -77,10 +82,13 @@ namespace pinger_api_service
         public async Task<IActionResult> AddContactedUser([FromBody] AddContactedUser contactedUserRequest)
         {
             string userId = _userManager.GetUserId(User);
+
             User? user = await _dbContext.Users
                 .Include(u => u.ConnectionInformations)
                 .Include(u => u.ContactedUsersInfo)
                 .ThenInclude(cuf => cuf.ContactedUser)
+                .Include(u => u.ContactedUsersInfo)
+                .ThenInclude(cuf => cuf.ChatSpace)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if(user is null) {
@@ -93,13 +101,15 @@ namespace pinger_api_service
             if(contactedUser is null) {
                 return NotFound();
             }
-            
-            bool userAlreadyAdded = user.ContactedUsersInfo.Any(item => item.ContactedUser.Id == contactedUserId); 
+
+            int chatspaceId = _userManager.GetChatSpaceId(User);
+            List<ContactedUserInfo> contactedUserInfos = user.ContactedUsersInfo.Where(cui => cui.ChatSpace.Id == chatspaceId).ToList();
+
+            bool userAlreadyAdded = contactedUserInfos.Any(item => item.ContactedUser.Id == contactedUserId); 
             if(userAlreadyAdded) {
                 return NoContent();
             }
 
-            int chatspaceId = _userManager.GetChatSpaceId(User);
             ChatSpace? chatSpace = _chatSpaceManager.GetChatSpaceById(chatspaceId);
             
             if(chatSpace is null) {

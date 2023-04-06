@@ -20,7 +20,7 @@ function CreateChatSpace() {
             svg.setAttribute('fill', 'white');
           }}
         />
-              )}
+      )}
     />
   );
 }

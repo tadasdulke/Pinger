@@ -178,7 +178,7 @@ namespace pinger_api_service
 
                DateTime refreshTokenExpirityTime = DateTime.Now.AddDays(7);
 
-               File? profilePicture = _userManager.GetProfilePicture(user.Id); 
+               File? profilePicture = await _userManager.GetProfilePictureAsync(user.Id); 
                user.ProfileImageFile = profilePicture;
 
                user.RefreshToken = refreshToken;

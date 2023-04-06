@@ -3,13 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@Router';
 import { withErrorWrapper, useApiAction } from '@Common';
 import { ReactSVG } from 'react-svg';
+import { useDispatch } from 'react-redux';
 
 import revokeToken from './services/revokeToken';
 import ChannelList from './components/ChannelList';
 import ContactedUserList from './components/ContactedUsersList';
+import { restore as restoreAuthStore } from '@Store/slices/auth';
+import { restore as restoreWorkspaceStore } from '@Store/slices/workspaces';
 
 function MessagingOptions({ errorHandler, connection }) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const { sendAction: revokeTokenAction } = useApiAction(
     revokeToken,
@@ -17,9 +21,11 @@ function MessagingOptions({ errorHandler, connection }) {
   );
 
   const onLogOut = async () => {
-    localStorage.clear();
     const { status } = await revokeTokenAction();
     if (status === 204) {
+      localStorage.clear();
+      dispatch(restoreAuthStore())
+      dispatch(restoreWorkspaceStore())
       navigate(ROUTES.LOGIN);
     }
   };

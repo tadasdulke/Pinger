@@ -7,6 +7,7 @@ namespace pinger_api_service
         public User() {
             this.ChatSpaces = new HashSet<ChatSpace>();
             this.ConnectionInformations = new HashSet<ConnectionInformation>();
+            this.Channels = new HashSet<Channel>();
         }
 
         public string? RefreshToken { get; set; }

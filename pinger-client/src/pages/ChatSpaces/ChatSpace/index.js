@@ -7,11 +7,11 @@ function ChatSpace({
 }) {
   return (
     <Col xs={3}>
-      <button className="w-full" onClick={onClick}>
+      <button className="w-full mt-[10px]" onClick={onClick}>
         <div className={cx('hover:border-2 border-white w-full aspect-square bg-black rounded-full', className)}>
           {image}
         </div>
-        <p className="text-white text-center mt-[30px]">
+        <p className="text-white text-center mt-[20px]">
           {name}
         </p>
       </button>
