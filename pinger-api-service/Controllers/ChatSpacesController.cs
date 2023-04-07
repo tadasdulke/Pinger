@@ -10,12 +10,14 @@ namespace pinger_api_service
     public class ChatSpacesController : ControllerBase
     {
         private ApplicationDbContext _dbContext;
+        private ChatSpaceManager _chatSpaceManager;
         private readonly ApplicationUserManager _userManager;
 
-        public ChatSpacesController(ApplicationDbContext dbContext, ApplicationUserManager userManager)
+        public ChatSpacesController(ApplicationDbContext dbContext, ApplicationUserManager userManager, ChatSpaceManager chatSpaceManager)
         {
             _dbContext = dbContext;
             _userManager = userManager;
+            _chatSpaceManager = chatSpaceManager;
         }
 
         [Authorize]
@@ -54,7 +56,7 @@ namespace pinger_api_service
         public async Task<ActionResult<ChatSpace>> GetChatSpaceById([FromRoute] int chatspaceId)
         {
             string userId = _userManager.GetUserId(User);
-            ChatSpace? chatspace = await _dbContext.ChatSpace.Include(cs => cs.Members).FirstOrDefaultAsync(cs => cs.Id == chatspaceId);
+            ChatSpace? chatspace = await _chatSpaceManager.GetChatSpaceById(chatspaceId);
             
             if(chatspace is null) {
                 return NotFound();
@@ -63,10 +65,10 @@ namespace pinger_api_service
             bool isUserInMembers = chatspace.Members.Any(m => m.Id == userId);
 
             if(isUserInMembers) {
-                return chatspace;
+                return BadRequest(new Error("User does not exists in chatspace"));
             }
 
-            return BadRequest();
+            return chatspace;
         }
 
         [Authorize]
@@ -75,10 +77,10 @@ namespace pinger_api_service
         {
             string userId = _userManager.GetUserId(User);
             User user = await _userManager.FindByIdAsync(userId);
-            ChatSpace? chatspace = await _dbContext.ChatSpace.Include(cs => cs.Members).FirstOrDefaultAsync(cs => cs.Id == chatspaceId);
+            ChatSpace? chatspace = await _chatSpaceManager.GetChatSpaceById(chatspaceId);
             
             if(chatspace is null) {
-                return NotFound();
+                return NotFound("Chatspace not found");
             }
 
             chatspace.Members.Add(user);

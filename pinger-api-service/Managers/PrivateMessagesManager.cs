@@ -30,7 +30,7 @@ namespace pinger_api_service
         {
             User sender = await _dbContext.Users.Include(u => u.ProfileImageFile).Where(u => u.Id == senderId).FirstOrDefaultAsync();
             User receiver = await _dbContext.Users.Where(u => u.Id == receiverId).FirstOrDefaultAsync();
-            ChatSpace? chatSpace = _chatSpaceManager.GetChatSpaceById(chatspaceId);
+            ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatspaceId);
 
             if(chatSpace is null) {
                 return null;

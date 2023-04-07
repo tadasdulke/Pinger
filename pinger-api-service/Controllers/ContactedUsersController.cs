@@ -110,7 +110,7 @@ namespace pinger_api_service
                 return NoContent();
             }
 
-            ChatSpace? chatSpace = _chatSpaceManager.GetChatSpaceById(chatspaceId);
+            ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatspaceId);
             
             if(chatSpace is null) {
                 return NotFound();

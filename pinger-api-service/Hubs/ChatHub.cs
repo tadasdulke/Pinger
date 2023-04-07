@@ -41,7 +41,7 @@ namespace pinger_api_service
             string userId = _userManager.GetUserId(Context.User);
             int chatSpaceId = _userManager.GetChatSpaceId(Context.User);
 
-            ChatSpace currentChatSpace = _chatSpaceManager.GetChatSpaceById(chatSpaceId);
+            ChatSpace currentChatSpace = await _chatSpaceManager.GetChatSpaceById(chatSpaceId);
             User? user = await _dbContext.Users
                 .Include(u => u.Channels)
                 .ThenInclude(c => c.ChatSpace)
@@ -103,7 +103,7 @@ namespace pinger_api_service
             
             if(!alreadyContacted) {
                 User sender = await _userManager.FindByIdAsync(senderId);
-                ChatSpace chatSpace = _chatSpaceManager.GetChatSpaceById(chatspaceId);
+                ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatspaceId);
 
                 ContactedUserInfo contactedUserInfo = new ContactedUserInfo {
                     Owner = receiver,
