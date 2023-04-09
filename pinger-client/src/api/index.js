@@ -29,6 +29,7 @@ export const createPingerClient = () => {
     getChatSpaces,
     joinChatSpace,
     getChatSpaceMember,
+    getChatSpace
   } = getChatSpaceEndpoints(instance);
   const { getSelf, updateSelf } = getUserEndpoints(instance);
   const { addContactedUser, getContactedUsers, updateContactedUserReadTime } = getContactedUsersEndpoints(instance);
@@ -86,7 +87,8 @@ export const createPingerClient = () => {
     updateContactedUserReadTime,
     getUnreadPrivateMessages,
     updateChannelReadTime,
-    getUnreadChannelMessages
+    getUnreadChannelMessages,
+    getChatSpace
   };
 };
 

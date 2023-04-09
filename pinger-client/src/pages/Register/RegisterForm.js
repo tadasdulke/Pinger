@@ -3,19 +3,19 @@ import { Formik, Field, Form } from 'formik';
 import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { Button, withErrorWrapper, TextInput } from '@Common';
+import { Button, TextInput } from '@Common';
 import { ROUTES } from '@Router';
 
 import useRegistration from './hooks/useRegistration';
 
-function RegisterForm({ errorHandler }) {
+function RegisterForm() {
   const FIELDS = {
     EMAIL: 'email',
     USERNAME: 'username',
     PASSWORD: 'password',
   };
 
-  const { loaded, sendAction } = useRegistration(errorHandler);
+  const { loaded, sendAction } = useRegistration();
   const navigate = useNavigate();
 
   const handleSubmit = async ({ email, username, password }) => {
@@ -86,4 +86,4 @@ function RegisterForm({ errorHandler }) {
   );
 }
 
-export default withErrorWrapper(RegisterForm);
+export default RegisterForm;

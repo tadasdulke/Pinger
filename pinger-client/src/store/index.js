@@ -5,6 +5,7 @@ import workspaceReducer from './slices/workspaces';
 import chatReducer from './slices/chat';
 import contactedUsersReducer from './slices/contactedUsers';
 import channelsReducer from './slices/channels';
+import errorsReducer from './slices/errors';
 
 const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ const store = configureStore({
     chat: chatReducer,
     contactedUsers: contactedUsersReducer,
     channels: channelsReducer,
+    errors: errorsReducer,
   },
   preloadedState: {
     auth: {

@@ -2,10 +2,9 @@ import { useApiAction } from '@Common';
 
 import removePrivateMessage from '../services/removePrivateMessage';
 
-const useRemovePrivateMessage = (errorHandler) => {
+const useRemovePrivateMessage = () => {
   const { loaded, sendAction } = useApiAction(
     (id) => removePrivateMessage(id),
-    errorHandler,
   );
 
   return {

@@ -11,14 +11,21 @@ namespace pinger_api_service
         private IChatSpaceManager _chatSpaceManager;
         private ApplicationDbContext _dbContext;
         private IPrivateMessagesManager _privateMessageManager;
+        private IContactedUsersManager _contactedUserManager;
         private IChannelMessageManager _channelMessageManager;
+        private IConnectionInformationManager _connectionInformationManager;
+        private IChatHubConnectionManager _chatHubConnectionManager;
+
 
         public ChatHub(
             ApplicationDbContext dbContext,
             ApplicationUserManager userManager,
             IChatSpaceManager chatSpaceManager,
             IPrivateMessagesManager privateMessageManager,
-            IChannelMessageManager channelMessageManager
+            IChannelMessageManager channelMessageManager,
+            IChatHubConnectionManager chatHubConnectionManager,
+            IConnectionInformationManager connectionInformationManager,
+            IContactedUsersManager contactedUserManager
         )
         {
         _userManager = userManager;
@@ -26,6 +33,9 @@ namespace pinger_api_service
             _chatSpaceManager = chatSpaceManager;
             _privateMessageManager = privateMessageManager;
             _channelMessageManager = channelMessageManager;
+            _chatHubConnectionManager = chatHubConnectionManager;
+            _connectionInformationManager = connectionInformationManager;
+            _contactedUserManager = contactedUserManager;
         }
 
         private async Task AddUserToGroups(List<Channel> channels) {
@@ -36,41 +46,46 @@ namespace pinger_api_service
             }
         }
 
-        public override async Task OnConnectedAsync() 
+        public override async Task OnConnectedAsync()
         {
             string userId = _userManager.GetUserId(Context.User);
             int chatSpaceId = _userManager.GetChatSpaceId(Context.User);
 
-            ChatSpace currentChatSpace = await _chatSpaceManager.GetChatSpaceById(chatSpaceId);
-            User? user = await _dbContext.Users
-                .Include(u => u.Channels)
-                .ThenInclude(c => c.ChatSpace)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+            ChatSpace? currentChatSpace = await _chatSpaceManager.GetChatSpaceById(chatSpaceId);
+
+            if(currentChatSpace is null) {
+                await _chatHubConnectionManager.NotifyError(Context.ConnectionId, "Chatspace not found");
+            }
+
+            User? user = await _userManager.GetUserAsync(userId);
+
+            if(user is null) {
+                await _chatHubConnectionManager.NotifyError(Context.ConnectionId, "User not found");
+            }
             
             List<Channel> activeChannels = user.Channels.Where(c => c.ChatSpace.Id == chatSpaceId).ToList();
-            
+
             await AddUserToGroups(activeChannels);
 
-            ConnectionInformation ct = new ConnectionInformation();
-            ct.ConnectionId = Context.ConnectionId;
-            ct.ChatSpace = currentChatSpace;
-            user.ConnectionInformations.Add(ct);
-            await _userManager.UpdateAsync(user);
+            await _connectionInformationManager.AddConnectionInformation(Context.ConnectionId, currentChatSpace, user);
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception) 
         {
             string userId = _userManager.GetUserId(Context.User);
-            User user = await _userManager.Users.Include(u => u.ConnectionInformations).FirstOrDefaultAsync(u => u.Id == userId);
-            var userConnections = user.ConnectionInformations;
-            ConnectionInformation? connectionInfoToRemove = userConnections.FirstOrDefault(c => c.ConnectionId == Context.ConnectionId);
+            User? user = await _userManager.GetUserAsync(userId);
+
+            if(user is null) {
+                await _chatHubConnectionManager.NotifyError(Context.ConnectionId, "User not found");
+                await base.OnDisconnectedAsync(exception);
+            }
+
+            ConnectionInformation? connectionInfoToRemove = user.ConnectionInformations.FirstOrDefault(c => c.ConnectionId == Context.ConnectionId);
             
             if(connectionInfoToRemove is not null) 
             {
-                userConnections.Remove(connectionInfoToRemove);
-                user.ConnectionInformations = userConnections;
-                await _userManager.UpdateAsync(user);
+                await _connectionInformationManager.RemoveConnectionInformation(connectionInfoToRemove);
             }
 
             await base.OnDisconnectedAsync(exception);
@@ -80,67 +95,37 @@ namespace pinger_api_service
         {
             int chatspaceId = _userManager.GetChatSpaceId(Context.User);
             string senderId = _userManager.GetUserId(Context.User);
-            
-            User? receiver = await _dbContext.Users
-                .Include(u => u.ConnectionInformations)
-                .ThenInclude(ci => ci.ChatSpace)
-                .FirstOrDefaultAsync(u => u.Id == receiverId);
-            List<ConnectionInformation> filteredConnectionInformations = receiver.ConnectionInformations.Where(ci => ci.ChatSpace.Id == chatspaceId).ToList();
 
             PrivateMessage sentMessage = await _privateMessageManager.AddPrivateMessage(senderId, receiverId, chatspaceId, message, fileIds);
 
-            // Add contacted user for receiver if not added
-            
-            List<ContactedUserInfo> contactedUserInfos = await _dbContext.ContactedUserInfo
-                .Include(cui => cui.ChatSpace)
-                .Include(cui => cui.ContactedUser)
-                .Include(cui => cui.Owner)
-                .Where(cui => cui.Owner.Id == receiverId)
-                .Where(cui => cui.ChatSpace.Id == chatspaceId)
-                .ToListAsync();
+            List<ContactedUserInfo>? contactedUserInfos = await _contactedUserManager.GetContactedUsers(receiverId, chatspaceId);
+
+            if(contactedUserInfos is null) {
+                await _chatHubConnectionManager.NotifyError(Context.ConnectionId, "User not found");
+                return;
+            }
 
             bool alreadyContacted = contactedUserInfos.Any(cu => cu.ContactedUser.Id == senderId);
             
+            List<ConnectionInformation> receiverConnectionInformations = await _connectionInformationManager.GetUserConnectionInfo(receiverId, chatspaceId);
+            string[] receiverConnectionIds = receiverConnectionInformations.Select(rci => rci.ConnectionId).ToArray();
+            
             if(!alreadyContacted) {
-                User sender = await _userManager.FindByIdAsync(senderId);
-                ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatspaceId);
-
-                ContactedUserInfo contactedUserInfo = new ContactedUserInfo {
-                    Owner = receiver,
-                    ContactedUser = sender,
-                    ChatSpace = chatSpace
-                };
-
-
-                await SendToMulitpleClients(filteredConnectionInformations, "NewUserContactAdded", new ContactedUserInfoDto(contactedUserInfo));
-                await _dbContext.ContactedUserInfo.AddAsync(contactedUserInfo);
-                await _dbContext.SaveChangesAsync();
+                ContactedUserInfo contactedUserInfo = await _contactedUserManager.AddContactedUser(receiverId, senderId, chatspaceId);
+                await _chatHubConnectionManager.NotifyUserNewContactAdded(receiverConnectionIds, contactedUserInfo);
             }
 
-            PrivateMessageDto privateMessageDto = new PrivateMessageDto(sentMessage);
-            await Clients.Client(Context.ConnectionId).SendAsync("MessageSent", privateMessageDto);
-            await SendToMulitpleClients(filteredConnectionInformations, "ReceiveMessage", privateMessageDto);
-        }
-
-        private async Task SendToMulitpleClients(List<ConnectionInformation> connectionInformation, string method, object message) 
-        {
-            foreach(ConnectionInformation connectionInfo in connectionInformation) {
-                await Clients.Client(connectionInfo.ConnectionId).SendAsync(method, message);   
-            }
-        }
-
-        public async Task Ping() {
-            await Clients.Client(Context.ConnectionId).SendAsync("Pong");
+            await _chatHubConnectionManager.NotifyUserMessageSent(Context.ConnectionId, sentMessage);
+            await _chatHubConnectionManager.NotifyUserPrivateMessageReceived(receiverConnectionIds, sentMessage);
         }
 
         public async Task SendGroupMessage(int channelId, string message, int[] fileIds)
         {
             string senderId = _userManager.GetUserId(Context.User);
-            Channel channel = _dbContext.Channel.FirstOrDefault(c => c.Id == channelId);
-
-            string groupName = $"{channel.Id}-{channel.Name}";
+            Channel? channel = await _dbContext.Channel.FirstOrDefaultAsync(c => c.Id == channelId);
 
             if(channel is null) {
+                await _chatHubConnectionManager.NotifyError(Context.ConnectionId, "Channel not found");
                 return;
             }
 
@@ -152,17 +137,19 @@ namespace pinger_api_service
                 fileIds
             );
 
-            User? sender = await _dbContext.Users
-                .Include(u => u.ConnectionInformations)
-                .Where(u => u.Id == senderId)
-                .FirstOrDefaultAsync();
+            User? sender = await _userManager.GetUserAsync(senderId);
 
-            List<string> senderConnectionIds = sender.ConnectionInformations.Select(ci => ci.ConnectionId).ToList();
+            if(sender is null) {
+                await _chatHubConnectionManager.NotifyError(Context.ConnectionId, "Sender not found");
+                return;
+            }
 
-            ChannelMessageDto channelMessageDto = new ChannelMessageDto(sentMessage);
+            await _chatHubConnectionManager.NotifyUserChannelMessageSent(Context.ConnectionId, sentMessage);
+            await _chatHubConnectionManager.NotifyChannelReceivedMessage(channel, sender, sentMessage);
+        }
 
-            await Clients.Client(Context.ConnectionId).SendAsync("GroupMessageSent", channelMessageDto);
-            await Clients.GroupExcept(groupName, senderConnectionIds).SendAsync("ReceiveGroupMessage", channelMessageDto);
+        public async Task Ping() {
+            await Clients.Client(Context.ConnectionId).SendAsync("Pong");   
         }
     }
 } 

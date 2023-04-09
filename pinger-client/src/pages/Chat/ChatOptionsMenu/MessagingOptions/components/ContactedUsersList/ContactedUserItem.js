@@ -24,7 +24,7 @@ const ContactedUserItem = ({id, userName, profilePictureId, highlighted}) => {
               className={cx('rounded-full aspect-square')}
             />}
           </div>
-          <p className="ml-[10px]">{userName}</p>
+          <p className="ml-[10px] break-all">{userName}</p>
         </div>
       </ListItem>
     )

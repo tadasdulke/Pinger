@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import {
-  Button, useFetchData, useApiAction, withErrorWrapper,
+  Button, useFetchData, useApiAction,
 } from '@Common';
 import { getChannelMembers } from '@Services';
 import removeUserFromChannel from '../services/removeUserFromChannel';
 
-function RemoveUsersFromChannel({ errorHandler }) {
+function RemoveUsersFromChannel() {
   const { channelId } = useParams();
   const [searchField, setSearchField] = useState('');
   const { userId } = useSelector((state) => state.auth);
@@ -18,8 +18,6 @@ function RemoveUsersFromChannel({ errorHandler }) {
 
   const { loaded, result } = useFetchData(
     () => getChannelMembers(channelId, searchField),
-    errorHandler,
-    null,
     [searchField],
   );
 
@@ -47,4 +45,4 @@ function RemoveUsersFromChannel({ errorHandler }) {
   );
 }
 
-export default withErrorWrapper(RemoveUsersFromChannel);
+export default RemoveUsersFromChannel;

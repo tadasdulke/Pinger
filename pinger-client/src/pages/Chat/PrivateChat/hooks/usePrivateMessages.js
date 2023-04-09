@@ -8,21 +8,17 @@ const usePrivateMessages = (
     connection, 
     receiverId, 
     isAtBottom,
-    errorHandler
 ) => {
     const { sendAction: getPrivateMessagesAction } = useApiAction(
         (id, offset, step, skip) => getPrivateMessages(id, offset, step, skip),
-        errorHandler,
     );
   
     const { sendAction: getUnreadPrivateMessagesAction } = useApiAction(
         (id) => getUnreadPrivateMessages(id),
-        errorHandler,
     );
   
     const { sendAction: updateReadTimeAction } = useApiAction(
         () => updateContactedUserReadTime(receiverId),
-        errorHandler,
     );
 
     const {

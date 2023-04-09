@@ -2,10 +2,9 @@ import { useApiAction } from '@Common';
 
 import appendClaims from '../services/appendClaims';
 
-const useAppendClaims = (errorHandler) => {
+const useAppendClaims = () => {
   const { loaded, sendAction } = useApiAction(
     (chatspaceId) => appendClaims(chatspaceId),
-    errorHandler,
   );
 
   return {

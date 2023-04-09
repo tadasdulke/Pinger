@@ -4,7 +4,6 @@ import { useDispatch } from 'react-redux';
 import cx from 'classnames';
 import { RotatingLines } from 'react-loader-spinner';
 import {
-  withErrorWrapper, 
   useApiAction, 
   useOnScreen, 
   Button, 
@@ -21,18 +20,17 @@ import useRemovePrivateMessage from './hooks/useRemovePrivateMessage';
 import useUpdatePrivateMessage from './hooks/useUpdatePrivateMessage';
 import usePrivateMessages from './hooks/usePrivateMessages';
 
-function PrivateChat({ errorHandler }) {
+function PrivateChat() {
   const dispatch = useDispatch();
   const [messageValue, setMessageValue] = useState('');
   const { isIntersecting: isAtBottom, initiateObserver } = useOnScreen();
   const { connection } = useOutletContext();
   const { receiverId } = useParams();
   const [expanded, setExpanded] = useState(false);
-  const { member } = useFetchChatSpaceMember(errorHandler, receiverId, null, [receiverId]);
+  const { member } = useFetchChatSpaceMember(receiverId, [receiverId]);
 
   const { sendAction: updateContactedUserReadTimeAction } = useApiAction(
       () => updateContactedUserReadTime(receiverId),
-      errorHandler,
   );
 
   const {
@@ -50,13 +48,13 @@ function PrivateChat({ errorHandler }) {
     connection, 
     receiverId, 
     isAtBottom,
-    errorHandler
   );
 
-  const { sendRemoveMessageAction } = useRemovePrivateMessage(errorHandler);
-  const { sendUpdateMessageAction } = useUpdatePrivateMessage(errorHandler);
+  const { sendRemoveMessageAction } = useRemovePrivateMessage();
+  const { sendUpdateMessageAction } = useUpdatePrivateMessage();
   const { sendAction: uploadPrivateFileAction } = useApiAction(
     (file, receiverId) => uploadPrivateFile(file, receiverId),
+    false
   );
   const { files, uploadFiles, setFiles } = useUploadPrivateFiles(uploadPrivateFileAction);
 
@@ -192,4 +190,4 @@ function PrivateChat({ errorHandler }) {
   );
 }
 
-export default withErrorWrapper(PrivateChat);
+export default PrivateChat;

@@ -1,10 +1,9 @@
 import { useApiAction } from '@Common';
 import joinChatSpace from '../serivces/joinChatSpace';
 
-const useJoinChatSpace = (errorHandler) => {
+const useJoinChatSpace = () => {
   const { loaded, sendAction } = useApiAction(
     (chatspaceId) => joinChatSpace(chatspaceId),
-    errorHandler,
   );
 
   return {

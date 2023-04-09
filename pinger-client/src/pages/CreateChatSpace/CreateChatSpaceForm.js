@@ -4,17 +4,17 @@ import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom'
 import { ROUTES } from '@Router'
 import {
-  Button, withErrorWrapper, TextInput, useApiAction,
+  Button, TextInput, useApiAction,
 } from '@Common';
 import createChatSpace from './services/createChatSpace';
 
-function CreateChatSpaceForm({ errorHandler }) {
+function CreateChatSpaceForm() {
   const navigate = useNavigate();
   const FIELDS = {
     NAME: 'name',
   };
 
-  const { sendAction } = useApiAction((name) => createChatSpace(name), errorHandler);
+  const { sendAction } = useApiAction((name) => createChatSpace(name));
 
   const handleSubmit = async (values) => {
     const name = values[FIELDS.NAME];
@@ -57,4 +57,4 @@ function CreateChatSpaceForm({ errorHandler }) {
   );
 }
 
-export default withErrorWrapper(CreateChatSpaceForm);
+export default CreateChatSpaceForm;

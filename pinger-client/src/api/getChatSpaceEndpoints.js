@@ -88,6 +88,24 @@ const getChatSpaceEndpoints = (instance) => {
     };
   };
 
+  const getChatSpace = async (chatspaceId) => {
+    const response = await instance.get(
+      `${API_SERVICE_ENDPOINTS.CHATSPACES}/${chatspaceId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    const { status, data } = response;
+
+    return {
+      status,
+      data,
+    };
+  };
+
   const getChatSpaceMember = async (memberId) => {
     const response = await instance.get(
       `${API_SERVICE_ENDPOINTS.CHATSPACES}/members/${memberId}`,
@@ -113,6 +131,7 @@ const getChatSpaceEndpoints = (instance) => {
     getChatSpaces,
     joinChatSpace,
     getChatSpaceMember,
+    getChatSpace
   };
 };
 

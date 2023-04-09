@@ -10,6 +10,7 @@ namespace pinger_api_service
     public class ContactedUsersController : ControllerBase
     {
         private ApplicationDbContext _dbContext;
+        private IContactedUsersManager _contactedUsersManager;
         private IChatSpaceManager _chatSpaceManager;
         private readonly ApplicationUserManager _userManager;
         private readonly IHubContext<ChatHub> _hubContext;
@@ -18,13 +19,15 @@ namespace pinger_api_service
             ApplicationDbContext dbContext, 
             ApplicationUserManager userManager, 
             IChatSpaceManager chatSpaceManager,
-            IHubContext<ChatHub>  hubContext
+            IHubContext<ChatHub>  hubContext,
+            IContactedUsersManager contactedUsersManager
         )
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _chatSpaceManager = chatSpaceManager;
             _hubContext = hubContext;
+            _contactedUsersManager = contactedUsersManager;
         }
 
         [Authorize]
@@ -33,23 +36,15 @@ namespace pinger_api_service
         {
             string userId = _userManager.GetUserId(User);
             int chatspaceId = _userManager.GetChatSpaceId(User);
-            User? user = await _dbContext.Users
-                .Include(u => u.ContactedUsersInfo)
-                .ThenInclude(userInfo => userInfo.ChatSpace)
-                .Include(u => u.ContactedUsersInfo)
-                .ThenInclude(userInfo => userInfo.ContactedUser)
-                .ThenInclude(u => u.ProfileImageFile)
-                .Include(u => u.ContactedUsersInfo)
-                .ThenInclude(userInfo => userInfo.ChatSpace)
-                .FirstOrDefaultAsync(u => u.Id == userId);
-                
-            if(user is null) {
-                return NotFound();
+            
+            List<ContactedUserInfo>? contactedUserInfos = await _contactedUsersManager.GetContactedUsers(userId, chatspaceId);
+
+            if(contactedUserInfos is null) {
+                return NotFound(new Error("Contacted users not found"));
             }
 
-            List<ContactedUserInfo> filteredContactedUsers = user.ContactedUsersInfo.Where(cui => cui.ChatSpace.Id == chatspaceId).ToList();
-            
-            return filteredContactedUsers.Select(cu => new ContactedUserInfoDto(cu)).ToList();
+
+            return contactedUserInfos.Select(cu => new ContactedUserInfoDto(cu)).ToList();
         }
 
         [Authorize]
@@ -59,20 +54,13 @@ namespace pinger_api_service
         {
             string ownerId = _userManager.GetUserId(User);
             
-            ContactedUserInfo? contactedUserInfo = await _dbContext.ContactedUserInfo
-                .Include(cui => cui.Owner)
-                .Include(cui => cui.ContactedUser)
-                .Where(cui => cui.Owner.Id == ownerId)
-                .FirstOrDefaultAsync(cui => cui.ContactedUser.Id == contactedUserId);
+            ContactedUserInfo? contactedUserInfo = await _contactedUsersManager.GetContactedUserInfoAsync(ownerId, contactedUserId);
             
             if(contactedUserInfo is null) {
-                return NotFound();
+                return NotFound(new Error("Contacted user info not found"));
             }
             
-            contactedUserInfo.LastReadTime = DateTime.Now;
-            
-            _dbContext.Update(contactedUserInfo);
-            await _dbContext.SaveChangesAsync();
+            await _contactedUsersManager.UpdateContactedUser(contactedUserInfo, DateTime.Now);
 
             return NoContent();
         }

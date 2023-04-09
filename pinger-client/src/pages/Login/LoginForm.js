@@ -4,7 +4,7 @@ import { Formik, Field, Form } from 'formik';
 import * as Yup from 'yup';
 import { Link } from 'react-router-dom';
 
-import { Button, withErrorWrapper, TextInput } from '@Common';
+import { Button, TextInput } from '@Common';
 import { ROUTES } from '@Router';
 import {
   authenticate, setUserName, setUserId, setProfilePictureId,
@@ -13,13 +13,13 @@ import LOCAL_STORAGE_ITEMS from '@Common/config/localStorageItems';
 
 import useLogin from './hooks/useLogin';
 
-function LoginForm({ errorHandler }) {
+function LoginForm() {
   const FIELDS = {
     USERNAME: 'username',
     PASSWORD: 'password',
   };
 
-  const { loaded, sendAction } = useLogin(errorHandler);
+  const { loaded, sendAction } = useLogin();
   const dispath = useDispatch();
 
   const handleSubmit = async ({ username, password }) => {
@@ -85,4 +85,4 @@ function LoginForm({ errorHandler }) {
   );
 }
 
-export default withErrorWrapper(LoginForm);
+export default LoginForm;

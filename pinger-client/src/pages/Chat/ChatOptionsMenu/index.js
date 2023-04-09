@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
-import { ReactSVG } from 'react-svg';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import cx from 'classnames';
 import { useLoadedImage } from '@Common';
 import { ROUTES } from '@Router';
-import UserSearchModal from './UserSearchModal';
 import MessagingOptions from './MessagingOptions';
 
 function UserBar() {
-  const [showModal, setShowModal] = useState(false);
   const { userName, profilePictureId } = useSelector((state) => state.auth);
   const src = useLoadedImage(
     `http://localhost:5122/api/public-file/${profilePictureId}`,
@@ -30,20 +27,9 @@ function UserBar() {
               />
               )}
             </div>
-            <span className="ml-[16px]">{userName}</span>
+            <span className="ml-[16px] break-all">{userName}</span>
           </div>
         </Link>
-        {showModal && <UserSearchModal setShowModal={setShowModal} />}
-      <button onClick={() => setShowModal(true)}>
-        <ReactSVG
-          src="http://localhost:5122/public/icons/search.svg"
-          beforeInjection={(svg) => {
-            svg.setAttribute('width', '24px');
-            svg.setAttribute('height', '24px');
-            svg.setAttribute('fill', 'white');
-          }}
-        />
-      </button>
     </div>
   );
 }

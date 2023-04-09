@@ -159,19 +159,12 @@ namespace pinger_api_service
             var user = await _userManager.FindByNameAsync(model.Username);
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                var userRoles = await _userManager.GetRolesAsync(user);
-
-                var authClaims = new List<Claim>
+                List<Claim> authClaims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.UserName),
                     new Claim(ClaimTypes.NameIdentifier, user.Id),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
-
-                foreach (var userRole in userRoles)
-                {
-                    authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-                }
 
                var token = GetToken(authClaims);
                var refreshToken = GenerateRefreshToken();
@@ -208,7 +201,8 @@ namespace pinger_api_service
 
                 return new UserDto(user);
             }
-            return Unauthorized();
+
+            return Unauthorized(new Error("Login failed. Check your credentials"));
         }
 
         [HttpPost]
@@ -217,7 +211,7 @@ namespace pinger_api_service
         {
             var userExists = await _userManager.FindByNameAsync(model.Username);
             if (userExists != null)
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
+                return BadRequest(new Error("User already exists!"));
 
             User user = new()
             {
@@ -227,9 +221,9 @@ namespace pinger_api_service
             };
             var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+                return BadRequest(new Error("Register failed. Check username or password"));
 
-            return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+            return Ok();
         }
 
         private JwtSecurityToken GetToken(List<Claim> authClaims)

@@ -45,10 +45,14 @@ namespace pinger_api_service
             }
 
             int chatSpaceId = _userManager.GetChatSpaceId(User);
-            ChatSpace? chatSpace = _chatSpaceManager.GetChatSpaceById(chatSpaceId);
+            ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatSpaceId);
 
             if(chatSpace is null) {
                 return NotFound(new Error("Chatspace does not exist"));
+            }
+
+            if(await _channelManager.GetChannelByNameAsync(channelToAdd.Name, chatSpaceId) is not null) {
+                return BadRequest(new Error("Channel with this name already exists in this chatspace"));
             }
 
             Channel channel = await _channelManager.CreateChannel(channelToAdd.Name, owner, chatSpace);
@@ -105,7 +109,7 @@ namespace pinger_api_service
         {
             string userId = _userManager.GetUserId(User);
             int chatSpaceId = _userManager.GetChatSpaceId(User);
-            ChatSpace? chatSpace = _chatSpaceManager.GetChatSpaceById(chatSpaceId);
+            ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatSpaceId);
             
             if(chatSpace is null) {
                 return NotFound(new Error("Chatspace not found"));

@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { setConfiguration } from 'react-grid-system';
+import { BrowserRouter } from "react-router-dom";
 import store from './store';
 import Router from './router/Router';
 import tailwindConfig from '../tailwind.config';
@@ -17,4 +18,9 @@ setConfiguration({
   maxScreenClass: 'xl',
 });
 
-root.render(<Provider store={store}><Router /></Provider>);
+root.render(
+  <Provider store={store}>
+    <BrowserRouter>
+      <Router />
+    </BrowserRouter>
+  </Provider>);

@@ -9,7 +9,7 @@ namespace pinger_api_service
         public Task RemoveChannel(Channel channel);
         public Task AddUserToChannel(User user, Channel channel);
         public Task RemoveUserFromChannel(Channel channel, User user);
-
+        public Task<Channel?> GetChannelByNameAsync(string name, int chatspace);
 
     }
 
@@ -65,6 +65,15 @@ namespace pinger_api_service
                 .ThenInclude(m => m.ConnectionInformations)
                 .Include(c => c.ChatSpace)
                 .FirstOrDefaultAsync(c => c.Id == channelId);
+
+            return channel;
+        }
+
+        public async Task<Channel?> GetChannelByNameAsync(string name, int chatspace) {
+            Channel? channel = await _dbContext.Channel
+                .Include(c => c.ChatSpace)
+                .Where(c => c.ChatSpace.Id == chatspace)
+                .FirstOrDefaultAsync(c => c.Name.Trim().ToLower() == name.Trim().ToLower());
 
             return channel;
         }

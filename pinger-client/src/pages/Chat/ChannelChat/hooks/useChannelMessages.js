@@ -8,22 +8,18 @@ const useChannelMessages = (
     connection, 
     channelId, 
     isAtBottom,
-    errorHandler
 ) => {
     const convertedChannelId = parseInt(channelId);
     const { sendAction: getChannelMessagesAction } = useApiAction(
         (id, offset, step, skip) => getChannelMessages(id, offset, step, skip),
-        errorHandler,
     );
   
     const { sendAction: updateChannelReadTimeAction } = useApiAction(
         () => updateChannelReadTime(channelId),
-        errorHandler,
     );
   
     const { sendAction: getUnreadChannelMessagesAction } = useApiAction(
         () => getUnreadChannelMessages(channelId),
-        errorHandler,
     );
 
     const {

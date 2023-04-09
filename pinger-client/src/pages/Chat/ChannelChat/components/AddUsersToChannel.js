@@ -2,31 +2,27 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import {
-  Button, useFetchData, useApiAction, withErrorWrapper,
+  Button, useFetchData, useApiAction,
 } from '@Common';
 import { searchChatSpaceMembers, getChannelMembers } from '@Services';
 import addUserToChannel from '../services/addUserToChannel';
 
-function AddUsersToChannel({ errorHandler, toggle }) {
+function AddUsersToChannel({ toggle }) {
   const { channelId } = useParams();
   const [searchField, setSearchField] = useState('');
   const { userId } = useSelector((state) => state.auth);
 
   const { sendAction } = useApiAction(
     (newMemberId) => addUserToChannel(channelId, newMemberId),
-    errorHandler,
   );
 
   const { loaded, result } = useFetchData(
     () => searchChatSpaceMembers(searchField),
-    errorHandler,
-    null,
     [searchField],
   );
 
   const { result: channelMembersResult } = useFetchData(
     () => getChannelMembers(channelId),
-    errorHandler,
   );
 
   const filteredUsers = result?.data.filter((u) => u.id !== userId) || [];
@@ -60,4 +56,4 @@ function AddUsersToChannel({ errorHandler, toggle }) {
   );
 }
 
-export default withErrorWrapper(AddUsersToChannel);
+export default AddUsersToChannel;

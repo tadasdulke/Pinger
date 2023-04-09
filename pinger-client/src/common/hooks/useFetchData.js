@@ -1,32 +1,39 @@
 import { useState, useEffect } from 'react';
-import { DEFAULT_ERROR } from '../config/errorMessages';
+import { useDispatch } from 'react-redux';
 
-const defaultErrorHandler = {
-  showError: () => null,
-  hideError: () => null,
-};
+import { addError } from '@Store/slices/errors';
+
 
 const useFetchData = (
   fetchAction,
-  errorHandler = defaultErrorHandler,
-  resolveErrorMessage = null,
   deps = [],
 ) => {
   const [result, setResult] = useState(null);
   const [loaded, setLoaded] = useState(true);
+  const dispatch = useDispatch();
 
   const core = async () => {
     try {
       setLoaded(false);
       const response = await fetchAction();
-      errorHandler.hideError();
       setResult(response);
-    } catch ({ response: { status } }) {
-      const errorMessage = resolveErrorMessage === null
-        ? DEFAULT_ERROR
-        : resolveErrorMessage(status);
+    } catch ({ response }) {
+      if(response?.status) {
+        const { status, data } = response;
+        const { message } = data;
 
-      errorHandler.showError(errorMessage);
+        if(message) {
+          dispatch(addError(message));
+        } else {
+          dispatch(addError("Something went wrong"));
+        }
+
+        return { status, data };
+      } else {
+        return { status: 500 };
+      }
+
+      return { status, data };
     } finally {
       setLoaded(true);
     }

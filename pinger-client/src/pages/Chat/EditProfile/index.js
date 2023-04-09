@@ -6,7 +6,7 @@ import * as Yup from 'yup';
 import cx from 'classnames';
 import { setUserName, setProfilePictureId } from '@Store/slices/auth';
 import {
-  Button, TextInput, withErrorWrapper, useFetchData, useApiAction, useLoadedImage,
+  Button, TextInput, useFetchData, useApiAction, useLoadedImage,
   FilePicker,
 } from '@Common';
 import LOCAL_STORAGE_ITEMS from '@Common/config/localStorageItems';
@@ -14,7 +14,7 @@ import LOCAL_STORAGE_ITEMS from '@Common/config/localStorageItems';
 import getSelf from './services/getSelf';
 import updateSelf from './services/updateSelf';
 
-function EditProfile({ errorHandler }) {
+function EditProfile() {
   const dispatch = useDispatch();
   const [selectedFile, setSelectedFile] = useState(null);
   const [profileImageSrc, setProfileImageSrc] = useState(null);
@@ -23,12 +23,10 @@ function EditProfile({ errorHandler }) {
 
   const { loaded, result: self } = useFetchData(
     getSelf,
-    errorHandler,
   );
 
   const { sendAction: sendUpdateSelfAction } = useApiAction(
     (file, userName) => updateSelf(file, userName),
-    errorHandler,
   );
 
   const FIELDS = {
@@ -63,7 +61,7 @@ function EditProfile({ errorHandler }) {
   }, [selectedFile]);
 
   useEffect(() => {
-    if (self && self.data && self.data.profilePictureId) {
+    if (self && self.data) {
       setProfileImageSrc(`http://localhost:5122/api/public-file/${self.data.profilePictureId}`);
     }
   }, [self?.data]);
@@ -135,4 +133,4 @@ function EditProfile({ errorHandler }) {
   );
 }
 
-export default withErrorWrapper(EditProfile);
+export default EditProfile;

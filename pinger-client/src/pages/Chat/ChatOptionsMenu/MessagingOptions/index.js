@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@Router';
-import { withErrorWrapper, useApiAction } from '@Common';
+import { useApiAction } from '@Common';
 import { ReactSVG } from 'react-svg';
 import { useDispatch } from 'react-redux';
 
@@ -11,13 +11,12 @@ import ContactedUserList from './components/ContactedUsersList';
 import { restore as restoreAuthStore } from '@Store/slices/auth';
 import { restore as restoreWorkspaceStore } from '@Store/slices/workspaces';
 
-function MessagingOptions({ errorHandler, connection }) {
+function MessagingOptions({ connection }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const { sendAction: revokeTokenAction } = useApiAction(
     revokeToken,
-    errorHandler,
   );
 
   const onLogOut = async () => {
@@ -68,4 +67,4 @@ function MessagingOptions({ errorHandler, connection }) {
   );
 }
 
-export default withErrorWrapper(MessagingOptions);
+export default MessagingOptions;

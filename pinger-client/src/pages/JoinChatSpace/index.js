@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Row, Col } from 'react-grid-system';
-import { useFetchData, withErrorWrapper } from '@Common';
+import { useFetchData} from '@Common';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@Router';
 import getChatSpaces from './serivces/getChatSpaces';
@@ -15,19 +15,17 @@ function ChatSpaceRow({ name, chatspaceId, onClick }) {
   );
 }
 
-function JoinChatSpace({ errorHandler }) {
+function JoinChatSpace() {
   const navigate = useNavigate();
   const { loaded: allChatSpacesLoaded, result: allChatSpaces } = useFetchData(
     getChatSpaces,
-    errorHandler,
   );
 
   const { loaded: joinedChatSpacesLoaded, result: joinedChatSpaces } = useFetchData(
     getUserChatSpaces,
-    errorHandler,
   );
 
-  const { joinChatSpace } = useJoinChatSpace(errorHandler);
+  const { joinChatSpace } = useJoinChatSpace();
 
   const onClick = async (chatspaceId) => {
     const { status } = await joinChatSpace(chatspaceId);
@@ -56,11 +54,11 @@ function JoinChatSpace({ errorHandler }) {
           {chatspacesToDisplay?.map(({ id, name }) => (
             <ChatSpaceRow key={id} chatspaceId={id} onClick={onClick} name={name} />
           ))}
-          {chatspacesToDisplay?.length <= 0 && <p className="text-white">There are no available chatspaces</p>}
+          {chatspacesToDisplay?.length <= 0 && <p className="text-white">There are no available chatspaces that you can join</p>}
         </Col>
       </Row>
     </Container>
   );
 }
 
-export default withErrorWrapper(JoinChatSpace);
+export default JoinChatSpace;

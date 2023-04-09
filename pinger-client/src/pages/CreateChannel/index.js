@@ -6,13 +6,13 @@ import * as Yup from 'yup';
 import { RotatingLines } from 'react-loader-spinner';
 import { useDispatch } from 'react-redux';
 import { ROUTES } from '@Router';
-import { Button, TextInput, withErrorWrapper } from '@Common';
+import { Button, TextInput } from '@Common';
 
 import useCreateChannel from './hooks/useCreateChannel';
 import { addChannel } from '@Store/slices/channels';
 
-function CreateChannel({ errorHandler }) {
-  const { channelCreated, createChannel } = useCreateChannel(errorHandler);
+function CreateChannel() {
+  const { channelCreated, createChannel } = useCreateChannel();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -82,4 +82,4 @@ function CreateChannel({ errorHandler }) {
   );
 }
 
-export default withErrorWrapper(CreateChannel);
+export default CreateChannel;

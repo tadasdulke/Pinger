@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-grid-system';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useFetchData, withErrorWrapper } from '@Common';
+import { useFetchData, Button } from '@Common';
 import { ROUTES } from '@Router';
 import { changeCurrentWorkspaceId } from '@Store/slices/workspaces';
 import LOCAL_STORAGE_ITEMS from '@Common/config/localStorageItems';
@@ -17,12 +17,12 @@ import { restore as restoreChannelStore } from '../../store/slices/channels';
 import { restore as restoreContactedUsersStore } from '../../store/slices/contactedUsers';
 import { restore as restoreChatspaceStore } from '../../store/slices/workspaces';
 
-function ChatSpaces({ errorHandler }) {
+function ChatSpaces() {
+  const [showAll, setShowAll] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loaded, result: chatSpaces } = useFetchData(
     getUserChatSpaces,
-    errorHandler,
   );
 
   useEffect(() => {
@@ -32,7 +32,7 @@ function ChatSpaces({ errorHandler }) {
     dispatch(restoreChatspaceStore())
   }, [])
 
-  const { addClaims } = useAppendClaims(errorHandler);
+  const { addClaims } = useAppendClaims();
 
   const selectWorkspace = async (workspaceId) => {
     const { status } = await addClaims(workspaceId);
@@ -44,12 +44,14 @@ function ChatSpaces({ errorHandler }) {
     }
   };
 
+  const chatSpacesToDisplay = !showAll ? chatSpaces?.data?.slice(0, 2) : chatSpaces?.data;
+
   return (
     <Container className="top-1/2 translate-y-[-50%]">
       <Row>
         <Col xs={12}>
           <Row justify="center">
-            {chatSpaces?.data?.map(({ name, id }) => (
+            {chatSpacesToDisplay?.map(({ name, id }) => (
               <ChatSpace 
                 image={<div className="text-white flex justify-center items-center h-full text-3xl">{name[0].toUpperCase()}</div>}  
                 onClick={() => selectWorkspace(id)} 
@@ -61,9 +63,16 @@ function ChatSpaces({ errorHandler }) {
             <CreateChatSpace />
           </Row>
         </Col>
+        <Col xs={12}>
+          <div className="flex justify-center mt-[20px]">
+            <Button onClick={() => setShowAll(!showAll)}>
+              {showAll ? "Show less" : "Show all"}
+            </Button>
+          </div>
+        </Col>
       </Row>
     </Container>
   );
 }
 
-export default withErrorWrapper(ChatSpaces);
+export default ChatSpaces;

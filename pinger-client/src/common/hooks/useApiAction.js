@@ -1,30 +1,34 @@
 import { useState } from 'react';
+import {useDispatch} from 'react-redux';
 
-import { DEFAULT_ERROR } from '../config/errorMessages';
+import { addError } from '@Store/slices/errors';
 
-const defaultErrorHandler = {
-  showError: () => null,
-  hideError: () => null,
-};
-
-const useApiAction = (action, errorHandler = defaultErrorHandler, resolveErrorMessage = null) => {
+const useApiAction = (action, handleErrors) => {
   const [loaded, setLoaded] = useState(true);
+  const dispatch = useDispatch();
 
   const sendAction = async (...args) => {
     try {
       setLoaded(false);
       const response = await action(...args);
-      errorHandler.hideError();
-
+      
       return response;
-    } catch ({ response: { status, data } }) {
-      const errorMessage = resolveErrorMessage === null
-        ? DEFAULT_ERROR
-        : resolveErrorMessage(status);
+    } catch ({ response }) {
+      const defaultError = "Something went wrong"
 
-      errorHandler.showError(errorMessage);
+      if(response?.status) {
+        const { status, data } = response;
+        const { message } = data;
 
-      return { status, data };
+        handleErrors && dispatch(addError(message || defaultError));
+
+        return { status, data };
+      } else {
+        handleErrors && dispatch(addError(defaultError));
+
+        return { status: 500 };
+      }
+        
     } finally {
       setLoaded(true);
     }

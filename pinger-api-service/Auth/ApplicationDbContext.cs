@@ -13,6 +13,7 @@ namespace pinger_api_service
         public DbSet<PrivateMessageFile> PrivateMessageFile { get; set; }
         public DbSet<ChannelMessageFile> ChannelMessageFile  { get; set; }
         public DbSet<ChannelReadTime> ChannelReadTimes  { get; set; }
+        public DbSet<ConnectionInformation> ConnectionInformations  { get; set; }
         public DbSet<File> File  { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)

@@ -2,7 +2,7 @@ import React from 'react';
 import { ReactSVG } from 'react-svg';
 import cx from 'classnames';
 
-function FileList({ files, setFiles }) {
+const FileList = ({ files, setFiles, fileDownloadEndpoint }) => {
   const removeFile = (name) => {
     const filteredFiles = files.filter(({ file }) => file.name !== name);
     setFiles(filteredFiles);
@@ -26,14 +26,14 @@ function FileList({ files, setFiles }) {
           <div className="flex justify-between w-full">
             <button type="button" disabled={!fileId} className="ml-[10px] text-left">
               {fileId
-                ? <a key={fileId} href={`http://localhost:5122/api/private-message-file/${fileId}`} target="_blank" download={file.name} className={cx('text-white mr-[10px] break-all')} rel="noreferrer">{file.name}</a>
+                ? <a key={fileId} href={`http://localhost:5122/api/${fileDownloadEndpoint}/${fileId}`} target="_blank" download={file.name} className={cx('text-white mr-[10px] break-all')} rel="noreferrer">{file.name}</a>
                 : <span className="text-white mr-[10px] break-all">{file.name}</span>}
               {!loaded
-                                && (
-                                <span className="ml">
-                                  Uploading
-                                </span>
-                                )}
+                && (
+                <span className="ml">
+                  Uploading
+                </span>
+              )}
               {error && (
               <span className="text-red-600 break-words">
                 {error}

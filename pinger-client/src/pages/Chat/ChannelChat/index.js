@@ -7,7 +7,6 @@ import cx from 'classnames';
 import { ROUTES } from '@Router';
 import {
   useFetchData,
-  withErrorWrapper,
   useApiAction,
   useOnScreen,
   ButtonWithLoader
@@ -24,7 +23,7 @@ import removeChannel from './services/removeChannel'
 import RemoveChannelConfirmation from './components/RemoveChannelConfirmation';
 import useChannelMessages from './hooks/useChannelMessages';
 
-function ChannelChat({ errorHandler }) {
+function ChannelChat() {
     const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isIntersecting: isAtBottom, initiateObserver } = useOnScreen();
@@ -37,6 +36,7 @@ function ChannelChat({ errorHandler }) {
 
   const { sendAction: uploadChannelMessageFileAction } = useApiAction(
     (file, channelId) => uploadChannelMessageFile(file, channelId),
+    null
   );
   const { sendAction: updateChannelMessageAction } = useApiAction(
     (messageId, body) => updateChannelMessage(messageId, body),
@@ -50,7 +50,6 @@ function ChannelChat({ errorHandler }) {
 
   const { sendAction: updateChannelReadTimeAction } = useApiAction(
       () => updateChannelReadTime(channelId),
-      errorHandler,
   );
 
   const { files, uploadFiles, setFiles } = useUploadPrivateFiles(uploadChannelMessageFileAction);
@@ -70,7 +69,6 @@ function ChannelChat({ errorHandler }) {
     connection, 
     channelId, 
     isAtBottom,
-    errorHandler
   );
 
   const sendMessage = (message, scrollToBottom, setMessageValue) => {
@@ -90,8 +88,6 @@ function ChannelChat({ errorHandler }) {
 
   const { loaded, result: channelResponse } = useFetchData(
     () => getChannel(channelId),
-    errorHandler,
-    null,
     [channelId],
   );
 
@@ -197,7 +193,7 @@ function ChannelChat({ errorHandler }) {
             Load more messages
           </ButtonWithLoader>
         </div>
-              )}
+      )}
       fileDownloadEndpoint="channel-message-file"
       handleFilesUpload={(addedFiles) => uploadFiles(addedFiles, convertedChannelId)}
       files={files}
@@ -253,4 +249,4 @@ function ChannelChat({ errorHandler }) {
   );
 }
 
-export default withErrorWrapper(ChannelChat);
+export default ChannelChat;

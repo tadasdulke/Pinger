@@ -1,7 +1,8 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React, {useEffect} from 'react';
+import { Routes, Route, useLocation } from "react-router-dom";
 import { BaseLayout } from '@Components';
 import { ROUTES } from "@Router";
+import { useDispatch } from 'react-redux';
 import {Login, Register, ChatSpaces, CreateChatSpace, Chat, JoinChatSpace, CreateChannel, EditChannel } from '../pages'
 import AuthorizedRoute from './AuthorizedRoute'
 import UnauthorizedRoute from './UnauthorizedRoute'
@@ -10,9 +11,17 @@ import PrivateChat from '../pages/Chat/PrivateChat';
 import ChannelChat from '../pages/Chat/ChannelChat';
 import EditProfile from '../pages/Chat/EditProfile';
 
+import { restore as restoreErrorState } from '../store/slices/errors';
+
 const Router = () => {
+  const location = useLocation();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(restoreErrorState())
+  }, [location])
+
   return (
-    <BrowserRouter>
       <Routes>
         <Route
           path={ROUTES.LOGIN}
@@ -100,7 +109,6 @@ const Router = () => {
           }
         />
       </Routes>
-    </BrowserRouter>
   )
 }
 

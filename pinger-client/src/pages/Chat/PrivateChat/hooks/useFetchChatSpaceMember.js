@@ -1,11 +1,9 @@
 import { useFetchData } from '@Common';
 import getChatSpaceMember from '../services/getChatSpaceMember';
 
-const useFetchChatSpaceMember = (errorHandler, memberId, resolveErrorMessage = null, deps = []) => {
+const useFetchChatSpaceMember = (memberId, deps = []) => {
   const { loaded, result } = useFetchData(
     () => getChatSpaceMember(memberId),
-    errorHandler,
-    resolveErrorMessage,
     deps,
   );
 

@@ -2,10 +2,9 @@ import { useApiAction } from '@Common';
 
 import updatePrivateMessage from '../services/updatePrivateMessage';
 
-const useUpdatePrivateMessage = (errorHandler) => {
+const useUpdatePrivateMessage = () => {
   const { loaded, sendAction } = useApiAction(
     (id, body) => updatePrivateMessage(id, body),
-    errorHandler,
   );
 
   return {

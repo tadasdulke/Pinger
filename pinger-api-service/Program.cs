@@ -73,6 +73,7 @@ builder.Services.AddScoped<IChatHubConnectionManager, ChatHubConnectionManager>(
 builder.Services.AddScoped<IChannelReadTimeManager, ChannelReadTimeManager>();
 builder.Services.AddScoped<IConnectionInformationManager, ConnectionInformationManager>();
 builder.Services.AddScoped<IChannelMessageFileManager, ChannelMessageFileManager>();
+builder.Services.AddScoped<IContactedUsersManager, ContactedUsersManager>();
 
 builder.WebHost.ConfigureKestrel(options =>
 {

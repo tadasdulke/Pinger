@@ -11,8 +11,11 @@ namespace pinger_api_service
     {
         private ApplicationDbContext _dbContext;
         private IPrivateMessagesManager _privateMessagesManager;
+        private IContactedUsersManager _contactedUsersManager;
+        private IConnectionInformationManager _connectionInformationManager;
         private IFileManager _fileManager;
         private readonly ApplicationUserManager _userManager;
+        private IChatHubConnectionManager _chatHubConnectionManager;
         private readonly IHubContext<ChatHub> _hubContext;
 
         public PrivateMessagesController(
@@ -20,7 +23,10 @@ namespace pinger_api_service
             ApplicationUserManager userManager, 
             IPrivateMessagesManager privateMessagesManager,
             IHubContext<ChatHub> hubContext,   
-            IFileManager fileManager 
+            IFileManager fileManager,
+            IContactedUsersManager contactedUsersManager,
+            IConnectionInformationManager connectionInformationManager,
+            IChatHubConnectionManager chatHubConnectionManager
         )
         {
             _dbContext = dbContext;
@@ -28,6 +34,9 @@ namespace pinger_api_service
             _privateMessagesManager = privateMessagesManager;
             _hubContext = hubContext;
             _fileManager = fileManager;
+            _contactedUsersManager = contactedUsersManager;
+            _connectionInformationManager = connectionInformationManager;
+            _chatHubConnectionManager = chatHubConnectionManager;
         }
 
         [Authorize]
@@ -36,32 +45,20 @@ namespace pinger_api_service
         public async Task<ActionResult<List<PrivateMessageDto>>> GetUnreadMessages([FromRoute] string receiverId)
         {
             string senderId = _userManager.GetUserId(User);
-            ContactedUserInfo? contactedUserInfo = await _dbContext.ContactedUserInfo
-                .Include(cui => cui.Owner)
-                .Include(cui => cui.ContactedUser)
-                .Where(cui => cui.Owner.Id == senderId)
-                .FirstOrDefaultAsync(cui => cui.ContactedUser.Id == receiverId);
+            ContactedUserInfo? contactedUserInfo = await _contactedUsersManager.GetContactedUserInfoAsync(senderId, receiverId);
 
             if(contactedUserInfo is null) {
-                return NotFound();
+                return NotFound(new Error("Contacted user info not found"));
             }
 
             int chatSpaceId = _userManager.GetChatSpaceId(User);
 
-            var LastReadTime = contactedUserInfo.LastReadTime;
-            List<PrivateMessage> unreadPrivateMessages = _dbContext.PrivateMessage
-                .OrderByDescending(cm => cm.SentAt)
-                .Include(pm => pm.Receiver)
-                .Include(pm => pm.Sender)
-                .ThenInclude(sender => sender.ProfileImageFile)
-                .Include(pm => pm.ChatSpace)
-                .Include(pm => pm.PrivateMessageFiles)
-                .Where(pm => (pm.Receiver.Id == receiverId) || (pm.Receiver.Id == senderId))
-                .Where(pm => (pm.Sender.Id == senderId) || (pm.Sender.Id == receiverId))
-                .Where(pm => pm.ChatSpace.Id == chatSpaceId)
-                .Where(pm => pm.SentAt > LastReadTime)
-                .Reverse()
-                .ToList();
+            List<PrivateMessage> unreadPrivateMessages = await _privateMessagesManager.GetPrivateMessagesAfterTime(
+                receiverId,
+                senderId,
+                chatSpaceId,
+                contactedUserInfo.LastReadTime
+            );
             
             return unreadPrivateMessages.Select(m => new PrivateMessageDto(m)).ToList();
         }
@@ -77,44 +74,23 @@ namespace pinger_api_service
         )
         {
             string senderId = _userManager.GetUserId(User);
-            User user = await _userManager.FindByIdAsync(senderId);
-            
-            ContactedUserInfo? contactedUserInfo = await _dbContext.ContactedUserInfo
-                .Include(cui => cui.Owner)
-                .Include(cui => cui.ContactedUser)
-                .Where(cui => cui.Owner.Id == senderId)
-                .FirstOrDefaultAsync(cui => cui.ContactedUser.Id == receiverId);
+            ContactedUserInfo? contactedUserInfo = await _contactedUsersManager.GetContactedUserInfoAsync(senderId, receiverId);
 
             if(contactedUserInfo is null) {
-                return NotFound();
-            }
-
-            if(contactedUserInfo.LastReadTime is null) {
-                contactedUserInfo.LastReadTime = DateTime.Now;
-
-                _dbContext.ContactedUserInfo.Update(contactedUserInfo);
-                await _dbContext.SaveChangesAsync();
+                return NotFound(new Error("Contacted user info not found"));
             }
 
             int chatSpaceId = _userManager.GetChatSpaceId(User);
 
-            var LastReadTime = contactedUserInfo.LastReadTime;
-
-            List<PrivateMessage> oldPrivateMessages = _dbContext.PrivateMessage
-                .OrderByDescending(cm => cm.SentAt)
-                .Include(pm => pm.Receiver)
-                .Include(pm => pm.Sender)
-                .ThenInclude(sender => sender.ProfileImageFile)
-                .Include(pm => pm.ChatSpace)
-                .Include(pm => pm.PrivateMessageFiles)
-                .Where(pm => (pm.Receiver.Id == receiverId) || (pm.Receiver.Id == senderId))
-                .Where(pm => (pm.Sender.Id == senderId) || (pm.Sender.Id == receiverId))
-                .Where(pm => pm.ChatSpace.Id == chatSpaceId)
-                .Where(pm => pm.SentAt <= LastReadTime)
-                .Skip(offset + skip)
-                .Take(step + 1)
-                .Reverse()
-                .ToList();
+            List<PrivateMessage> oldPrivateMessages = await _privateMessagesManager.GetPrivateMessagesBeforeTime(
+                receiverId,
+                senderId,
+                chatSpaceId,
+                contactedUserInfo.LastReadTime,
+                offset,
+                skip,
+                step
+            );
             
             bool hasMore = oldPrivateMessages.Count > step;
 
@@ -144,19 +120,10 @@ namespace pinger_api_service
             PrivateMessage? privateMessage = await _privateMessagesManager.RemovePrivateMessage(messageId, senderId);
 
             if(privateMessage is null) {
-                return NotFound();
+                return NotFound(new Error("Message not found"));
             }
 
-            
-            List<ConnectionInformation> receiverConnectionInformation = privateMessage.Receiver.ConnectionInformations.ToList(); 
-            List<string> connectionIds = receiverConnectionInformation.Select(ci => ci.ConnectionId).ToList();
-
-            await _hubContext.Clients.Clients(connectionIds).SendAsync("PrivateMessageRemoved", new PrivateMessageDto(privateMessage));
-
-            foreach (PrivateMessageFile pmf in privateMessage.PrivateMessageFiles)
-            {
-                _fileManager.RemoveFile(pmf.Path);
-            }
+            await _chatHubConnectionManager.NotifyUserPrivateMessageRemoved(privateMessage);
 
             return new PrivateMessageDto(privateMessage);
         }
@@ -167,33 +134,17 @@ namespace pinger_api_service
         public async Task<ActionResult<PrivateMessageDto>> UpdatePrivateMessage([FromRoute] long messageId, [FromBody] UpdatePrivateMessageRequest updatePrivateMessageRequest)
         {
             string senderId = _userManager.GetUserId(User);
-            PrivateMessage? messageToEdit = _dbContext.PrivateMessage
-                .Include(pm => pm.Receiver)
-                .ThenInclude(receiver => receiver.ConnectionInformations)
-                .Include(pm => pm.Sender)
-                .ThenInclude(s => s.ProfileImageFile)
-                .Include(pm => pm.PrivateMessageFiles)
-                .Where(pm => pm.Sender.Id == senderId)
-                .Where(pm => pm.Id == messageId)
-                .FirstOrDefault();
-
-            if(messageToEdit is null) {
-                return NotFound();
-            }
-
-            messageToEdit.Body = updatePrivateMessageRequest.Body;
-            messageToEdit.Edited = true;
-            _dbContext.PrivateMessage.Update(messageToEdit);
-            await _dbContext.SaveChangesAsync();
-
+        
+            PrivateMessage? editedPrivateMessage = await _privateMessagesManager.UpdatePrivateMessage(senderId, messageId, updatePrivateMessageRequest.Body);
             
-            List<ConnectionInformation> receiverConnectionInformation = messageToEdit.Receiver.ConnectionInformations.ToList(); 
-            List<string> connectionIds = receiverConnectionInformation.Select(ci => ci.ConnectionId).ToList();
+            if(editedPrivateMessage is null) {
+                return NotFound(new Error("Message not found"));
+            } 
 
-            await _hubContext.Clients.Clients(connectionIds).SendAsync("PrivateMessageUpdated", new PrivateMessageDto(messageToEdit));
+            await _chatHubConnectionManager.NotifyUserPrivateMessageUpdated(editedPrivateMessage);
 
 
-            return new PrivateMessageDto(messageToEdit);
+            return new PrivateMessageDto(editedPrivateMessage);
         }
     }
 } 

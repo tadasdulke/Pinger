@@ -13,7 +13,10 @@ namespace pinger_api_service
 
         public async Task<ChatSpace?> GetChatSpaceById(int id)
         {
-            ChatSpace? chatspace = await _dbContext.ChatSpace.Include(cs => cs.Members).FirstOrDefaultAsync(chatspace => chatspace.Id == id);
+            ChatSpace? chatspace = await _dbContext.ChatSpace
+                .Include(cs => cs.Members)
+                .ThenInclude(u => u.ProfileImageFile)
+                .FirstOrDefaultAsync(chatspace => chatspace.Id == id);
             return chatspace;
         }
 

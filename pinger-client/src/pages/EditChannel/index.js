@@ -6,25 +6,23 @@ import { Formik, Field, Form } from 'formik';
 import * as Yup from 'yup';
 import { RotatingLines } from 'react-loader-spinner';
 import { ROUTES } from '@Router';
-import { Button, TextInput, withErrorWrapper, useApiAction, useFetchData } from '@Common';
+import { Button, TextInput, useApiAction, useFetchData } from '@Common';
 import { getChannel } from '@Services'
 import { modifyChannelName } from '@Store/slices/channels';
 
 import editChannel from './services/editChannel'
 
-function EditChannel({ errorHandler }) {
+function EditChannel() {
   const { channelId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const { loaded: channelEdited, sendAction: editChannelAction } = useApiAction(
     (name) => editChannel(parseInt(channelId), name),
-    errorHandler
   );
 
   const { loaded: channelLoaded, result: channelResult } = useFetchData(
     () => getChannel(channelId),
-    errorHandler
   );
 
   const FIELDS = {
@@ -89,4 +87,4 @@ function EditChannel({ errorHandler }) {
   );
 }
 
-export default withErrorWrapper(EditChannel);
+export default EditChannel;

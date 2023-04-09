@@ -2,12 +2,12 @@ import React, {useEffect} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { ReactSVG } from 'react-svg';
 import { getUnreadPrivateMessages } from '@Services';
-import { useFetchData, withErrorWrapper, useApiAction } from '@Common'
+import { useFetchData, useApiAction } from '@Common'
 import { addContactedUser, highlightUser } from '@Store/slices/contactedUsers';
 import ContactedUserItem from './ContactedUserItem';
 import getContactedUsers from '../../services/getContactedUsers';
 
-const ContactedUsersList = ({connection, errorHandler}) => {
+const ContactedUsersList = ({connection}) => {
     const dispatch = useDispatch();
     const { users: contactedUsers } = useSelector((state) => state.contactedUsers);
     const { occupierInfo: chatOccupierInfo, isAtButton } = useSelector((state) => state.chat);
@@ -15,12 +15,10 @@ const ContactedUsersList = ({connection, errorHandler}) => {
 
     const { result: contactedUsersResult } = useFetchData(
         getContactedUsers,
-        errorHandler,
     );
 
     const { sendAction: getUnreadPrivateMessagesAction } = useApiAction(
         (id) => getUnreadPrivateMessages(id),
-        errorHandler,
       );
 
     const checkForUnreadMessages = async (contactedUsers) => {
@@ -40,7 +38,7 @@ const ContactedUsersList = ({connection, errorHandler}) => {
 
         (async () => {
         await checkForUnreadMessages(contactedUsersResult.data); 
-        })();
+      })();
     }
     }, [contactedUsersResult]);
 
@@ -80,8 +78,8 @@ const ContactedUsersList = ({connection, errorHandler}) => {
                 <ReactSVG
                     src="http://localhost:5122/public/icons/direct-message.svg"
                     beforeInjection={(svg) => {
-                    svg.setAttribute('width', '24px');
-                    svg.setAttribute('height', '24px');
+                      svg.setAttribute('width', '24px');
+                      svg.setAttribute('height', '24px');
                     }}
                 />
                 <span className="ml-[10px] py-[10px]">Private messages</span>
@@ -103,4 +101,4 @@ const ContactedUsersList = ({connection, errorHandler}) => {
     )
 }
 
-export default withErrorWrapper(ContactedUsersList);
+export default ContactedUsersList;
