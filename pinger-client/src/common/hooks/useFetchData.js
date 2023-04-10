@@ -32,8 +32,6 @@ const useFetchData = (
       } else {
         return { status: 500 };
       }
-
-      return { status, data };
     } finally {
       setLoaded(true);
     }

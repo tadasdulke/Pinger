@@ -12,6 +12,7 @@ const ChannelList = ({connection}) => {
   const dispatch = useDispatch();
 
     const { channels } = useSelector((state) => state);
+    const { currentWorkspaceId } = useSelector((state) => state.workspace);
     const { occupierInfo: chatOccupierInfo, isAtButton, chatType } = useSelector((state) => state.chat);
   
     const { result: channelsResult } = useFetchData(
@@ -61,9 +62,12 @@ const ChannelList = ({connection}) => {
 
   useEffect(() => {
     const callBack = (data) => {
-      const {id, name} = data;
-      dispatch(addChannel({id, name}));
-      dispatch(highlightChannel(id))
+      const {id, name, chatSpace} = data;
+
+      if(chatSpace.id === currentWorkspaceId) {
+        dispatch(addChannel({id, name}));
+        dispatch(highlightChannel(id))
+      }
     };
 
     connection.on('UserAddedToChannel', callBack);

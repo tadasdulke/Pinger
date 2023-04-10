@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ReactSVG } from 'react-svg';
-import { RotatingLines } from 'react-loader-spinner';
 
 function DropDown({
-  activationElement, options, setExpanded, expanded, loading
+  activationElement, options, setExpanded, expanded
 }) {
   const [currentComponentFunc, setCurrentComponentFunc] = useState(null);
 
@@ -65,14 +64,6 @@ function DropDown({
       {expanded && 
       (
           <div className="absolute top-[50px] right-[0px] bg-white text-black rounded-[5px] z-10">
-            {loading && <div className="absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%]">
-                <RotatingLines
-                    strokeColor="black"
-                    strokeWidth="5"
-                    animationDuration="0.75"
-                    width="35"
-                />
-            </div>}
             {currentComponentFunc ? <RenderedComponentWrapper>{currentComponentFunc}</RenderedComponentWrapper> : dropDownOptions}
           </div>
       )}

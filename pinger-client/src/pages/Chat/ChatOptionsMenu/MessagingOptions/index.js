@@ -31,9 +31,11 @@ function MessagingOptions({ connection }) {
 
   return (
     <div className="flex-1 flex flex-col justify-between text-white">
-      <div>
-        <ChannelList connection={connection}/>
-        <ContactedUserList connection={connection} />
+      <div className="relative h-full">
+        <div className="absolute overflow-y-auto bottom-0 top-0 left-0 right-0">
+          <ChannelList connection={connection}/>
+          <ContactedUserList connection={connection} />
+        </div>
       </div>
       <div>
         <button

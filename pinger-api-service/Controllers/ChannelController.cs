@@ -181,7 +181,7 @@ namespace pinger_api_service
             }
 
             if(search is not null) {
-                return channel.Members.Where(m => m.UserName.Contains(search.ToLower())).Select(u => new UserDto(u)).ToList();
+                return channel.Members.Where(m => m.UserName.ToLower().Contains(search.ToLower())).Select(u => new UserDto(u)).ToList();
             }
 
             return channel.Members.Select(m => new UserDto(m)).ToList();

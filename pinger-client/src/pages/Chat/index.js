@@ -48,7 +48,7 @@ function Chat() {
       className="h-full"
       fluid
     >
-      <Row nogutter align="stretch" className="h-[5%] border-b-2 border-tuna-darker">
+      <Row nogutter align="stretch" className="h-[60px] border-b-2 border-tuna-darker">
         <Col xs={4} lg={2} className="flex items-center">
           <ChatSpaceInformation/>
         </Col>
@@ -56,7 +56,7 @@ function Chat() {
           <UserSearch/>
         </Col>
       </Row>
-      <Row nogutter align="stretch" className="h-[95%]">
+      <Row nogutter align="stretch" className="h-[calc(100%-60px)]">
         <Col xs={4} lg={2} className="border-r-2 border-tuna-darker">
           <ChatOptionsMenu connection={connection} />
         </Col>

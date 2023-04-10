@@ -12,14 +12,13 @@ import {
   ButtonWithLoader
 } from '@Common';
 import { updateChatType, changeChatOccupierInfo, updateIsAtButton, restore } from '@Store/slices/chat';
-import { removeChannelHighlight, removeChannel as removeChannelFromState } from '@Store/slices/channels';
+import { removeChannelHighlight } from '@Store/slices/channels';
 import { uploadChannelMessageFile, getChannel, updateChannelReadTime } from '@Services';
 import { useUploadPrivateFiles } from '@Hooks';
 import AddUsersToChannel from './components/AddUsersToChannel';
 import RemoveUserFromChannel from './components/RemoveUsersFromChannel';
 import removeChannelMessage from './services/removeChannelMessage';
 import updateChannelMessage from './services/updateChannelMessage'
-import removeChannel from './services/removeChannel'
 import RemoveChannelConfirmation from './components/RemoveChannelConfirmation';
 import useChannelMessages from './hooks/useChannelMessages';
 
@@ -43,9 +42,6 @@ function ChannelChat() {
   );
   const { sendAction: removeChannelMessageAction } = useApiAction(
     (messageId) => removeChannelMessage(messageId),
-  );
-  const { loaded: channelRemoved, sendAction: removeChannelAction } = useApiAction(
-    () => removeChannel(channelId),
   );
 
   const { sendAction: updateChannelReadTimeAction } = useApiAction(
@@ -127,14 +123,6 @@ function ChannelChat() {
     }
   };
 
-  const handleChannelRemove = async (toggle) => {
-    const { status, data } = await removeChannelAction();
-    toggle();
-    if(status === 200) {
-      dispatch(removeChannelFromState({id: data.id}));
-    }
-  }
-
   useEffect(() => {
     (async () => {
       if(isAtBottom) {
@@ -200,7 +188,6 @@ function ChannelChat() {
       setFiles={setFiles}
       chatActions={(
         <DropDown
-        loading={!channelRemoved}
           expanded={expanded}
           setExpanded={setExpanded}
           activationElement={(toggle) => (
@@ -222,7 +209,7 @@ function ChannelChat() {
             {
               disabled: channelResponse?.data?.owner?.id !== currentUserId,
               buttonText: 'Remove user',
-              componentToRender: <RemoveUserFromChannel />,
+              componentToRender: (toggle) => <RemoveUserFromChannel toggle={toggle} />,
             },
             {
               disabled: channelResponse?.data?.owner?.id !== currentUserId,
@@ -236,9 +223,9 @@ function ChannelChat() {
               disabled: channelResponse?.data?.owner?.id !== currentUserId,
               buttonText: 'Remove channel',
               componentToRender: (toggle) => (
-                <RemoveChannelConfirmation 
-                  removeAction={() => handleChannelRemove(toggle)} 
-                  cancelAction={toggle}
+                <RemoveChannelConfirmation
+                  channelId={channelId}
+                  toggle={toggle}
                 />
               )
             },

@@ -131,7 +131,7 @@ function PrivateChat() {
   };
 
   const profileImageSrc = useLoadedImage(
-    member?.profilePictureId ? `http://localhost:5122/api/public-file/${member?.profilePictureId}` : null,
+    member ? `http://localhost:5122/api/public-file/${member?.profilePictureId}` : null,
     'http://localhost:5122/public/profile-pic.png',
   );
 
