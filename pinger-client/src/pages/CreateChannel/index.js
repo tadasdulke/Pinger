@@ -55,6 +55,7 @@ function CreateChannel() {
                   type="text"
                   name={FIELDS.NAME}
                   label="Channel name"
+                  id="channel name"
                   component={TextInput}
                   value={values[FIELDS.NAME]}
                   onChange={handleChange}

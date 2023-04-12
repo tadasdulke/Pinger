@@ -3,7 +3,10 @@ import cx from 'classnames';
 import { Col } from 'react-grid-system';
 
 function ChatSpace({
-  name, image, className, onClick,
+  name,
+  image, 
+  className, 
+  onClick
 }) {
   return (
     <Col xs={3}>
