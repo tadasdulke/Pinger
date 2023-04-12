@@ -3,7 +3,7 @@ import {useDispatch} from 'react-redux';
 
 import { addError } from '@Store/slices/errors';
 
-const useApiAction = (action, handleErrors) => {
+const useApiAction = (action, handleErrors = true) => {
   const [loaded, setLoaded] = useState(true);
   const dispatch = useDispatch();
 

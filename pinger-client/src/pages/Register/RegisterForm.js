@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button, TextInput } from '@Common';
 import { ROUTES } from '@Router';
 
-import useRegistration from './hooks/useRegistration';
+import { useRegistration } from './hooks';
 
 function RegisterForm() {
   const FIELDS = {
@@ -50,6 +50,7 @@ function RegisterForm() {
               type="text"
               name={FIELDS.EMAIL}
               label="Email"
+              id="email"
               component={TextInput}
               value={values.email}
               onChange={handleChange}
@@ -59,6 +60,7 @@ function RegisterForm() {
               type="text"
               name={FIELDS.USERNAME}
               label="Username"
+              id="username"
               component={TextInput}
               value={values.username}
               onChange={handleChange}
@@ -68,6 +70,7 @@ function RegisterForm() {
               type="password"
               name={FIELDS.PASSWORD}
               label="Password"
+              id="password"
               component={TextInput}
               value={values.password}
               onChange={handleChange}

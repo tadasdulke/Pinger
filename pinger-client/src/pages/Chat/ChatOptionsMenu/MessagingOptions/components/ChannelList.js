@@ -22,7 +22,7 @@ const ChannelList = ({connection}) => {
     const checkForUnreadMessages = async (channels) => {
       const unreadMsgs = await Promise.all(channels.map(({id}) => getUnreadChannelMessages(id)));
       unreadMsgs.forEach((unreadMsg, index) => {
-        if(unreadMsg.data.length > 0) {
+        if(unreadMsg.data.unreadMessages.length > 0 || !unreadMsg.data.alreadyInteracted) {
           dispatch(highlightChannel(channels[index].id));
         }
       })

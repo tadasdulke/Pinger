@@ -83,7 +83,7 @@ const useMessages = (receiverId, getMessagesAction, getUnreadMessagesAction) => 
             const unreadMessagesResponse = await getUnreadMessagesAction(receiverId);
             if(messagesResponse.status === 200 && unreadMessagesResponse.status === 200) {
             const {messages, hasMore} = messagesResponse.data;
-            const unreadMessages = unreadMessagesResponse.data;
+            const {unreadMessages} = unreadMessagesResponse.data;
             setMessages(messages);
             setUnreadMessages(unreadMessages);
             setHasMore(hasMore);

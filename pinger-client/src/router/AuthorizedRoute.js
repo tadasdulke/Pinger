@@ -5,7 +5,7 @@ import ProtectedRoute from './ProtectedRoute';
 
 function AuthorizedRoute({ children }) {
   const { isAuthenticated } = useSelector((store) => store.auth);
-
+  
   return (
     <ProtectedRoute isVerified={isAuthenticated} fallbackRoute={ROUTES.LOGIN}>
       {children}

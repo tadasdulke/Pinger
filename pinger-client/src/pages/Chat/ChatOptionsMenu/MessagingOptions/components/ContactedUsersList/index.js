@@ -24,7 +24,7 @@ const ContactedUsersList = ({connection}) => {
     const checkForUnreadMessages = async (contactedUsers) => {
         const unreadMsgs = await Promise.all(contactedUsers.map(({contactedUser}) => getUnreadPrivateMessagesAction(contactedUser.id)));
         unreadMsgs.forEach((unreadMsg, index) => {
-          if(unreadMsg.data.length > 0) {
+          if(unreadMsg.data.unreadMessages.length > 0 || !unreadMsg.data.alreadyInteracted) {
             dispatch(highlightUser(contactedUsers[index].contactedUser.id));
           }
         })
@@ -37,7 +37,7 @@ const ContactedUsersList = ({connection}) => {
         });
 
         (async () => {
-        await checkForUnreadMessages(contactedUsersResult.data); 
+          await checkForUnreadMessages(contactedUsersResult.data); 
       })();
     }
     }, [contactedUsersResult]);

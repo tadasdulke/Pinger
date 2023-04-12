@@ -32,32 +32,15 @@ namespace pinger_api_service
         [Authorize]
         [HttpGet]
         [Route("unread/{channelId}")]
-        public async Task<ActionResult<List<ChannelMessageDto>>> GetUnreadMessages([FromRoute] int channelId)
+        public async Task<ActionResult<ChannelUnreadMessages>> GetUnreadMessages([FromRoute] int channelId)
         {
             string userId = _userManager.GetUserId(User);
-            User? user = await _userManager.GetUserAsync(userId);
-
-            if(user is null) {
-                return NotFound(new Error("User not found"));
-            }
-
-            Channel? channel = await _channelManager.GetChannelAsync(channelId);
-
-            if(channel is null) {
-                return NotFound(new Error("Channel not found"));
-            }
             
-            ChannelReadTime? channelReadTime = await _channelReadTimeManager.GetUsersChannelReadTime(user, channel);
+            ChannelReadTime? channelReadTime = await _channelReadTimeManager.GetUsersChannelReadTimes(channelId, userId);
 
-            if(channelReadTime is null) {
-                return NotFound(new Error("Channel readtime not found"));
-            }
+            List<ChannelMessage> messages = channelReadTime is not null ? await _channelMessageManager.GetChannelMessagesAfterTime(channelReadTime.LastReadTime, channelId) : new List<ChannelMessage>();
 
-            DateTime? LastReadTime = channelReadTime.LastReadTime;
-
-            List<ChannelMessage> messages = await _channelMessageManager.GetChannelMessagesAfterTime(LastReadTime, channelId);
-            
-            return messages.Select(m => new ChannelMessageDto(m)).ToList();
+            return new ChannelUnreadMessages(messages, channelReadTime is not null);
         }
 
         [Authorize]
@@ -66,21 +49,13 @@ namespace pinger_api_service
         public async Task<ActionResult<LazyLoadChannelMessages>> GetChannelMessages([FromRoute] int channelId, [FromQuery] int offset, [FromQuery] int step, [FromQuery] int skip)
         {
             string userId = _userManager.GetUserId(User);
-            User? user = await _userManager.GetUserAsync(userId);
 
-            if(user is null) {
-                return NotFound(new Error("User not found"));
+            ChannelReadTime? channelReadTime = await _channelReadTimeManager.GetUsersChannelReadTimes(channelId, userId);
+            DateTime? LastReadTime = DateTime.Now;
+            if(channelReadTime is not null) {
+                LastReadTime = channelReadTime.LastReadTime;
             }
 
-            Channel? channel = user.Channels.FirstOrDefault(c => c.Id == channelId);
-
-            if(channel is null) {
-                return NotFound("Channel not found");
-            }
-
-            ChannelReadTime channelReadTime = await _channelReadTimeManager.GetUsersChannelReadTime(user, channel);
-
-            DateTime? LastReadTime = channelReadTime.LastReadTime;
 
             List<ChannelMessage> messages = await _channelMessageManager.GetChannelMessagesBeforeTime(
                 LastReadTime,

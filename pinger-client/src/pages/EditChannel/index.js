@@ -6,24 +6,18 @@ import { Formik, Field, Form } from 'formik';
 import * as Yup from 'yup';
 import { RotatingLines } from 'react-loader-spinner';
 import { ROUTES } from '@Router';
-import { Button, TextInput, useApiAction, useFetchData } from '@Common';
-import { getChannel } from '@Services'
+import { Button, TextInput } from '@Common';
 import { modifyChannelName } from '@Store/slices/channels';
 
-import editChannel from './services/editChannel'
+import { useEditChannel, useFetchChannel } from './hooks';
 
 function EditChannel() {
   const { channelId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { loaded: channelEdited, sendAction: editChannelAction } = useApiAction(
-    (name) => editChannel(parseInt(channelId), name),
-  );
-
-  const { loaded: channelLoaded, result: channelResult } = useFetchData(
-    () => getChannel(channelId),
-  );
+  const { channelEdited, editChannelAction } = useEditChannel(channelId)
+  const { channelLoaded, channelResult } = useFetchChannel(channelId)
 
   const FIELDS = {
     NAME: 'NAME',
@@ -60,6 +54,7 @@ function EditChannel() {
                   type="text"
                   name={FIELDS.NAME}
                   label="Channel name"
+                  id="channel name"
                   component={TextInput}
                   value={values[FIELDS.NAME]}
                   onChange={handleChange}

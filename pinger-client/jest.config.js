@@ -14,5 +14,6 @@ module.exports = {
         "^@Utils(.*)$": "<rootDir>/src/utils$1",
         "^@Services(.*)$": "<rootDir>/src/services$1",
         "^@Hooks(.*)$": "<rootDir>/src/hooks$1",
+        '\\.(css|less)$': '<rootDir>/__mocks__/styleMock.js',
     } 
 };

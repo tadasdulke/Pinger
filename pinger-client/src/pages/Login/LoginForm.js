@@ -11,7 +11,7 @@ import {
 } from '@Store/slices/auth';
 import LOCAL_STORAGE_ITEMS from '@Common/config/localStorageItems';
 
-import useLogin from './hooks/useLogin';
+import { useLogin } from './hooks';
 
 function LoginForm() {
   const FIELDS = {
@@ -24,10 +24,10 @@ function LoginForm() {
 
   const handleSubmit = async ({ username, password }) => {
     const response = await sendAction(username, password);
-
+    
     if (response.status === 200) {
       const { id, userName, profilePictureId } = response.data;
-
+      
       dispath(authenticate());
       dispath(setUserId(id));
       dispath(setUserName(userName));
@@ -58,6 +58,7 @@ function LoginForm() {
               type="text"
               name={FIELDS.USERNAME}
               label="Username"
+              id="username"
               component={TextInput}
               value={values.username}
               onChange={handleChange}
@@ -67,6 +68,7 @@ function LoginForm() {
               type="password"
               name={FIELDS.PASSWORD}
               label="Password"
+              id="password"
               component={TextInput}
               value={values.password}
               onChange={handleChange}

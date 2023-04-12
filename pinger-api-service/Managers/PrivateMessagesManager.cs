@@ -116,6 +116,11 @@ namespace pinger_api_service
             int step
         ) 
         {
+            DateTime? readTime = lastReadTime;
+            if(lastReadTime is null) {
+                readTime = DateTime.Now;
+            }
+
             return await _dbContext.PrivateMessage
                 .OrderByDescending(cm => cm.SentAt)
                 .Include(pm => pm.Receiver)
@@ -126,7 +131,7 @@ namespace pinger_api_service
                 .Where(pm => (pm.Receiver.Id == receiverId) || (pm.Receiver.Id == senderId))
                 .Where(pm => (pm.Sender.Id == senderId) || (pm.Sender.Id == receiverId))
                 .Where(pm => pm.ChatSpace.Id == chatSpaceId)
-                .Where(pm => pm.SentAt <= lastReadTime)
+                .Where(pm => pm.SentAt <= readTime)
                 .Skip(offset + skip)
                 .Take(step + 1)
                 .Reverse()

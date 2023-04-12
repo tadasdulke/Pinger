@@ -1,27 +1,22 @@
 import React from 'react';
 import { render, fireEvent, act } from '@testing-library/react';
 import { useDispatch } from 'react-redux';
-import { Routes, Route, MemoryRouter, useNavigate } from 'react-router-dom'
-import { ROUTES } from '@Router'
-import RegisterForm from '../RegisterForm';
-import { useRegistration } from '../hooks';
+import { Routes, Route, MemoryRouter } from 'react-router-dom'
+
+import LoginForm from '../LoginForm';
+import { useLogin } from '../hooks';
 
 
 jest.mock('react-redux', () => ({
   useSelector: jest.fn(),
-  useDispatch: jest.fn(),
+  useDispatch: jest.fn()
 }));
-
-jest.mock('react-router-dom', () => ({
-    ...jest.requireActual("react-router-dom"),
-    useNavigate: jest.fn()
-}))
 
 jest.mock('../hooks', () => ({
-    useRegistration: jest.fn()
+    useLogin: jest.fn()
 }));
 
-describe('RegisterForm', () => {
+describe('LoginForm', () => {
     beforeEach(() => {
         useDispatch.mockReturnValue(() => null);
 
@@ -31,18 +26,18 @@ describe('RegisterForm', () => {
             profilePictureId: null
         }
 
-        useRegistration.mockReturnValue(({
+        useLogin.mockReturnValue(({
             sendAction: jest.fn().mockResolvedValue(({status: 200, data: fakeUser})),
             loaded: true,
         }))
     })
 
-    const renderRegistrationForm = () => (
+    const renderLoginForm = () => (
         <MemoryRouter initialEntries={["/"]}>
             <Routes>
                 <Route
                     path="/"
-                    element={<RegisterForm/>}
+                    element={<LoginForm/>}
                 />
             </Routes>
         </MemoryRouter>
@@ -50,60 +45,56 @@ describe('RegisterForm', () => {
 
     it('should render withour errors', () => {
         expect(() => render(
-            renderRegistrationForm()
+            renderLoginForm()
         )).not.toThrow();
     });
 
     it('should render input fields', () => {
         const { getByText } = render(
-            renderRegistrationForm()
+            renderLoginForm()
         );
         
         expect(getByText("Username")).toBeInTheDocument()
-        expect(getByText("Email")).toBeInTheDocument()
         expect(getByText("Password")).toBeInTheDocument()
         
     });
 
     it('should indicate fields as required if fields are empty', async () => {
         const { getAllByText, getByRole } = render(
-            renderRegistrationForm()
+            renderLoginForm()
         );
         
-        const registerButton = getByRole('button', {
-            name: /Sign up/i
+        const loginButton = getByRole('button', {
+            name: /Login/i
           })
         
         await act(() => {
-            fireEvent.click(registerButton)
+            fireEvent.click(loginButton)
         });
 
-        expect(getAllByText("Required")).toHaveLength(3)
+        expect(getAllByText("Required")).toHaveLength(2)
     });
 
-    it('should handle submit after sign up click', async () => {
-        const navigateMock = jest.fn();
-        useNavigate.mockReturnValue(navigateMock);
-        
+    it('should handle submit after login click', async () => {
+        const dispatchMock = jest.fn();
+        useDispatch.mockReturnValue(dispatchMock);
         const { getByRole, getByLabelText } = render(
-            renderRegistrationForm()
+            renderLoginForm()
         );
         
-        const registerButton = getByRole('button', {
-            name: /Sign up/i
+        const loginButton = getByRole('button', {
+            name: /Login/i
         })
 
         const usernameField = getByLabelText('Username')
-        const emailField = getByLabelText('Email')
         const passwordField = getByLabelText('Password')
 
         await act(() => {
-            fireEvent.change(emailField, {target: {value: 'starman@test.com'}})
             fireEvent.change(usernameField, {target: {value: 'star man'}})
             fireEvent.change(passwordField, {target: {value: 'waiting in the sky'}})
-            fireEvent.click(registerButton)
+            fireEvent.click(loginButton)
         });
 
-        expect(navigateMock).toBeCalledWith(ROUTES.LOGIN)
+        expect(dispatchMock).toBeCalledTimes(4)
     });
 });

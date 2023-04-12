@@ -34,10 +34,6 @@ namespace pinger_api_service
                 return null;
             }
 
-            if(contactedUserInfo.LastReadTime is null) {
-                await UpdateContactedUser(contactedUserInfo, DateTime.Now);
-            }
-
             return contactedUserInfo;
         }
 

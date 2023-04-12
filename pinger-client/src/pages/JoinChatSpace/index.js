@@ -1,11 +1,8 @@
 import React from 'react';
 import { Container, Row, Col } from 'react-grid-system';
-import { useFetchData} from '@Common';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@Router';
-import getChatSpaces from './serivces/getChatSpaces';
-import useJoinChatSpace from './hooks/useJoinChatSpace';
-import getUserChatSpaces from '../ChatSpaces/services/getUserChatSpaces';
+import {useJoinChatSpace, useFetchAllChatSpaces, useFetchUserChatSpaces} from './hooks';
 
 function ChatSpaceRow({ name, chatspaceId, onClick }) {
   return (
@@ -17,18 +14,14 @@ function ChatSpaceRow({ name, chatspaceId, onClick }) {
 
 function JoinChatSpace() {
   const navigate = useNavigate();
-  const { loaded: allChatSpacesLoaded, result: allChatSpaces } = useFetchData(
-    getChatSpaces,
-  );
 
-  const { loaded: joinedChatSpacesLoaded, result: joinedChatSpaces } = useFetchData(
-    getUserChatSpaces,
-  );
-
+  const { allChatSpaces } = useFetchAllChatSpaces();
+  const { joinedChatSpaces } = useFetchUserChatSpaces()
   const { joinChatSpace } = useJoinChatSpace();
 
   const onClick = async (chatspaceId) => {
     const { status } = await joinChatSpace(chatspaceId);
+
     if (status === 204) {
       navigate(ROUTES.CHATSPACES);
     }
@@ -44,6 +37,7 @@ function JoinChatSpace() {
 
   const chatspacesToDisplay = resolveChatSpaces();
 
+  const shouldShowInfoMessage = !joinedChatSpaces || !allChatSpaces || chatspacesToDisplay?.length <= 0;
   return (
     <Container>
       <Row>
@@ -54,7 +48,7 @@ function JoinChatSpace() {
           {chatspacesToDisplay?.map(({ id, name }) => (
             <ChatSpaceRow key={id} chatspaceId={id} onClick={onClick} name={name} />
           ))}
-          {chatspacesToDisplay?.length <= 0 && <p className="text-white">There are no available chatspaces that you can join</p>}
+          {shouldShowInfoMessage && <p className="text-white">There are no available chatspaces that you can join</p>}
         </Col>
       </Row>
     </Container>

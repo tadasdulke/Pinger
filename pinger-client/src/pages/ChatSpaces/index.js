@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-grid-system';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useFetchData, Button } from '@Common';
+import { useFetchData, Button, Loader } from '@Common';
 import { ROUTES } from '@Router';
 import { changeCurrentWorkspaceId } from '@Store/slices/workspaces';
 import LOCAL_STORAGE_ITEMS from '@Common/config/localStorageItems';
@@ -45,6 +45,10 @@ function ChatSpaces() {
   };
 
   const chatSpacesToDisplay = !showAll ? chatSpaces?.data?.slice(0, 2) : chatSpaces?.data;
+
+  if(!loaded) {
+    return <Loader/>
+  }
 
   return (
     <Container className="top-1/2 translate-y-[-50%]">

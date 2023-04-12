@@ -42,7 +42,7 @@ namespace pinger_api_service
         [Authorize]
         [HttpGet]
         [Route("unread/{receiverId}")]
-        public async Task<ActionResult<List<PrivateMessageDto>>> GetUnreadMessages([FromRoute] string receiverId)
+        public async Task<ActionResult<PrivateUnreadMessages>> GetUnreadMessages([FromRoute] string receiverId)
         {
             string senderId = _userManager.GetUserId(User);
             ContactedUserInfo? contactedUserInfo = await _contactedUsersManager.GetContactedUserInfoAsync(senderId, receiverId);
@@ -53,14 +53,16 @@ namespace pinger_api_service
 
             int chatSpaceId = _userManager.GetChatSpaceId(User);
 
+            DateTime? lastReadTime = contactedUserInfo.LastReadTime;
+
             List<PrivateMessage> unreadPrivateMessages = await _privateMessagesManager.GetPrivateMessagesAfterTime(
                 receiverId,
                 senderId,
                 chatSpaceId,
-                contactedUserInfo.LastReadTime
+                lastReadTime
             );
             
-            return unreadPrivateMessages.Select(m => new PrivateMessageDto(m)).ToList();
+            return new PrivateUnreadMessages(unreadPrivateMessages, contactedUserInfo.LastReadTime != null);
         }
 
         [Authorize]

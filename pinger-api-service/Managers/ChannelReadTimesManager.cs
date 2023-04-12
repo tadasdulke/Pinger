@@ -5,7 +5,6 @@ namespace pinger_api_service
     public interface IChannelReadTimeManager 
     {
         public Task<List<ChannelReadTime>> GetChannelReadTimes(int channelId);
-        public Task<ChannelReadTime> GetUsersChannelReadTime(User user, Channel channel); 
         public Task<ChannelReadTime> CreateUsersChannelReadTime(User user, Channel channel); 
         public Task<ChannelReadTime?> GetUsersChannelReadTimes(int channelId, string userId); 
         public Task<ChannelReadTime> UpdateUsersChannelReadTime(ChannelReadTime channelReadTime);
@@ -37,23 +36,9 @@ namespace pinger_api_service
         {
             ChannelReadTime? channelReadTime = await _dbContext.ChannelReadTimes
                 .Include(crt => crt.Owner)
+                .Include(crt => crt.Channel)
                 .Where(crt => crt.Owner.Id == userId)
                 .FirstOrDefaultAsync(crt => crt.Channel.Id == channelId);
-
-            return channelReadTime;
-        }
-
-        public async Task<ChannelReadTime> GetUsersChannelReadTime(User user, Channel channel) 
-        {
-            ChannelReadTime? channelReadTime = await _dbContext.ChannelReadTimes
-                .Include(crt => crt.Owner)
-                .Include(crt => crt.Channel)
-                .Where(crt => crt.Owner.Id == user.Id)
-                .FirstOrDefaultAsync(crt => crt.Channel.Id == channel.Id);
-
-            if(channelReadTime is null) {
-                channelReadTime = await CreateUsersChannelReadTime(user, channel);
-            }
 
             return channelReadTime;
         }
