@@ -17,7 +17,7 @@ describe('CreateChatSpace', () => {
 
         const { getByRole } = render(
                 <CreateChatSpace />
-            );
+        );
 
         const submitButton = getByRole('button', {
             name: /Create Chatspace/i

@@ -1,24 +1,19 @@
 import React, { useState } from 'react';
 import { ReactSVG } from 'react-svg';
 import cx from 'classnames'
-import { Modal, useFetchData, Loader } from '@Common';
-import { searchChatSpaceMembers, getChannels } from '@Services';
+import { Modal, Loader } from '@Common';
 
 import UserList from './UserList';
 import ChannelList from './ChannelList';
+import useFetchChatSpaceMembers from './hooks/useFetchChatSpaceMembers';
+import useFetchChannels from './hooks/useFetchChannels';
 
 function UserSearchModal({ setShowModal }) {
   const [searchInput, setSearchInput] = useState('');
   
-  const { loaded: chatSpaceMembersLoaded, result: chatSpaceMembersResult } = useFetchData(
-    async () => await searchChatSpaceMembers(searchInput),
-    [searchInput],
-  );
+  const { chatSpaceMembersLoaded, chatSpaceMembersResult } = useFetchChatSpaceMembers(searchInput)
 
-  const { loaded: channelsLoaded, result: channelsResult  } = useFetchData(
-    async () => searchInput && await getChannels(searchInput),
-    [searchInput],
-  );
+  const { channelsLoaded, channelsResult  } = useFetchChannels(searchInput);
 
   const loaded = channelsLoaded && chatSpaceMembersLoaded;
 

@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-grid-system';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useFetchData, Button, Loader } from '@Common';
+import { Button, Loader } from '@Common';
 import { ROUTES } from '@Router';
 import { changeCurrentWorkspaceId } from '@Store/slices/workspaces';
 import LOCAL_STORAGE_ITEMS from '@Common/config/localStorageItems';
-import getUserChatSpaces from './services/getUserChatSpaces';
 import ChatSpace from './ChatSpace';
 import CreateChatSpace from './CreateChatSpace';
 import JoinChatSpace from './JoinChangeSpace';
 import useAppendClaims from './hooks/useAppendClaims';
+import useFetchUserChatSpaces from './hooks/useFetchUserChatSpaces';
 
 import { restore as restoreChatStore } from '../../store/slices/chat';
 import { restore as restoreChannelStore } from '../../store/slices/channels';
@@ -21,9 +21,8 @@ function ChatSpaces() {
   const [showAll, setShowAll] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loaded, result: chatSpaces } = useFetchData(
-    getUserChatSpaces,
-  );
+  const { loaded, chatSpaces } = useFetchUserChatSpaces();
+  const { addClaims } = useAppendClaims();
 
   useEffect(() => {
     dispatch(restoreChatStore())
@@ -31,8 +30,6 @@ function ChatSpaces() {
     dispatch(restoreContactedUsersStore())
     dispatch(restoreChatspaceStore())
   }, [])
-
-  const { addClaims } = useAppendClaims();
 
   const selectWorkspace = async (workspaceId) => {
     const { status } = await addClaims(workspaceId);
@@ -45,7 +42,7 @@ function ChatSpaces() {
   };
 
   const chatSpacesToDisplay = !showAll ? chatSpaces?.data?.slice(0, 2) : chatSpaces?.data;
-
+  
   if(!loaded) {
     return <Loader/>
   }

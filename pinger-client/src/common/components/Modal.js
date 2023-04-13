@@ -7,7 +7,7 @@ const Modal = ({ className, children, onClose }) => createPortal(
   <div className="fixed top-0 left-0 w-full h-full">
     <div className={cx('fixed z-10 opacity-100', className)}>
       <div className="flex justify-end">
-        <button onClick={onClose}>
+        <button onClick={onClose} data-testid="modal-close-button-id">
           <ReactSVG
             src="http://localhost:5122/public/icons/close.svg"
             beforeInjection={(svg) => {

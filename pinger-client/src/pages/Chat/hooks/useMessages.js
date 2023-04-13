@@ -77,7 +77,6 @@ const useMessages = (receiverId, getMessagesAction, getUnreadMessagesAction) => 
         setHasMore(false);
         setFetchingOptions(defaultFetchingOptions);
         setInitialMessagesLoaded(false);
-
         (async () => {
             const messagesResponse = await getMessagesAction(receiverId, defaultFetchingOptions.offset, defaultFetchingOptions.step, 0);
             const unreadMessagesResponse = await getUnreadMessagesAction(receiverId);

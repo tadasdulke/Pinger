@@ -19,6 +19,9 @@ import useFetchChatSpaceMember from './hooks/useFetchChatSpaceMember';
 import useRemovePrivateMessage from './hooks/useRemovePrivateMessage';
 import useUpdatePrivateMessage from './hooks/useUpdatePrivateMessage';
 import usePrivateMessages from './hooks/usePrivateMessages';
+import handleMessageRemove from './utils/handleMessageRemove';
+import handleMessageEdit from './utils/handleMessageEdit';
+import handleMessageSending from './utils/handleMessageSending'
 
 function PrivateChat() {
   const dispatch = useDispatch();
@@ -62,20 +65,6 @@ function PrivateChat() {
     connection.invoke('SendPrivateMessage', receiverId, messageValue, fileIds);
   };
 
-  const handleMessageSending = (message, scrollToBottom, setMessageValue) => {
-    const allFilesLoaded = files.every(({ loaded }) => loaded === true);
-
-    if (!allFilesLoaded) {
-      return;
-    }
-    const loadedFileIds = files.filter(({ error }) => error === null).map(({ fileId }) => fileId);
-
-    sendMessage(message, loadedFileIds);
-    scrollToBottom();
-    setFiles([]);
-    setMessageValue('');
-  };
-
   useEffect(() => {
     dispatch(updateChatType('DIRECT_MESSAGE'));
     dispatch(changeChatOccupierInfo({
@@ -112,23 +101,6 @@ function PrivateChat() {
 
     })();
   }, [messages, unreadMessages])
-
-  const handleMessageEdit = async (message, { id }) => {
-    const editedMessage = message;
-    const { status, data } = await sendUpdateMessageAction(id, editedMessage);
-
-    if (status === 200) {
-      modifyMessage(data)
-    }
-  };
-
-  const handleMessageRemove = async (id) => {
-    const { status, data } = await sendRemoveMessageAction(id);
-
-    if (status === 200) {
-      removeMessage(data);
-    }
-  };
 
   const profileImageSrc = useLoadedImage(
     member ? `http://localhost:5122/api/public-file/${member?.profilePictureId}` : null,
@@ -176,10 +148,19 @@ function PrivateChat() {
           </Button>
         </div>
       )}
-      handleMessageSending={handleMessageSending}
+      handleMessageSending={
+        (message, scrollToBottom, setMessageValue) => handleMessageSending(
+          message, 
+          scrollToBottom, 
+          setMessageValue,
+          files,
+          sendMessage,
+          setFiles,
+        )
+      }
       onIsAtButtonUpdate={onIsAtButtonUpdate}
-      removeMessage={handleMessageRemove}
-      handleMessageEdit={handleMessageEdit}
+      removeMessage={(id) => handleMessageRemove(id, sendRemoveMessageAction, removeMessage)}
+      handleMessageEdit={(msg, editMsgData) => handleMessageEdit(msg, editMsgData, sendUpdateMessageAction, modifyMessage)}
       handleFilesUpload={(addedFiles) => uploadFiles(addedFiles, receiverId)}
       files={files}
       setFiles={setFiles}
