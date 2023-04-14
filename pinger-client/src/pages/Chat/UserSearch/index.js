@@ -13,9 +13,9 @@ const UserSearch = () => {
                 <ReactSVG
                     src="http://localhost:5122/public/icons/search.svg"
                     beforeInjection={(svg) => {
+                        svg.setAttribute('fill', 'white');
                         svg.setAttribute('width', '20px');
                         svg.setAttribute('height', '20px');
-                        svg.setAttribute('fill', 'white');
                     }}
                     className="mr-[5px]"
                 />

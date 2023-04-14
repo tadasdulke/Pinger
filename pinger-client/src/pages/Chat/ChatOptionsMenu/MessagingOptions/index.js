@@ -42,26 +42,26 @@ function MessagingOptions({ connection }) {
             className="flex items-center text-left py-[10px] px-[5px] w-full hover:text-red-600"
             onClick={() => navigate(ROUTES.CHATSPACES)}
         >
-            <ReactSVG
-                src="http://localhost:5122/public/icons/people.svg"
-                beforeInjection={(svg) => {
-                    svg.setAttribute('width', '30px');
-                    svg.setAttribute('height', '30px');
-                }}
+            <ReactSVG 
+              src="http://localhost:5122/public/icons/people.svg"
+              beforeInjection={(svg) => {
+                svg.setAttribute('width', '30px');
+                svg.setAttribute('height', '30px');
+              }}  
             />
-            <span className="ml-[10px]">Change chatspace</span>
+          <span className="ml-[10px]">Change chatspace</span>
         </button>
         <button
             className="flex items-center text-left py-[10px] px-[5px] w-full hover:text-red-600"
             onClick={onLogOut}
         >
-            <ReactSVG
-                src="http://localhost:5122/public/icons/logout.svg"
-                beforeInjection={(svg) => {
-                    svg.setAttribute('width', '30px');
-                    svg.setAttribute('height', '30px');
-                }}
-            />
+            <ReactSVG 
+              src="http://localhost:5122/public/icons/logout.svg"
+              beforeInjection={(svg) => {
+                svg.setAttribute('width', '30px');
+                svg.setAttribute('height', '30px');
+              }}
+             />
             <span className="ml-[10px]">Logout</span>
         </button>
       </div>

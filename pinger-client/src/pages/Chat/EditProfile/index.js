@@ -6,13 +6,15 @@ import * as Yup from 'yup';
 import cx from 'classnames';
 import { setUserName, setProfilePictureId } from '@Store/slices/auth';
 import {
-  Button, TextInput, useFetchData, useApiAction, useLoadedImage,
+  Button, 
+  TextInput, 
+  useLoadedImage,
   FilePicker,
 } from '@Common';
 import LOCAL_STORAGE_ITEMS from '@Common/config/localStorageItems';
 
-import getSelf from './services/getSelf';
-import updateSelf from './services/updateSelf';
+import useFetchSelf from './hooks/useFetchSelf';
+import useUpdateSelf from './hooks/useUpdateSelf';
 
 function EditProfile() {
   const dispatch = useDispatch();
@@ -21,13 +23,8 @@ function EditProfile() {
   const [localImageUrl, setLocalImgUrl] = useState(null);
   const imageUrlSrc = useLoadedImage(profileImageSrc, 'http://localhost:5122/public/profile-pic.png');
 
-  const { loaded, result: self } = useFetchData(
-    getSelf,
-  );
-
-  const { sendAction: sendUpdateSelfAction } = useApiAction(
-    (file, userName) => updateSelf(file, userName),
-  );
+  const { self } = useFetchSelf()
+  const { sendUpdateSelfAction } = useUpdateSelf();
 
   const FIELDS = {
     USER_NAME: 'USER_NAME',
@@ -114,6 +111,7 @@ function EditProfile() {
                     type="text"
                     name={FIELDS.USER_NAME}
                     label="User name"
+                    data-testid="edit-profile-username-input-id"
                     component={TextInput}
                     value={values[FIELDS.USER_NAME]}
                     onChange={handleChange}

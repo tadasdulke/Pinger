@@ -9,7 +9,7 @@ import ListItem from './ListItem';
 
 
 const ChannelList = ({connection}) => {
-  const dispatch = useDispatch();
+   const dispatch = useDispatch();
 
     const { channels } = useSelector((state) => state);
     const { currentWorkspaceId } = useSelector((state) => state.workspace);
@@ -94,13 +94,13 @@ const ChannelList = ({connection}) => {
     return (
         <div className="mb-[20px]">
           <div className="flex items-center text-left px-[5px]">
-            <ReactSVG
-              src="http://localhost:5122/public/icons/group.svg"
-              beforeInjection={(svg) => {
-                svg.setAttribute('width', '24px');
-                svg.setAttribute('height', '24px');
-              }}
-            />
+              <ReactSVG
+                src="http://localhost:5122/public/icons/group.svg"
+                beforeInjection={(svg) => {
+                  svg.setAttribute('width', '24px');
+                  svg.setAttribute('height', '24px');
+                }}  
+              />
             <span className="ml-[10px] py-[10px]">Channels</span>
           </div>
           <div className="flex flex-col items-start">
@@ -120,7 +120,7 @@ const ChannelList = ({connection}) => {
                   beforeInjection={(svg) => {
                     svg.setAttribute('width', '24px');
                     svg.setAttribute('height', '24px');
-                  }}
+                  }}  
                 />
                 <span className="ml-[10px]">Create channel</span>
               </div>

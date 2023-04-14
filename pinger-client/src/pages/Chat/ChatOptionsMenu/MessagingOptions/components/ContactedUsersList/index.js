@@ -75,13 +75,13 @@ const ContactedUsersList = ({connection}) => {
     return (
         <>
             <div className="flex items-center text-left px-[5px]">
-                <ReactSVG
-                    src="http://localhost:5122/public/icons/direct-message.svg"
-                    beforeInjection={(svg) => {
-                      svg.setAttribute('width', '24px');
-                      svg.setAttribute('height', '24px');
-                    }}
-                />
+                  <ReactSVG
+                      src="http://localhost:5122/public/icons/direct-message.svg"
+                      beforeInjection={(svg) => {
+                        svg.setAttribute('width', '24px');
+                        svg.setAttribute('height', '24px');
+                      }}  
+                  />
                 <span className="ml-[10px] py-[10px]">Private messages</span>
                 </div>
                 <div className="flex items-start flex-col">
