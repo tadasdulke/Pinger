@@ -1,10 +1,6 @@
 import React from 'react';
-import { render } from '@testing-library/react';
-
-import ChatSpaceInformation from '../ChatSpaceInformation';
-import ChatOptionsMenu from '../ChatOptionsMenu';
-import UserSearch from '../UserSearch';
-
+import { render, act } from '@testing-library/react';
+import apiClient from '@Api';
 import Chat from '..'
 
 jest.mock('../ChatSpaceInformation', () => ({
@@ -12,10 +8,41 @@ jest.mock('../ChatSpaceInformation', () => ({
     default: () => <div>ChatSpaceInformation</div>
 }))
 
+jest.mock('../ChatOptionsMenu', () => ({
+    __esModule: true,
+    default: () => <div>ChatOptionsMenu</div>
+}))
+
+jest.mock('../UserSearch', () => ({
+    __esModule: true,
+    default: () => <div>UserSearch</div>
+}))
+
+jest.mock('react-router-dom', () => ({
+    Outlet: () => <div>Outlet</div>
+}))
+
+jest.mock('@microsoft/signalr', () => ({
+    HubConnectionBuilder: jest.fn().mockReturnValue({
+        withUrl: () => ({
+            build: () => ({
+                start: () => {},
+                stop: () => {},
+                invoke: () => {}
+            })
+        })
+    })
+}))
+
 describe('Chat', () => {
-    it('should render withour errors', () => {
-        expect(() => render(
-            <Login/>
-        )).not.toThrow();
+    it('should render withour errors', async () => {
+        const refreshTokenMock = jest.fn();
+        apiClient.refreshToken = refreshTokenMock;
+
+        await act(() => {
+            render(<Chat/>);
+        })
+
+        expect(refreshTokenMock).toBeCalled();
     });
 });

@@ -21,6 +21,9 @@ import removeChannelMessage from './services/removeChannelMessage';
 import updateChannelMessage from './services/updateChannelMessage'
 import RemoveChannelConfirmation from './components/RemoveChannelConfirmation';
 import useChannelMessages from './hooks/useChannelMessages';
+import sendMessage from './utils/sendMessage';
+import handleMesaageRemove from './utils/handleMesaageRemove';
+import handleMessageEdit from './utils/handleMessageEdit';
 
 function ChannelChat() {
     const navigate = useNavigate();
@@ -67,21 +70,6 @@ function ChannelChat() {
     isAtBottom,
   );
 
-  const sendMessage = (message, scrollToBottom, setMessageValue) => {
-    const allFilesLoaded = files.every(({ loaded }) => loaded === true);
-
-    if (!allFilesLoaded) {
-      return;
-    }
-
-    const loadedFileIds = files.filter(({ error }) => error === null).map(({ fileId }) => fileId);
-
-    connection.invoke('SendGroupMessage', convertedChannelId, message, loadedFileIds);
-    scrollToBottom();
-    setFiles([]);
-    setMessageValue('');
-  };
-
   const { loaded, result: channelResponse } = useFetchData(
     () => getChannel(channelId),
     [channelId],
@@ -105,22 +93,6 @@ function ChannelChat() {
   const onIsAtButtonUpdate = (isAtBottom) => {
     dispatch(updateIsAtButton(isAtBottom));
     dispatch(removeChannelHighlight(convertedChannelId));
-  };
-
-  const handleMessaageRemove = async (messageId) => {
-    const { status, data } = await removeChannelMessageAction(messageId);
-
-    if(status === 200) {
-      removeMessage(data);
-    }
-  };
-
-  const handleMessageEdit = async (editedMessage, { id }) => {
-    const { status, data } = await updateChannelMessageAction(id, editedMessage);
-    
-    if(status === 200) {
-      modifyMessage(data);
-    }
   };
 
   useEffect(() => {
@@ -160,9 +132,17 @@ function ChannelChat() {
       receiverInfo={channelResponse?.data?.name}
       messages={messages}
       unreadMessages={unreadMessages}
-      handleMessageSending={sendMessage}
-      removeMessage={handleMessaageRemove}
-      handleMessageEdit={handleMessageEdit}
+      handleMessageSending={(message, scrollToBottom, setMessageValue) => sendMessage(
+        message, 
+        scrollToBottom, 
+        setMessageValue,
+        files,
+        connection,
+        setFiles,
+        convertedChannelId
+      )}
+      removeMessage={(messageId) => handleMesaageRemove(messageId, removeChannelMessageAction, removeMessage)}
+      handleMessageEdit={(editedMessage, messageInfo) => handleMessageEdit(editedMessage, messageInfo, updateChannelMessageAction, modifyMessage)}
       onIsAtButtonUpdate={onIsAtButtonUpdate}
       seeNewMessagesButtonVisible={seeNewMessagesButtonVisible}
       setSeeNewMessagesButtonVisible={setSeeNewMessagesButtonVisible}

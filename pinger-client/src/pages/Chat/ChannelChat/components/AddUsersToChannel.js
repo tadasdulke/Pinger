@@ -1,29 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import {
-  Button, useFetchData, useApiAction, Loader,
-} from '@Common';
-import { searchChatSpaceMembers, getChannelMembers } from '@Services';
-import addUserToChannel from '../services/addUserToChannel';
+import { Button, Loader } from '@Common';
+
+import useSearchChatSpaceMembers from '../hooks/useSearchChatSpaceMembers'
+import useChannelMembers from '../hooks/useChannelMembers';
+import useAddUserToChannel from '../hooks/useAddUserToChannel';
 
 function AddUsersToChannel({ toggle }) {
   const { channelId } = useParams();
   const [searchField, setSearchField] = useState('');
   const [availableUsers, setAvailableUsers] = useState([]);
 
-  const { sendAction } = useApiAction(
-    (newMemberId) => addUserToChannel(channelId, newMemberId),
-  );
-
-  const { loaded: chatspaceMembersLoaded, result: allChatSpaceMembersResult } = useFetchData(
-    () => searchChatSpaceMembers(searchField),
-    [searchField],
-  );
-
-  const { loaded: channelMembersLoaded, result: channelMembersResult } = useFetchData(
-    () => getChannelMembers(channelId),
-  );
-
+  const { sendAction } = useAddUserToChannel(channelId);
+  const { chatspaceMembersLoaded, allChatSpaceMembersResult } = useSearchChatSpaceMembers(searchField);
+  const { channelMembersLoaded, channelMembersResult } = useChannelMembers(channelId);
+  console.log(channelMembersResult)
   const handleUserAdd = async (id, toggle) => {
     const {status} = await sendAction(id)
 

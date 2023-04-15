@@ -66,9 +66,12 @@ function ChatSpaces() {
         </Col>
         <Col xs={12}>
           <div className="flex justify-center mt-[20px]">
+            {chatSpaces?.data?.length > 2 && 
+            (
             <Button onClick={() => setShowAll(!showAll)}>
-              {showAll ? "Show less" : "Show all"}
+                {showAll ? "Show less" : "Show all"}
             </Button>
+            )}
           </div>
         </Col>
       </Row>
