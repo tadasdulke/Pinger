@@ -15,6 +15,7 @@ const ErrorHandler = () => {
                         {message}
                         <button
                             className="ml-[10px]"
+                            data-testid="remove-error-button"
                             onClick={() => dispatch(removeError(id))}
                         >
                             <ReactSVG
