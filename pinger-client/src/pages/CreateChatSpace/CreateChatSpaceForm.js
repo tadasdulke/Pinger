@@ -14,13 +14,17 @@ function CreateChatSpaceForm() {
   const navigate = useNavigate();
   const FIELDS = {
     NAME: 'name',
+    PRIVATE: 'private',
   };
 
   const { sendAction } = useCreateChatSpace();
 
   const handleSubmit = async (values) => {
+    
+    console.log(values)
     const name = values[FIELDS.NAME];
-    const {status} = await sendAction(name);
+    const isPrivate = values[FIELDS.PRIVATE];
+    const {status} = await sendAction(name, isPrivate);
     
     if(status === 204) {
       navigate(ROUTES.CHATSPACES)
@@ -33,7 +37,7 @@ function CreateChatSpaceForm() {
         Create chatspace
       </h1>
       <Formik
-        initialValues={{ [FIELDS.NAME]: '' }}
+        initialValues={{ [FIELDS.NAME]: '', [FIELDS.PRIVATE]: false }}
         onSubmit={handleSubmit}
         validationSchema={Yup.object().shape({
           [FIELDS.NAME]: Yup.string().trim().required('Required'),
@@ -50,6 +54,12 @@ function CreateChatSpaceForm() {
               value={values[FIELDS.NAME]}
               onChange={handleChange}
             />
+            <label className="mt-[10px]">
+              <Field type="checkbox" name={FIELDS.PRIVATE} />
+              <span className="ml-[10px]">
+                Private
+              </span>
+            </label>
             <Button type="submit" className="mt-[20px] mb-[10px]">
               Create
             </Button>

@@ -2,7 +2,7 @@ import React from 'react';
 import { Container, Row, Col } from 'react-grid-system';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@Router';
-import {useJoinChatSpace, useFetchAllChatSpaces, useFetchUserChatSpaces} from './hooks';
+import {useJoinChatSpace, useFetchAllChatSpaces, useFetchUserChatSpaces, useFetchInvitedChatSpaces} from './hooks';
 
 function ChatSpaceRow({ name, chatspaceId, onClick }) {
   return (
@@ -17,6 +17,7 @@ function JoinChatSpace() {
 
   const { allChatSpaces } = useFetchAllChatSpaces();
   const { joinedChatSpaces } = useFetchUserChatSpaces()
+  const { invitedChatSpaces } = useFetchInvitedChatSpaces()
   const { joinChatSpace } = useJoinChatSpace();
 
   const onClick = async (chatspaceId) => {

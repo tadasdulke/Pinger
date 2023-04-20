@@ -6,5 +6,6 @@ namespace pinger_api_service
     {
         [Required(ErrorMessage = "ChatSpace name is required")]
         public string? Name { get; set; }
+        public bool Private { get; set; }
     }
 }

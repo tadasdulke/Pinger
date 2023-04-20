@@ -15,9 +15,23 @@ const getChatSpaceEndpoints = (instance) => {
       data,
     };
   };
+  const getInvitedChatSpaces = async () => {
+    const response = await instance.get(API_SERVICE_ENDPOINTS.INVITED_CHATSPACES, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  const createChatSpace = async (name) => {
-    const response = await instance.post(API_SERVICE_ENDPOINTS.CHATSPACES, { name }, {
+    const { status, data } = response;
+
+    return {
+      status,
+      data,
+    };
+  };
+
+  const createChatSpace = async (name, isPrivate) => {
+    const response = await instance.post(API_SERVICE_ENDPOINTS.CHATSPACES, { name, private: isPrivate }, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -124,6 +138,45 @@ const getChatSpaceEndpoints = (instance) => {
     };
   };
 
+  const removeChatSpaceMember = async (memberId) => {
+    const response = await instance.delete(
+      `${API_SERVICE_ENDPOINTS.CHATSPACES}/members/${memberId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    const { status, data } = response;
+
+    return {
+      status,
+      data,
+    };
+  };
+
+  const updateChatSpace = async (name) => {
+    const response = await instance.put(
+      `${API_SERVICE_ENDPOINTS.CHATSPACES}`,
+      {
+        name
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    const { status, data } = response;
+
+    return {
+      status,
+      data,
+    };
+  };
+
   return {
     getUserChatSpaces,
     createChatSpace,
@@ -131,7 +184,10 @@ const getChatSpaceEndpoints = (instance) => {
     getChatSpaces,
     joinChatSpace,
     getChatSpaceMember,
-    getChatSpace
+    getChatSpace,
+    getInvitedChatSpaces,
+    updateChatSpace,
+    removeChatSpaceMember
   };
 };
 

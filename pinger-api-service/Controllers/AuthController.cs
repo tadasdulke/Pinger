@@ -107,7 +107,8 @@ namespace pinger_api_service
     
             return NoContent();
         }
-
+        
+        [Microsoft.AspNetCore.Authorization.Authorize]
         [HttpPut]
         [Route("append-claims")]
         public async Task<IActionResult> AppendNewClaimsToToken(AppendNewClaim appendNewClaim)

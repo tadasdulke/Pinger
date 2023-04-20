@@ -16,6 +16,8 @@ namespace pinger_api_service
         public Task NotifyUserMessageSent(string connectionId, PrivateMessage privateMessage);
         public Task NotifyChannelReceivedMessage(Channel channel, User sender, ChannelMessage channelMessage);
         public Task NotifyUserChannelMessageSent(string connectionId, ChannelMessage channelMessage); 
+        public Task NotifyRemovedFromChatSpace(User user, ChatSpace chatSpace);
+
     }
 
     public class ChatHubConnectionManager : IChatHubConnectionManager
@@ -84,6 +86,12 @@ namespace pinger_api_service
             string groupName = $"{channel.Id}-{channel.Name}";
 
             await _chatHubContext.Clients.GroupExcept(groupName, connectionIds).SendAsync("ReceiveGroupMessage", new ChannelMessageDto(channelMessage));
+        }
+        public async Task NotifyRemovedFromChatSpace(User user, ChatSpace chatSpace) 
+        {
+            List<string> connectionIds = _connectionInformationManager.GetUsersConnectionInfo(new List<User>{user});
+
+            await _chatHubContext.Clients.Clients(connectionIds).SendAsync("RemovedFromChatSpace", new ChatSpaceDto(chatSpace));
         }
 
         public async Task NotifyUserPrivateMessageRemoved(PrivateMessage privateMessage) 

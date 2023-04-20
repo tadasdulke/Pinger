@@ -7,7 +7,6 @@ namespace pinger_api_service
         public Task<ContactedUserInfo?> GetContactedUserInfoAsync(string ownerId, string contactedUserId);
         public Task<ContactedUserInfo> AddContactedUser(string ownerId, string contactedUserId, int chatSpaceId);
         public Task UpdateContactedUser(ContactedUserInfo contactedUserInfo, DateTime lastReadTime);
-
     }
 
     public class ContactedUsersManager : IContactedUsersManager

@@ -14,7 +14,7 @@ function AddUsersToChannel({ toggle }) {
   const { sendAction } = useAddUserToChannel(channelId);
   const { chatspaceMembersLoaded, allChatSpaceMembersResult } = useSearchChatSpaceMembers(searchField);
   const { channelMembersLoaded, channelMembersResult } = useChannelMembers(channelId);
-  console.log(channelMembersResult)
+  
   const handleUserAdd = async (id, toggle) => {
     const {status} = await sendAction(id)
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@Router';
 import { useApiAction } from '@Common';
 import { ReactSVG } from 'react-svg';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import revokeToken from './services/revokeToken';
 import ChannelList from './components/ChannelList';
@@ -14,6 +14,7 @@ import { restore as restoreWorkspaceStore } from '@Store/slices/workspaces';
 function MessagingOptions({ connection }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { isOwner } = useSelector(state => state.workspace)
 
   const { sendAction: revokeTokenAction } = useApiAction(
     revokeToken,
@@ -38,6 +39,19 @@ function MessagingOptions({ connection }) {
         </div>
       </div>
       <div>
+        {isOwner && <button
+            className="flex items-center text-left py-[10px] px-[5px] w-full hover:text-red-600"
+            onClick={() => navigate("manage-chatspace")}
+        >
+            <ReactSVG 
+              src="http://localhost:5122/public/icons/manage.svg"
+              beforeInjection={(svg) => {
+                svg.setAttribute('width', '30px');
+                svg.setAttribute('height', '30px');
+              }}  
+            />
+          <span className="ml-[10px]">Manage chatspace</span>
+        </button>}
         <button
             className="flex items-center text-left py-[10px] px-[5px] w-full hover:text-red-600"
             onClick={() => navigate(ROUTES.CHATSPACES)}

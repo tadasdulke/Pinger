@@ -4,3 +4,5 @@ export { default as Modal } from './Modal';
 export { default as FilePicker } from './FilePicker';
 export { default as ButtonWithLoader } from './ButtonWithLoader';
 export { default as Loader } from './Loader';
+export { default as Expandable } from './Expandable';
+export { default as NotificationHandler } from './NotificationHandler';

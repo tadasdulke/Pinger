@@ -3,7 +3,17 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { BaseLayout } from '@Components';
 import { ROUTES } from "@Router";
 import { useDispatch } from 'react-redux';
-import {Login, Register, ChatSpaces, CreateChatSpace, Chat, JoinChatSpace, CreateChannel, EditChannel } from '../pages'
+import {
+  Login, 
+  Register, 
+  ChatSpaces, 
+  CreateChatSpace, 
+  Chat, 
+  JoinChatSpace, 
+  CreateChannel, 
+  EditChannel, 
+  ManageChatSpace
+} from '../pages'
 import AuthorizedRoute from './AuthorizedRoute'
 import UnauthorizedRoute from './UnauthorizedRoute'
 import ManagedRoute from './ManagedRoute'
@@ -96,6 +106,10 @@ const Router = () => {
           <Route
             path={`${ROUTES.EDIT_CHANNEL}/:channelId`}
             element={<EditChannel />}
+          />
+          <Route
+            path="manage-chatspace"
+            element={<ManageChatSpace />}
           />
         </Route>
         <Route

@@ -4,7 +4,7 @@ import { HubConnectionBuilder } from '@microsoft/signalr';
 import { Outlet } from 'react-router-dom';
 import apiClient from '@Api';
 import ChatOptionsMenu from './ChatOptionsMenu';
-
+import { useGlobalListener } from './hooks'
 import UserSearch from './UserSearch';
 import ChatSpaceInformation from './ChatSpaceInformation';
 
@@ -34,6 +34,8 @@ function Chat() {
       return () => clearInterval(interval);        
     }
   }, [connection]);
+
+  useGlobalListener(connection)
 
   if(!connection) {
     return null;

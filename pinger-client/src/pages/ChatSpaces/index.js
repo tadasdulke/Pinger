@@ -21,7 +21,7 @@ function ChatSpaces() {
   const [showAll, setShowAll] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loaded, chatSpaces } = useFetchUserChatSpaces();
+  const { chatSpaces } = useFetchUserChatSpaces();
   const { addClaims } = useAppendClaims();
 
   useEffect(() => {
@@ -43,7 +43,7 @@ function ChatSpaces() {
 
   const chatSpacesToDisplay = !showAll ? chatSpaces?.data?.slice(0, 2) : chatSpaces?.data;
   
-  if(!loaded) {
+  if(!chatSpacesToDisplay) {
     return <Loader/>
   }
 

@@ -1,7 +1,7 @@
 import apiClient from '@Api';
 
-const createChatSpace = async (name) => {
-  return apiClient.createChatSpace(name);
+const createChatSpace = async (name, isPrivate) => {
+  return apiClient.createChatSpace(name, isPrivate);
 };
 
 export default createChatSpace;

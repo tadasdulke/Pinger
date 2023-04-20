@@ -8,6 +8,7 @@ export const API_SERVICE_ENDPOINTS = {
   CHATSPACES: '/api/chatspaces',
   CHATSPACE_MEMBERS: '/api/chatspaces/members',
   JOINED_CHATSPACES: '/api/chatspaces/joined',
+  INVITED_CHATSPACES: '/api/chatspaces/invited',
   USERS_CONTACTED_USERS: '/api/contacted-users',
   USERS: '/api/user',
   PRIVATE_MESSAGES: '/api/private-messages',

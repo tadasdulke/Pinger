@@ -6,6 +6,7 @@ import chatReducer from './slices/chat';
 import contactedUsersReducer from './slices/contactedUsers';
 import channelsReducer from './slices/channels';
 import errorsReducer from './slices/errors';
+import notificationsReducer from './slices/notifications';
 
 const store = configureStore({
   reducer: {
@@ -15,6 +16,7 @@ const store = configureStore({
     contactedUsers: contactedUsersReducer,
     channels: channelsReducer,
     errors: errorsReducer,
+    notifications: notificationsReducer
   },
   preloadedState: {
     auth: {

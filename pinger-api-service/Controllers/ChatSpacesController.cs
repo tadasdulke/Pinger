@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 
 namespace pinger_api_service
 {
@@ -12,12 +13,19 @@ namespace pinger_api_service
         private ApplicationDbContext _dbContext;
         private IChatSpaceManager _chatSpaceManager;
         private readonly ApplicationUserManager _userManager;
-
-        public ChatSpacesController(ApplicationDbContext dbContext, ApplicationUserManager userManager, IChatSpaceManager chatSpaceManager)
+        private IChatHubConnectionManager _chatHubConnectionManager;
+        
+        public ChatSpacesController(
+            ApplicationDbContext dbContext, 
+            ApplicationUserManager userManager, 
+            IChatSpaceManager chatSpaceManager,
+            IChatHubConnectionManager chatHubConnectionManager
+        )
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _chatSpaceManager = chatSpaceManager;
+            _chatHubConnectionManager = chatHubConnectionManager;
         }
 
         [Authorize]
@@ -29,6 +37,21 @@ namespace pinger_api_service
         }
 
         [Authorize]
+        [HttpGet]
+        [Route("invited")]
+        public async Task<ActionResult<List<ChatSpaceDto>>> GetInvitedChatSpaces()
+        {
+            string userId = _userManager.GetUserId(User);
+            User? user = await _dbContext.Users.Include(u => u.InvitedChatSpaces).FirstOrDefaultAsync(u => u.Id == userId);
+            
+            if(user is null) {
+                return BadRequest(new Error("User not found"));
+            }
+
+            return user.InvitedChatSpaces.Select(cs => new ChatSpaceDto(cs)).ToList();
+        }
+
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateChatSpace([FromBody] NewChatSpace newChatSpace)
         {
@@ -36,11 +59,13 @@ namespace pinger_api_service
             User owner = await _userManager.FindByIdAsync(ownerId);
             ChatSpace chatSpace = new ChatSpace();
             chatSpace.Name = newChatSpace.Name.Trim();
+            chatSpace.Private = newChatSpace.Private;
+            chatSpace.Owner = owner;
 
             bool chatSpaceAlreadyExists = _dbContext.ChatSpace.Any(chatSpace => chatSpace.Name.ToLower() == newChatSpace.Name.Trim().ToLower());
 
             if(chatSpaceAlreadyExists) {
-                return BadRequest("Chatspace already exists");
+                return BadRequest(new Error("Chatspace already exists"));
             }
 
             chatSpace.Members.Add(owner);
@@ -101,7 +126,7 @@ namespace pinger_api_service
 
         [Authorize]
         [HttpGet("members")]
-        public async Task<ActionResult<List<UserDto>>> GetChatSpaceMembers([FromQuery(Name = "search")]  string search)
+        public async Task<ActionResult<List<UserDto>>> GetChatSpaceMembers([FromQuery(Name = "search")]  string? search)
         {
             int chatspaceId = _userManager.GetChatSpaceId(User);
             ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatspaceId);
@@ -111,6 +136,11 @@ namespace pinger_api_service
             }
 
             List<User> members = chatSpace.Members.ToList();
+
+            if(search is null) {
+                return members.Select(x => new UserDto(x)).ToList(); 
+            }
+
             List<User> filteredMembers = members.Where(m => m.UserName.ToLower().Contains(search.ToLower())).ToList();
 
             
@@ -136,6 +166,60 @@ namespace pinger_api_service
             }
 
             return new UserDto(foundMember);
+        }
+
+        [Authorize]
+        [HttpDelete("members/{memberId}")]
+        public async Task<ActionResult<UserDto>> RemoveMemberFromChatSpace([FromRoute] string memberId)
+        {
+            string ownerId = _userManager.GetUserId(User);
+            int chatspaceId = _userManager.GetChatSpaceId(User);
+            ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatspaceId);
+            
+            if(chatSpace is null) {
+                return NotFound(new Error("Chatspace not found"));
+            }
+
+            if(chatSpace.Owner.Id != ownerId) {
+                return NotFound(new Error("Only owner of the chatspace can remove users"));
+            }
+
+            if(ownerId == memberId) {
+                return NotFound(new Error("Chatspace owner can't be removed"));
+            }
+
+            
+            User? foundMember = chatSpace.Members.FirstOrDefault(m => m.Id == memberId);
+
+            if(foundMember is null) {
+                return NotFound(new Error("Member does not exist"));
+            }
+
+            await _chatHubConnectionManager.NotifyRemovedFromChatSpace(foundMember, chatSpace);
+            await _chatSpaceManager.RemoveMember(foundMember, chatSpace);  
+
+            return new UserDto(foundMember);
+        }
+
+        [Authorize]
+        [HttpPut]
+        public async Task<IActionResult> UpdateChatSpace(UpdateChatSpace updateChatSpace)
+        {
+            int chatspaceId = _userManager.GetChatSpaceId(User);
+            string ownerId = _userManager.GetUserId(User);
+            ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatspaceId);
+
+            if(chatSpace is null) {
+                return NotFound(new Error("Chatspace not found"));
+            }
+
+            if(chatSpace.Owner.Id != ownerId) {
+                return NotFound(new Error("Chatspace can only be edited by owner"));
+            }
+
+            await _chatSpaceManager.UpdateChatSpace(updateChatSpace.Name, chatSpace);
+
+            return NoContent();
         }
     }
 } 
