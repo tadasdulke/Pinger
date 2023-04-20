@@ -29,6 +29,7 @@ const ChatWindow = ({
   setMessageValue,
   messagesLoaded,
   initiateObserver,
+  messageFieldHidden,
 }) => {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -120,7 +121,7 @@ const ChatWindow = ({
             )}
         </div>
       </div>
-      <div className="p-[10px] bg-tuna">
+      <div className={cx("p-[10px] bg-tuna", {"hidden": messageFieldHidden})}>
         <MessageInput
           handleEnter={handleMessageInputEnter}
           setMessageValue={setMessageValue}

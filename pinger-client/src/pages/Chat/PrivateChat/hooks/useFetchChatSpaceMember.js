@@ -5,6 +5,7 @@ const useFetchChatSpaceMember = (memberId, deps = []) => {
   const { loaded, result } = useFetchData(
     () => getChatSpaceMember(memberId),
     deps,
+    false
   );
 
   return {

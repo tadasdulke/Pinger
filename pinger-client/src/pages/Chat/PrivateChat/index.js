@@ -15,10 +15,10 @@ import { removeUserHighlight } from '@Store/slices/contactedUsers';
 import { useUploadPrivateFiles } from '@Hooks';
 import { uploadPrivateFile, updateContactedUserReadTime } from '@Services';
 
-import useFetchChatSpaceMember from './hooks/useFetchChatSpaceMember';
 import useRemovePrivateMessage from './hooks/useRemovePrivateMessage';
 import useUpdatePrivateMessage from './hooks/useUpdatePrivateMessage';
 import usePrivateMessages from './hooks/usePrivateMessages';
+import useFetchContactedUser from './hooks/useFetchContactedUser'
 import handleMessageRemove from './utils/handleMessageRemove';
 import handleMessageEdit from './utils/handleMessageEdit';
 import handleMessageSending from './utils/handleMessageSending'
@@ -30,7 +30,7 @@ function PrivateChat() {
   const { connection } = useOutletContext();
   const { receiverId } = useParams();
   const [expanded, setExpanded] = useState(false);
-  const { member } = useFetchChatSpaceMember(receiverId, [receiverId]);
+  const { contactedUserInfo, contactedUserInfoLoaded } = useFetchContactedUser(receiverId);
 
   const { sendAction: updateContactedUserReadTimeAction } = useApiAction(
       () => updateContactedUserReadTime(receiverId),
@@ -103,14 +103,15 @@ function PrivateChat() {
   }, [messages, unreadMessages])
 
   const profileImageSrc = useLoadedImage(
-    member ? `http://localhost:5122/api/public-file/${member?.profilePictureId}` : null,
+    contactedUserInfo?.contactedUser ? `http://localhost:5122/api/public-file/${contactedUserInfo?.contactedUser?.profilePictureId}` : null,
     'http://localhost:5122/public/profile-pic.png',
   );
 
   return (
     <ChatWindow
+      messageFieldHidden={!contactedUserInfo?.existsInChatSpace}
       receiverInfo={(
-        <div className="flex items-center">
+        <div className={cx("flex items-center", {hidden: !contactedUserInfo})}>
           <div className="min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px]">
             {profileImageSrc && (
             <img
@@ -121,7 +122,8 @@ function PrivateChat() {
             />
             )}
           </div>
-          <span className="ml-[10px]">{member?.userName}</span>
+          <span className="ml-[10px]">{contactedUserInfo?.contactedUser?.userName}</span>
+          {!contactedUserInfo?.existsInChatSpace && <span className="text-red-500 text-sm ml-[5px]">Deactivated</span>}
         </div>
       )}
       expanded={expanded}

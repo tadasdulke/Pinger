@@ -15,6 +15,7 @@ namespace pinger_api_service
         {
             ChatSpace? chatspace = await _dbContext.ChatSpace
                 .Include(cs => cs.Owner)
+                .Include(cs => cs.Channel)
                 .Include(cs => cs.Members)
                 .ThenInclude(u => u.ProfileImageFile)
                 .Include(cs => cs.Members)
@@ -35,6 +36,18 @@ namespace pinger_api_service
             .Where(x => x.Members.Any(m => m.Id == userId)).ToListAsync();
 
             return chatSpaces;
+        }
+
+        public async Task<List<User>?> GetChatSpaceMembers(int chatspaceId) {
+            ChatSpace? chatSpace = await _dbContext.ChatSpace
+                .Include(c => c.Members)
+                .FirstOrDefaultAsync(c => c.Id == chatspaceId);
+
+            if(chatSpace is null) {
+                return null;
+            }
+
+            return chatSpace.Members.ToList();
         }
 
         public async Task UpdateChatSpace(string name, ChatSpace chatSpace) {

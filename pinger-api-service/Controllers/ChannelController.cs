@@ -93,9 +93,16 @@ namespace pinger_api_service
             if(channel is null) {
                 return NotFound(new Error("Channel not found"));
             }
+            
+            int chatspaceId = _userManager.GetChatSpaceId(User);
+            ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatspaceId);
 
-            if(channel.Owner.Id != userId) {
-                return Unauthorized(new Error("User is does not own this channel"));
+            if(chatSpace is null) {
+                return NotFound(new Error("Chat space not found"));
+            }
+
+            if(channel.Owner.Id != userId && chatSpace.Owner.Id != userId) {
+                return Unauthorized(new Error("User does not own this channel"));
             }
 
             await _channelManager.RemoveChannel(channel);
@@ -126,6 +133,36 @@ namespace pinger_api_service
             if(search is not null) {
                 channels = channels.Where(c => c.Name.Contains(search.ToLower())).ToList();
             }
+
+            List<ChannelDto> channelDtos = channels.Select(c => new ChannelDto(c)).ToList();
+
+            return channelDtos;
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("chatspace")]
+        public async Task<ActionResult<List<ChannelDto>>> GetChatSpaceChannels()
+        {
+            string userId = _userManager.GetUserId(User);
+            int chatSpaceId = _userManager.GetChatSpaceId(User);
+            ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatSpaceId);
+            
+            if(chatSpace is null) {
+                return NotFound(new Error("Chatspace not found"));
+            }
+
+            User? user = await _userManager.GetUserAsync(userId);
+            
+            if(user is null) {
+                return NotFound(new Error("User not found"));
+            }
+
+            if(chatSpace.Owner.Id != userId) {
+                return Unauthorized(new Error("Channels can only be inspected by owner of chatspace"));
+            }
+
+            List<Channel> channels = chatSpace.Channel.ToList();
 
             List<ChannelDto> channelDtos = channels.Select(c => new ChannelDto(c)).ToList();
 

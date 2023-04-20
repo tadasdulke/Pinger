@@ -1,18 +1,16 @@
 import React from 'react';
-import { Button, useApiAction, Loader } from '@Common';
+import { Button, Loader } from '@Common';
 import { useDispatch } from 'react-redux';
 import { removeChannel as removeChannelFromState } from '@Store/slices/channels';
 
-import removeChannel from '../services/removeChannel'
+import useDeleteChannel from '../hooks/useDeleteChannel';
 
 const RemoveChannelConfirmation = ({toggle, channelId}) => {
     const dispatch = useDispatch();
-    const { loaded: channelRemoved, sendAction: removeChannelAction } = useApiAction(
-        () => removeChannel(channelId),
-    );
+    const { channelRemoved, removeChannelAction } = useDeleteChannel();
 
     const handleChannelRemove = async () => {
-        const { status, data } = await removeChannelAction();
+        const { status, data } = await removeChannelAction(channelId);
 
         toggle();
         if(status === 200) {

@@ -7,6 +7,7 @@ import { addError } from '@Store/slices/errors';
 const useFetchData = (
   fetchAction,
   deps = [],
+  handleErrors = true
 ) => {
   const [result, setResult] = useState(null);
   const [loaded, setLoaded] = useState(true);
@@ -22,10 +23,12 @@ const useFetchData = (
         const { status, data } = response;
         const { message } = data;
 
-        if(message) {
-          dispatch(addError(message));
-        } else {
-          dispatch(addError("Something went wrong"));
+        if(handleErrors) {
+          if(message) {
+            dispatch(addError(message));
+          } else {
+            dispatch(addError("Something went wrong"));
+          }
         }
 
         return { status, data };

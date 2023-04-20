@@ -7,6 +7,7 @@ namespace pinger_api_service
         public Task<ContactedUserInfo?> GetContactedUserInfoAsync(string ownerId, string contactedUserId);
         public Task<ContactedUserInfo> AddContactedUser(string ownerId, string contactedUserId, int chatSpaceId);
         public Task UpdateContactedUser(ContactedUserInfo contactedUserInfo, DateTime lastReadTime);
+        public Task<ContactedUserInfo?> GetContactedUserAsync(string contactedUserId, int chatspaceId, string ownerId);
     }
 
     public class ContactedUsersManager : IContactedUsersManager
@@ -62,6 +63,18 @@ namespace pinger_api_service
 
             return contactedUserInfo;
         }
+        
+        public async Task<ContactedUserInfo?> GetContactedUserAsync(string contactedUserId, int chatspaceId, string ownerId) 
+        {
+            return await _dbContext.ContactedUserInfo
+                .Include(cui => cui.Owner)
+                .Include(cui => cui.ContactedUser)
+                .ThenInclude(cu => cu.ProfileImageFile)
+                .Include(cui => cui.ChatSpace)
+                .Where(cui => cui.ChatSpace.Id == chatspaceId)
+                .Where(cui => cui.Owner.Id == ownerId)
+                .FirstOrDefaultAsync(cui => cui.ContactedUser.Id == contactedUserId);
+        }
 
         public async Task<List<ContactedUserInfo>?> GetContactedUsers(string userId, int chatSpaceId)
         {
@@ -87,4 +100,5 @@ namespace pinger_api_service
             return null;
         }
     }
+
 }

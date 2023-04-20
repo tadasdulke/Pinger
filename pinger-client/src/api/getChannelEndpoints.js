@@ -31,6 +31,21 @@ const getChannelEndpoints = (instance) => {
     };
   };
 
+  const getChatSpaceChannels = async () => {
+    const response = await instance.get(`${API_SERVICE_ENDPOINTS.CHANNELS}/chatspace`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const { status, data } = response;
+
+    return {
+      status,
+      data,
+    };
+  };
+
   const getChannel = async (channelId) => {
     const response = await instance.get(`${API_SERVICE_ENDPOINTS.CHANNELS}/${channelId}`, {
       headers: {
@@ -129,7 +144,8 @@ const getChannelEndpoints = (instance) => {
     removeUserFromChannel,
     editChannel,
     removeChannel,
-    getChannelMembers
+    getChannelMembers,
+    getChatSpaceChannels
   };
 };
 

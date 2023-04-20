@@ -48,6 +48,31 @@ namespace pinger_api_service
         }
 
         [Authorize]
+        [HttpGet]
+        [Route("{contactedUserId}")]
+        public async Task<ActionResult<ContactedUserInfoDto>> GetContactedUser([FromRoute] string contactedUserId)
+        {
+            string ownerId = _userManager.GetUserId(User);
+            int chatspaceId = _userManager.GetChatSpaceId(User);
+            
+            ContactedUserInfo? contactedUserInfo = await _contactedUsersManager.GetContactedUserAsync(contactedUserId, chatspaceId, ownerId);
+
+            if(contactedUserInfo is null) {
+                return NotFound(new Error("Contacted user not found"));
+            }
+
+            List<User>? chatSpaceMembers = await _chatSpaceManager.GetChatSpaceMembers(chatspaceId);
+
+            if(chatSpaceMembers is null) {
+                return NotFound(new Error("Chatspace not found"));
+            }
+
+            bool contactedUserExistsInChatSpace = chatSpaceMembers.Any(m => m.Id == contactedUserId);
+
+            return new ContactedUserInfoDto(contactedUserInfo, contactedUserExistsInChatSpace);
+        }
+
+        [Authorize]
         [HttpPut]
         [Route("{contactedUserId}/readtime")]
         public async Task<IActionResult> UpdateContactedUserReadTime([FromRoute] string contactedUserId)

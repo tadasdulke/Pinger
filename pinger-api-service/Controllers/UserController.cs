@@ -55,6 +55,7 @@ namespace pinger_api_service
 
         [Authorize]
         [HttpGet]
+        [Route("self")]
         public async Task<ActionResult<UserDto>> GetUser()
         {
             string userId = _userManager.GetUserId(User);
@@ -65,6 +66,26 @@ namespace pinger_api_service
             }
 
             return new UserDto(user);    
+        }
+        [Authorize]
+        [HttpGet]
+        public async Task<ActionResult<List<UserDto>>> GetAllUsers()
+        {
+            string userId = _userManager.GetUserId(User);
+            int chatSpaceId = _userManager.GetChatSpaceId(User);
+            ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatSpaceId);
+
+            if(chatSpace is null) {
+                return NotFound(new Error("ChatSpace not found"));
+            }
+
+            if(chatSpace.Owner.Id != userId) {
+                return Unauthorized(new Error("Action can only be done by chatspace owner"));
+            }
+
+            List<User> users = await _dbContext.Users.ToListAsync();
+
+            return users.Select(u => new UserDto(u)).ToList();    
         }
     }
 } 

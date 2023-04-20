@@ -31,6 +31,21 @@ const getContactedUsersEndpoints = (instance) => {
     };
   };
 
+  const getContactedUser = async (contactedUserId) => {
+    const response = await instance.get(`${API_SERVICE_ENDPOINTS.USERS_CONTACTED_USERS}/${contactedUserId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const { status, data } = response;
+
+    return {
+      status,
+      data,
+    };
+  };
+
   const updateContactedUserReadTime = async (contactedUserId) => {
     const response = await instance.put(`${API_SERVICE_ENDPOINTS.USERS_CONTACTED_USERS}/${contactedUserId}/readtime`, {
       headers: {
@@ -49,7 +64,8 @@ const getContactedUsersEndpoints = (instance) => {
   return {
     addContactedUser,
     getContactedUsers,
-    updateContactedUserReadTime
+    updateContactedUserReadTime,
+    getContactedUser
   };
 };
 

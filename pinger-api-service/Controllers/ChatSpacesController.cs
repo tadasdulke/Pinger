@@ -167,6 +167,33 @@ namespace pinger_api_service
 
             return new UserDto(foundMember);
         }
+        [Authorize]
+        [HttpPost("members/{memberId}")]
+        public async Task<IActionResult> InviteUserToChatSpace([FromRoute] string memberId)
+        {
+            int chatspaceId = _userManager.GetChatSpaceId(User);
+            ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatspaceId);
+            
+            if(chatSpace is null) {
+                return NotFound(new Error("Chatspace not found"));
+            }
+
+            string ownerId = _userManager.GetUserId(User);
+            if(chatSpace.Owner.Id == ownerId) {
+                return Unauthorized(new Error("Users can only be invited by chatspace owner"));
+            }
+
+            User? userToAdd = await _userManager.FindByIdAsync(memberId);
+
+            if(userToAdd is null) {
+                return NotFound(new Error("User does not exist"));
+            }
+
+            userToAdd.InvitedChatSpaces.Add(chatSpace);
+            await _dbContext.SaveChangesAsync();
+
+            return NoContent();
+        }
 
         [Authorize]
         [HttpDelete("members/{memberId}")]

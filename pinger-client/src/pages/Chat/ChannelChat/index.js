@@ -24,6 +24,7 @@ import useChannelMessages from './hooks/useChannelMessages';
 import sendMessage from './utils/sendMessage';
 import handleMesaageRemove from './utils/handleMesaageRemove';
 import handleMessageEdit from './utils/handleMessageEdit';
+import { addNotification } from '../../../store/slices/notifications';
 
 function ChannelChat() {
     const navigate = useNavigate();
@@ -32,6 +33,7 @@ function ChannelChat() {
   const [expanded, setExpanded] = useState(false);
   const [messageValue, setMessageValue] = useState('');
   const { userId: currentUserId } = useSelector((state) => state.auth);
+  const { currentWorkspaceId } = useSelector((state) => state.workspace);
   const { channelId } = useParams();
   const convertedChannelId = parseInt(channelId);
   const { connection } = useOutletContext();
@@ -113,10 +115,16 @@ function ChannelChat() {
 
   useEffect(() => {
     const callBack = (channel) => {
-      const {id} = channel;
+      const {id, chatSpace, name} = channel;
+      if(chatSpace.id === currentWorkspaceId) {
+        dispatch(addNotification({
+          notification: `You were removed from ${name} channel`,
+          type: "danger",
+        }))
 
-      if(convertedChannelId === id) {
-        navigate(ROUTES.USE_CHATSPACE)
+        if(convertedChannelId === id) {
+          navigate(ROUTES.USE_CHATSPACE)
+        }
       }
     };
 
@@ -125,7 +133,7 @@ function ChannelChat() {
     return () => {
       connection.off('UserRemovedFromChannel', callBack);
     };
-  }, [convertedChannelId]);
+  }, [convertedChannelId, currentWorkspaceId]);
 
   return (
     <ChatWindow

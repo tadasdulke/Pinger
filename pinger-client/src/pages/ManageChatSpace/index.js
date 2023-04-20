@@ -4,6 +4,8 @@ import { Expandable } from '@Common';
 
 import ManageChatSapceInfo from './ManageChatSpaceInfo';
 import ManageChatSpaceMembers from './ManageChatSpaceMembers';
+import ManageChatSpaceChannels from './ManageChatSpaceChannels';
+import InviteMembers from './InviteMembers';
 
 const ManageChatSpace = () => {
 
@@ -17,12 +19,8 @@ const ManageChatSpace = () => {
             </div>
             <ManageChatSapceInfo/>
             <ManageChatSpaceMembers/>
-            <Expandable text="Manage chatspace users">
-                manage chatspace channels
-            </Expandable>
-            <Expandable text="Invite users">
-                invite users
-            </Expandable>
+            <ManageChatSpaceChannels/>
+            <InviteMembers/>
           </Col>
         </Row>
       );

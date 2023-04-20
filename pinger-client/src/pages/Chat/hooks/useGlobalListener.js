@@ -13,7 +13,6 @@ const useGlobalListener = (connection) => {
     useEffect(() => {
         if(connection) {
             const callBack = async (data) => {
-                console.log(data);
                 const isActiveWorkspace = data.id === currentWorkspaceId;
     
                 if(isActiveWorkspace) {
