@@ -2,7 +2,7 @@ import React, {useEffect} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { ReactSVG } from 'react-svg';
 import { getUnreadPrivateMessages } from '@Services';
-import { useFetchData, useApiAction } from '@Common'
+import { useFetchData, useApiAction, Loader } from '@Common'
 import { addContactedUser, highlightUser } from '@Store/slices/contactedUsers';
 import ContactedUserItem from './ContactedUserItem';
 import getContactedUsers from '../../services/getContactedUsers';
@@ -15,7 +15,7 @@ const ContactedUsersList = ({connection}) => {
     const { occupierInfo: chatOccupierInfo, isAtButton } = useSelector((state) => state.chat);
 
 
-    const { result: contactedUsersResult } = useFetchData(
+    const { result: contactedUsersResult, loaded: contactedUsersLoaded } = useFetchData(
         getContactedUsers,
     );
 
@@ -87,29 +87,30 @@ const ContactedUsersList = ({connection}) => {
               <span className="ml-[10px] py-[10px]">Private messages</span>
               </div>
               <div className="flex items-start flex-col">
-              {contactedUsers.map(({
-                  id, userName, profilePictureId, highlighted,
-              }) => (
-                  <ContactedUserItem
-                      key={id}
-                      id={id}
-                      userName={userName}
-                      profilePictureId={profilePictureId}
-                      highlighted={highlighted} 
-                  />
-              ))}
-              <ListItem to="chatspace-users">
-                <div className="flex items-center text-left">
-                  <ReactSVG
-                    src="http://localhost:5122/public/icons/users.svg"
-                    beforeInjection={(svg) => {
-                      svg.setAttribute('width', '24px');
-                      svg.setAttribute('height', '24px');
-                    }}  
-                  />
-                  <span className="ml-[10px]">See all users</span>
-                </div>
-              </ListItem>
+                <Loader height={30} loaded={contactedUsersLoaded} />
+                {contactedUsers.map(({
+                    id, userName, profilePictureId, highlighted,
+                }) => (
+                    <ContactedUserItem
+                        key={id}
+                        id={id}
+                        userName={userName}
+                        profilePictureId={profilePictureId}
+                        highlighted={highlighted} 
+                    />
+                ))}
+                <ListItem to="chatspace-users">
+                  <div className="flex items-center text-left">
+                    <ReactSVG
+                      src="http://localhost:5122/public/icons/users.svg"
+                      beforeInjection={(svg) => {
+                        svg.setAttribute('width', '24px');
+                        svg.setAttribute('height', '24px');
+                      }}  
+                    />
+                    <span className="ml-[10px]">See all users</span>
+                  </div>
+                </ListItem>
             </div>
         </>
     )

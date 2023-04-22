@@ -2,7 +2,7 @@ import React, {useEffect} from 'react';
 import { ReactSVG } from 'react-svg';
 import { useDispatch, useSelector } from 'react-redux';
 import { addChannel, highlightChannel, removeChannel } from '@Store/slices/channels';
-import { useFetchData } from '@Common';
+import { useFetchData, Loader } from '@Common';
 import { getUnreadChannelMessages, getChannels } from '@Services';
 import { ROUTES } from '@Router';
 import ListItem from './ListItem';
@@ -16,7 +16,7 @@ const ChannelList = ({connection}) => {
     const { currentWorkspaceId } = useSelector((state) => state.workspace);
     const { occupierInfo: chatOccupierInfo, isAtButton, chatType } = useSelector((state) => state.chat);
   
-    const { result: channelsResult } = useFetchData(
+    const { result: channelsResult, loaded: channelsLoaded } = useFetchData(
       getChannels,
     );
   
@@ -112,6 +112,7 @@ const ChannelList = ({connection}) => {
             <span className="ml-[10px] py-[10px]">Channels</span>
           </div>
           <div className="flex flex-col items-start">
+            <Loader height={30} loaded={channelsLoaded} />
             {channels.map(({ name, id, highlighted }) => (
               <ListItem
                 key={id}

@@ -30,7 +30,7 @@ function PrivateChat() {
   const { connection } = useOutletContext();
   const { receiverId } = useParams();
   const [expanded, setExpanded] = useState(false);
-  const { contactedUserInfo, contactedUserInfoLoaded } = useFetchContactedUser(receiverId);
+  const { contactedUserInfo } = useFetchContactedUser(receiverId, [receiverId]);
 
   const { sendAction: updateContactedUserReadTimeAction } = useApiAction(
       () => updateContactedUserReadTime(receiverId),
@@ -111,7 +111,7 @@ function PrivateChat() {
     <ChatWindow
       messageFieldHidden={!contactedUserInfo?.existsInChatSpace}
       receiverInfo={(
-        <div className={cx("flex items-center", {hidden: !contactedUserInfo})}>
+        <div className={cx("flex items-center ", {hidden: !contactedUserInfo})}>
           <div className="min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px]">
             {profileImageSrc && (
             <img

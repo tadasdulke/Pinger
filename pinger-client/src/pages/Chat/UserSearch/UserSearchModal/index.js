@@ -45,11 +45,11 @@ function UserSearchModal({ setShowModal }) {
         {loaded ? (
           <>
             <UserList
-              users={chatSpaceMembersResult?.data}
+              users={chatSpaceMembersResult?.data?.slice(0, 3)}
               onClickItem={() => setShowModal(false)}
             />
             <ChannelList
-              channels={channelsResult?.data}
+              channels={channelsResult?.data?.slice(0, 3)}
               onClickItem={() => setShowModal(false)}
             />
           </>
