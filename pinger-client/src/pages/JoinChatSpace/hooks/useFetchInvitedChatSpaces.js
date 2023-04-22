@@ -4,12 +4,13 @@ import { useFetchData } from '@Common'
 import getInvitedChatSpaces from '../serivces/getInvitedChatSpaces'
 
 const useFetchInvitedChatSpaces = () => {
-    const { result: invitedChatSpaces } = useFetchData(
+    const { loaded: invitedChatSpacesLoaded, result: invitedChatSpaces } = useFetchData(
         getInvitedChatSpaces,
      );
 
 
     return {
+        invitedChatSpacesLoaded,
         invitedChatSpaces,
     }
 }

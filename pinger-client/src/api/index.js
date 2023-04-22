@@ -20,7 +20,11 @@ export const createPingerClient = () => {
   });
 
   const {
-    getToken, handleRegistration, refreshToken, appendClaims, revokeToken,
+    getToken, 
+    handleRegistration, 
+    refreshToken, 
+    appendClaims, 
+    revokeToken,
   } = getAuthEndpoints(instance);
   const {
     getUserChatSpaces,
@@ -32,7 +36,10 @@ export const createPingerClient = () => {
     getChatSpace,
     getInvitedChatSpaces,
     updateChatSpace,
-    removeChatSpaceMember
+    removeChatSpaceMember,
+    inviteUserToChatSpace,
+    acceptInvitation,
+    getInvitedUsers
   } = getChatSpaceEndpoints(instance);
   const { getSelf, updateSelf, getAllUsers } = getUserEndpoints(instance);
   const { addContactedUser, getContactedUsers, getContactedUser, updateContactedUserReadTime } = getContactedUsersEndpoints(instance);
@@ -47,7 +54,8 @@ export const createPingerClient = () => {
     editChannel, 
     removeChannel, 
     getChannelMembers,
-    getChatSpaceChannels
+    getChatSpaceChannels,
+    getAvailableChannels
   } = getChannelEndpoints(instance);
   const { updateChannelMessageReadTime } = getChannelMessageReadTimesEndpoints(instance);
   const { addPrivateMessageFile } = getPrivateMessageFileEndpoints(instance);
@@ -98,7 +106,11 @@ export const createPingerClient = () => {
     removeChatSpaceMember,
     getContactedUser,
     getChatSpaceChannels,
-    getAllUsers
+    getAllUsers,
+    inviteUserToChatSpace,
+    acceptInvitation,
+    getInvitedUsers,
+    getAvailableChannels
   };
 };
 

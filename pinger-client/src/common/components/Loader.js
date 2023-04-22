@@ -2,7 +2,7 @@ import React from 'react';
 import cx from 'classnames'
 import { RotatingLines } from 'react-loader-spinner';
 
-const Loader = ({className, children, loaded, loaderProps}) => {
+const Loader = ({className, children, loaded, loaderProps, height}) => {
 
     const getLoader = () => {
       if(loaded) {
@@ -19,6 +19,14 @@ const Loader = ({className, children, loaded, loaderProps}) => {
           />
       )
       
+      if(height) {
+        return (
+          <div className={`flex justify-center items-center h-[${height}px]`}>
+            {loader}
+          </div>
+        )
+      }
+
       if(!children) {
         return loader;
       }

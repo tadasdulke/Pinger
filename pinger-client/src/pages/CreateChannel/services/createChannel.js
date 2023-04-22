@@ -1,5 +1,5 @@
 import apiClient from '@Api';
 
-const createChannel = (name) => apiClient.createChannel(name);
+const createChannel = (name, isPrivate) => apiClient.createChannel(name, isPrivate);
 
 export default createChannel;

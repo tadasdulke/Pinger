@@ -3,7 +3,7 @@ import { getChannels } from '@Services';
 
 const useFetchChannels = (searchInput) => {
     const { loaded, result  } = useFetchData(
-        async () => searchInput && await getChannels(searchInput),
+        async () =>  await getChannels(searchInput),
         [searchInput],
     );
 

@@ -55,7 +55,7 @@ namespace pinger_api_service
                 return BadRequest(new Error("Channel with this name already exists in this chatspace"));
             }
 
-            Channel channel = await _channelManager.CreateChannel(channelToAdd.Name, owner, chatSpace);
+            Channel channel = await _channelManager.CreateChannel(channelToAdd.Name, channelToAdd.Private, owner, chatSpace);
             await _chathubConnectionManager.AddUserConnectionToChannelAsync(owner.ConnectionInformations.ToList(), channel);
 
             return new ChannelDto(channel);
@@ -129,7 +129,47 @@ namespace pinger_api_service
             }
 
 
-            List<Channel> channels = user.Channels.Where(c => c.ChatSpace.Id == chatSpaceId).ToList();
+            List<Channel> channels = user.Channels
+                .Where(c => c.ChatSpace.Id == chatSpaceId)
+                .ToList();
+
+            if(search is not null) {
+                channels = channels.Where(c => c.Name.Contains(search.ToLower())).ToList();
+            }
+
+            List<ChannelDto> channelDtos = channels.Select(c => new ChannelDto(c)).ToList();
+
+            return channelDtos;
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("available")]
+        public async Task<ActionResult<List<ChannelDto>>> GetAvailableChannels([FromQuery] string? search)
+        {
+            string userId = _userManager.GetUserId(User);
+            int chatSpaceId = _userManager.GetChatSpaceId(User);
+            ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatSpaceId);
+            
+            if(chatSpace is null) {
+                return NotFound(new Error("Chatspace not found"));
+            }
+
+            User? user = await _userManager.GetUserAsync(userId);
+            
+            if(user is null) {
+                return NotFound(new Error("User not found"));
+            }
+
+
+            List<Channel> joinedChannels = user.Channels
+                .Where(c => c.ChatSpace.Id == chatSpaceId)
+                .Where(c => c.Private == true)
+                .ToList();
+            List<Channel> publicChannels = chatSpace.Channel.Where(c => c.Private == false).ToList();
+
+            List<Channel> channels = joinedChannels.Concat(publicChannels).ToList();
+
             if(search is not null) {
                 channels = channels.Where(c => c.Name.Contains(search.ToLower())).ToList();
             }
@@ -189,7 +229,6 @@ namespace pinger_api_service
         [HttpPost("{channelId}/members")]
         public async Task<IActionResult> AddMembersToChannel([FromRoute] int channelId, AddUserToChannelRequest addUserToChannelRequest)
         {
-            string userId = _userManager.GetUserId(User);
             Channel? channel = await _channelManager.GetChannelAsync(channelId);
             
             if(channel is null) {
@@ -201,6 +240,13 @@ namespace pinger_api_service
             if(newMember is null) {
                 return NotFound(new Error("Member not found"));
             }
+
+            bool userAlreadyExists = newMember.Channels.Any(c => c.Id == channelId);
+
+            if(userAlreadyExists) {
+                return NoContent();
+            }
+
 
             await _channelManager.AddUserToChannel(newMember, channel);
             await _chathubConnectionManager.NotifyUserAddedToChannel(channel, newMember);

@@ -6,5 +6,6 @@ namespace pinger_api_service
     {
         [Required]
         public string Name { get; set; }
+        public bool Private { get; set; }
     }
 }

@@ -30,9 +30,9 @@ namespace pinger_api_service
 
         [Authorize]
         [HttpGet]
-        public async Task<ActionResult<List<ChatSpaceDto>>> GetChatSpaces()
+        public async Task<ActionResult<List<ChatSpaceDto>>> GetChatPublicSpaces()
         {
-            List<ChatSpace> chatSpaces = await _dbContext.ChatSpace.ToListAsync();
+            List<ChatSpace> chatSpaces = await _dbContext.ChatSpace.Where(c => c.Private == false).ToListAsync();
             return chatSpaces.Select(cs => new ChatSpaceDto(cs)).ToList();
         }
 
@@ -49,6 +49,48 @@ namespace pinger_api_service
             }
 
             return user.InvitedChatSpaces.Select(cs => new ChatSpaceDto(cs)).ToList();
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("invited-users")]
+        public async Task<ActionResult<List<UserDto>>> GetInvitedUsers()
+        {
+            int chatspaceId = _userManager.GetChatSpaceId(User);
+            string userId = _userManager.GetUserId(User);
+            ChatSpace? chatSpace = await _chatSpaceManager.GetChatSpaceById(chatspaceId);
+            
+            if(chatSpace is null) {
+                return BadRequest(new Error("Chatspace not found"));
+            }
+
+            return chatSpace.InvitedUsers.Select(u => new UserDto(u)).ToList();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("accept-invite/{chatSpaceId}")]
+        public async Task<IActionResult> AcceptInvitation(int chatSpaceId)
+        {
+            string userId = _userManager.GetUserId(User);
+            User? user = await _dbContext.Users.Include(u => u.InvitedChatSpaces).FirstOrDefaultAsync(u => u.Id == userId);
+            
+            if(user is null) {
+                return BadRequest(new Error("User not found"));
+            }
+
+            ChatSpace? invitedChatSpace = user.InvitedChatSpaces.FirstOrDefault(icp => icp.Id == chatSpaceId); 
+
+            if(invitedChatSpace is null) {
+                return BadRequest(new Error("User was not invited to this chatspace"));
+            }
+
+            user.ChatSpaces.Add(invitedChatSpace);
+            user.InvitedChatSpaces.Remove(invitedChatSpace);
+
+            await _dbContext.SaveChangesAsync();
+
+            return NoContent();
         }
 
         [Authorize]
@@ -179,7 +221,7 @@ namespace pinger_api_service
             }
 
             string ownerId = _userManager.GetUserId(User);
-            if(chatSpace.Owner.Id == ownerId) {
+            if(chatSpace.Owner.Id != ownerId) {
                 return Unauthorized(new Error("Users can only be invited by chatspace owner"));
             }
 

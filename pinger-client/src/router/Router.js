@@ -12,7 +12,9 @@ import {
   JoinChatSpace, 
   CreateChannel, 
   EditChannel, 
-  ManageChatSpace
+  ManageChatSpace,
+  ChatSpaceMembers,
+  ChatSpaceChannels
 } from '../pages'
 import AuthorizedRoute from './AuthorizedRoute'
 import UnauthorizedRoute from './UnauthorizedRoute'
@@ -110,6 +112,14 @@ const Router = () => {
           <Route
             path="manage-chatspace"
             element={<ManageChatSpace />}
+          />
+          <Route
+            path="chatspace-users"
+            element={<ChatSpaceMembers />}
+          />
+          <Route
+            path="chatspace-channels"
+            element={<ChatSpaceChannels />}
           />
         </Route>
         <Route

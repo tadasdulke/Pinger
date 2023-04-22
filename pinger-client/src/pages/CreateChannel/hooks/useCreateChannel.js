@@ -3,7 +3,7 @@ import createChannel from '../services/createChannel';
 
 const useCreateChannel = () => {
   const { loaded, sendAction } = useApiAction(
-    (name) => createChannel(name),
+    (name, isPrivate) => createChannel(name, isPrivate),
   );
 
   return {

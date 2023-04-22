@@ -15,8 +15,54 @@ const getChatSpaceEndpoints = (instance) => {
       data,
     };
   };
+  
   const getInvitedChatSpaces = async () => {
     const response = await instance.get(API_SERVICE_ENDPOINTS.INVITED_CHATSPACES, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const { status, data } = response;
+
+    return {
+      status,
+      data,
+    };
+  };
+  
+  const getInvitedUsers = async () => {
+    const response = await instance.get(`${API_SERVICE_ENDPOINTS.CHATSPACES}/invited-users`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const { status, data } = response;
+
+    return {
+      status,
+      data,
+    };
+  };
+  
+  const acceptInvitation = async (chatspaceId) => {
+    const response = await instance.post(`${API_SERVICE_ENDPOINTS.CHATSPACES}/accept-invite/${chatspaceId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const { status, data } = response;
+
+    return {
+      status,
+      data,
+    };
+  };
+
+  const inviteUserToChatSpace = async (userId) => {
+    const response = await instance.post(`${API_SERVICE_ENDPOINTS.CHATSPACE_MEMBERS}/${userId}`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -187,7 +233,10 @@ const getChatSpaceEndpoints = (instance) => {
     getChatSpace,
     getInvitedChatSpaces,
     updateChatSpace,
-    removeChatSpaceMember
+    removeChatSpaceMember,
+    inviteUserToChatSpace,
+    acceptInvitation,
+    getInvitedUsers
   };
 };
 

@@ -31,22 +31,23 @@ const  ManageChatSpaceChannels = () => {
         }
     }, [channeslResult])
 
+    const shouldShowInfoMessage = channelsFetched && channels.length <= 0;
+
     return (
         <Expandable text="Manage chatspace channels">
-            <Loader loaded={channelsFetched}>
-                <div className="flex flex-col w-full pt-[10px] px-[30px]">
-                    {channels.map(({id, name}) => (
-                        <Item 
-                            key={id} 
-                            buttonText="Remove" 
-                            onClick={() => handleRemove(id)}
-                        >
-                            {name}
-                        </Item>
-                    ))}
-                    {channels.length <= 0 && "There are no channels in this chatspace"}
-                </div>
-            </Loader>
+            <Loader height={30} loaded={channelsFetched} />
+            <div className="flex flex-col w-full pt-[10px] px-[30px]">
+                {channels.map(({id, name}) => (
+                    <Item 
+                        key={id} 
+                        buttonText="Remove" 
+                        onClick={() => handleRemove(id)}
+                    >
+                        {name}
+                    </Item>
+                ))}
+                {shouldShowInfoMessage && "There are no channels in this chatspace"}
+            </div>
         </Expandable>
     )
 }

@@ -1,8 +1,8 @@
 import { API_SERVICE_ENDPOINTS } from './config/constants';
 
 const getChannelEndpoints = (instance) => {
-  const createChannel = async (name) => {
-    const response = await instance.post(API_SERVICE_ENDPOINTS.CHANNELS, { name }, {
+  const createChannel = async (name, isPrivate) => {
+    const response = await instance.post(API_SERVICE_ENDPOINTS.CHANNELS, { name, private: isPrivate }, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -136,6 +136,21 @@ const getChannelEndpoints = (instance) => {
     };
   };
 
+  const getAvailableChannels = async () => {
+    const response = await instance.get(`${API_SERVICE_ENDPOINTS.CHANNELS}/available`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const { status, data } = response;
+
+    return {
+      status,
+      data,
+    };
+  };
+
   return {
     createChannel,
     getChannels,
@@ -145,7 +160,8 @@ const getChannelEndpoints = (instance) => {
     editChannel,
     removeChannel,
     getChannelMembers,
-    getChatSpaceChannels
+    getChatSpaceChannels,
+    getAvailableChannels
   };
 };
 

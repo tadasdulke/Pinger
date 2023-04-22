@@ -18,10 +18,14 @@ function CreateChannel() {
 
   const FIELDS = {
     NAME: 'NAME',
+    PRIVATE: 'PRIVATE',
   };
 
   const handleSubmit = async (values) => {
-    const { status, data } = await createChannel(values[FIELDS.NAME]);
+    const { status, data } = await createChannel(
+      values[FIELDS.NAME],
+      values[FIELDS.PRIVATE]
+    );
 
     if (status === 200) {
       const { id, name } = data;
@@ -60,8 +64,14 @@ function CreateChannel() {
                   value={values[FIELDS.NAME]}
                   onChange={handleChange}
                   labelClassName="text-white"
-                  wrapperClassName="mb-[20px] text-black"
+                  wrapperClassName="text-black"
                 />
+                <label className="mt-[10px] mb-[20px]">
+                  <Field type="checkbox" name={FIELDS.PRIVATE} />
+                  <span className="ml-[10px]">
+                    Private
+                  </span>
+                </label>
                 <Button type="submit" className="my-[10px] flex justify-center">
                   {!channelCreated
                     ? (

@@ -1,7 +1,5 @@
 import React from 'react';
 import { Row, Col } from 'react-grid-system';
-import { Expandable } from '@Common';
-
 import ManageChatSapceInfo from './ManageChatSpaceInfo';
 import ManageChatSpaceMembers from './ManageChatSpaceMembers';
 import ManageChatSpaceChannels from './ManageChatSpaceChannels';

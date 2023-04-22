@@ -7,3 +7,5 @@ export { default as JoinChatSpace } from './JoinChatSpace';
 export { default as CreateChannel } from './CreateChannel';
 export { default as EditChannel } from './EditChannel';
 export { default as ManageChatSpace } from './ManageChatSpace';
+export { default as ChatSpaceMembers } from './ChatSpaceMembers';
+export { default as ChatSpaceChannels } from './ChatSpaceChannels';

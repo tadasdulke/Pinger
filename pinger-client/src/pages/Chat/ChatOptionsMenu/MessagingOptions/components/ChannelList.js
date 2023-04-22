@@ -6,6 +6,7 @@ import { useFetchData } from '@Common';
 import { getUnreadChannelMessages, getChannels } from '@Services';
 import { ROUTES } from '@Router';
 import ListItem from './ListItem';
+import { addNotification } from '@Store/slices/notifications';
 
 
 const ChannelList = ({connection}) => {
@@ -75,13 +76,20 @@ const ChannelList = ({connection}) => {
     return () => {
       connection.off('UserAddedToChannel', callBack);
     };
-  }, []);
+  }, [currentWorkspaceId]);
 
 
   useEffect(() => {
     const callBack = (channel) => {
-      const {id} = channel;
-      dispatch(removeChannel({id}));
+      const {id, chatSpace, name} = channel;
+      if(chatSpace.id === currentWorkspaceId) {
+        dispatch(addNotification({
+          notification: `You were removed from ${name} channel`,
+          type: "danger",
+        }))
+  
+        dispatch(removeChannel({id}));
+      }
     };
 
     connection.on('UserRemovedFromChannel', callBack);
@@ -89,7 +97,7 @@ const ChannelList = ({connection}) => {
     return () => {
       connection.off('UserRemovedFromChannel', callBack);
     };
-  }, []);
+  }, [currentWorkspaceId]);
 
     return (
         <div className="mb-[20px]">
@@ -123,6 +131,18 @@ const ChannelList = ({connection}) => {
                   }}  
                 />
                 <span className="ml-[10px]">Create channel</span>
+              </div>
+            </ListItem>
+            <ListItem to="chatspace-channels">
+              <div className="flex items-center text-left">
+                <ReactSVG
+                  src="http://localhost:5122/public/icons/channel.svg"
+                  beforeInjection={(svg) => {
+                    svg.setAttribute('width', '24px');
+                    svg.setAttribute('height', '24px');
+                  }}  
+                />
+                <span className="ml-[10px]">See all channels</span>
               </div>
             </ListItem>
           </div>

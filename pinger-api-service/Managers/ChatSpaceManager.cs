@@ -20,6 +20,7 @@ namespace pinger_api_service
                 .ThenInclude(u => u.ProfileImageFile)
                 .Include(cs => cs.Members)
                 .ThenInclude(m => m.ConnectionInformations)
+                .Include(cs => cs.InvitedUsers)
                 .FirstOrDefaultAsync(chatspace => chatspace.Id == id);
             return chatspace;
         }

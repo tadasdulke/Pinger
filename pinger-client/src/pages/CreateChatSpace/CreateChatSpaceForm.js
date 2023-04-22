@@ -20,8 +20,6 @@ function CreateChatSpaceForm() {
   const { sendAction } = useCreateChatSpace();
 
   const handleSubmit = async (values) => {
-    
-    console.log(values)
     const name = values[FIELDS.NAME];
     const isPrivate = values[FIELDS.PRIVATE];
     const {status} = await sendAction(name, isPrivate);

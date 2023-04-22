@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 namespace pinger_api_service
 {
     public interface IChannelManager {
-        public Task<Channel> CreateChannel(string name, User owner, ChatSpace chatSpace);
+        public Task<Channel> CreateChannel(string name, bool isPrivate, User owner, ChatSpace chatSpace);
         public Task<Channel> UpdateChannel(Channel channel, string name);
         public Task<Channel?> GetChannelAsync(int channelId);
         public Task RemoveChannel(Channel channel);
@@ -33,10 +33,11 @@ namespace pinger_api_service
             _channelMessageManager = channelMessageManager;
         }
 
-        public async Task<Channel> CreateChannel(string name, User owner, ChatSpace chatSpace) {
+        public async Task<Channel> CreateChannel(string name, bool isPrivate, User owner, ChatSpace chatSpace) {
             Channel newChannel = new Channel {
                 Name = name,
                 Owner = owner,
+                Private = isPrivate,
                 Members = new List<User>{ owner },
                 ChatSpace = chatSpace
             };

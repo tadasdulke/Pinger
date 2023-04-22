@@ -115,12 +115,8 @@ function ChannelChat() {
 
   useEffect(() => {
     const callBack = (channel) => {
-      const {id, chatSpace, name} = channel;
+      const {id, chatSpace} = channel;
       if(chatSpace.id === currentWorkspaceId) {
-        dispatch(addNotification({
-          notification: `You were removed from ${name} channel`,
-          type: "danger",
-        }))
 
         if(convertedChannelId === id) {
           navigate(ROUTES.USE_CHATSPACE)

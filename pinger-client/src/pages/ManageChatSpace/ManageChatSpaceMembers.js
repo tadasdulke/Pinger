@@ -35,22 +35,23 @@ const  ManageChatSpaceMembers = () => {
         }
     }, [chatSpaceMembersResult])
 
+    const shouldShowInfoMessage = chatSpaceMembersLoaded && members.length <= 0;
+
     return (
         <Expandable text="Manage chatspace members">
-            <Loader loaded={chatSpaceMembersLoaded}>
-                <div className="flex flex-col w-full pt-[10px] px-[30px]">
-                    {members.map(({id, userName}) => (
-                        <Item 
-                            key={id} 
-                            buttonText="Remove" 
-                            onClick={() => handleRemove(id)}
-                        >
-                            {userName}
-                        </Item>
-                    ))}
-                    {members.length <= 0 && "There are no members in this chatspace"}
-                </div>
-            </Loader>
+            <Loader height={30} loaded={chatSpaceMembersLoaded}/>
+            <div className="flex flex-col w-full pt-[10px] px-[30px]">
+                {members.map(({id, userName}) => (
+                    <Item 
+                        key={id} 
+                        buttonText="Remove" 
+                        onClick={() => handleRemove(id)}
+                    >
+                        {userName}
+                    </Item>
+                ))}
+                {shouldShowInfoMessage && "There are no members in this chatspace"}
+            </div>
         </Expandable>
     )
 }
