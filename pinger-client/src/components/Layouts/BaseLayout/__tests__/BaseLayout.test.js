@@ -6,6 +6,10 @@ jest.mock("@Components", () => ({
     ErrorHandler: () => null
 }))
 
+jest.mock("@Common", () => ({
+    NotificationHandler: () => null
+}))
+
 describe('BaseLayout', () => {
     it('should render children', () => {
         const children = "Hello"

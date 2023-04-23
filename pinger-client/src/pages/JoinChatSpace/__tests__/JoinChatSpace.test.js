@@ -4,12 +4,27 @@ import { useNavigate } from 'react-router-dom';
 import JoinChatSpace from '..'
 import { ROUTES } from '@Router'
 
-import { useFetchAllChatSpaces, useJoinChatSpace, useFetchUserChatSpaces } from '../hooks';
+import { 
+    useFetchAllChatSpaces, 
+    useJoinChatSpace, 
+    useFetchUserChatSpaces,
+    useFetchInvitedChatSpaces,
+    useAcceptInvitation
+} from '../hooks';
 
 jest.mock('../hooks', () => ({
-    useFetchAllChatSpaces: jest.fn(),
+    useFetchAllChatSpaces: jest.fn(), 
     useFetchUserChatSpaces: jest.fn(),
     useJoinChatSpace: jest.fn(),
+    useAcceptInvitation: jest.fn().mockReturnValue({
+        acceptInvitationAction: jest.fn()
+    }),
+    useFetchInvitedChatSpaces: jest.fn().mockReturnValue({
+        invitedChatSpacesLoaded: true,
+        invitedChatSpaces: {
+            data: null,
+        }
+    }),
 }))
 
 
@@ -48,8 +63,8 @@ describe('JoinChatSpace', () => {
             ...alreadyJoinedChatSpaces
         ]
 
-        useFetchAllChatSpaces.mockReturnValue({ allChatSpaces: { data: allChatSpaces} })
-        useFetchUserChatSpaces.mockReturnValue({ joinedChatSpaces: { data: alreadyJoinedChatSpaces} })
+        useFetchAllChatSpaces.mockReturnValue({ allChatSpacesLoaded: true, allChatSpaces: { data: allChatSpaces} })
+        useFetchUserChatSpaces.mockReturnValue({ joinedChatSpacesLoaded: true, joinedChatSpaces: { data: alreadyJoinedChatSpaces} })
         useJoinChatSpace.mockReturnValue({ joinChatSpace: jest.fn()})
 
         const { getByText, queryByText } = render(<JoinChatSpace/>);
@@ -77,13 +92,13 @@ describe('JoinChatSpace', () => {
 
         const allChatSpaces = alreadyJoinedChatSpaces
 
-        useFetchAllChatSpaces.mockReturnValue({ allChatSpaces: { data: allChatSpaces} })
-        useFetchUserChatSpaces.mockReturnValue({ joinedChatSpaces: { data: alreadyJoinedChatSpaces} })
+        useFetchAllChatSpaces.mockReturnValue({ allChatSpacesLoaded: true, allChatSpaces: { data: allChatSpaces} })
+        useFetchUserChatSpaces.mockReturnValue({ joinedChatSpacesLoaded: true, joinedChatSpaces: { data: alreadyJoinedChatSpaces} })
         useJoinChatSpace.mockReturnValue({ joinChatSpace: jest.fn()})
 
         const { getByText, queryByText } = render(<JoinChatSpace/>);
         
-        expect(getByText("There are no available chatspaces that you can join")).toBeInTheDocument();
+        expect(getByText("There are no available chatspaces to join")).toBeInTheDocument();
         
         allChatSpaces.forEach(({name}) => {
             expect(queryByText(name)).not.toBeInTheDocument();
@@ -91,13 +106,13 @@ describe('JoinChatSpace', () => {
     });
 
     it('should show info message when no chatspaces are fetched', () => {
-        useFetchAllChatSpaces.mockReturnValue({ allChatSpaces: null })
-        useFetchUserChatSpaces.mockReturnValue({ joinedChatSpaces: null })
+        useFetchAllChatSpaces.mockReturnValue({ allChatSpacesLoaded: true, allChatSpaces: null })
+        useFetchUserChatSpaces.mockReturnValue({ joinedChatSpacesLoaded: true, joinedChatSpaces: null })
         useJoinChatSpace.mockReturnValue({ joinChatSpace: jest.fn()})
 
         const { getByText } = render(<JoinChatSpace/>);
         
-        expect(getByText("There are no available chatspaces that you can join")).toBeInTheDocument();
+        expect(getByText("There are no available chatspaces to join")).toBeInTheDocument();
     });
     
     it('should navigate user to chatspace env', async () => {
@@ -108,8 +123,8 @@ describe('JoinChatSpace', () => {
             },
         ]
 
-        useFetchAllChatSpaces.mockReturnValue({ allChatSpaces: {data: alreadyJoinedChatSpaces} })
-        useFetchUserChatSpaces.mockReturnValue({ joinedChatSpaces: {data: []} })
+        useFetchAllChatSpaces.mockReturnValue({ allChatSpacesLoaded: true, allChatSpaces: {data: alreadyJoinedChatSpaces} })
+        useFetchUserChatSpaces.mockReturnValue({ joinedChatSpacesLoaded: true, joinedChatSpaces: {data: []} })
         const joinChatSpaceAction = jest.fn().mockResolvedValue({status: 204});
         useJoinChatSpace.mockReturnValue({ joinChatSpace: joinChatSpaceAction})
         const navigateMock = jest.fn();
@@ -117,7 +132,7 @@ describe('JoinChatSpace', () => {
     
         const { getByText } = render(<JoinChatSpace/>);
         
-        const chatSpaceButton = getByText(alreadyJoinedChatSpaces[0].name);
+        const chatSpaceButton = getByText("Join");
 
         await act(() => {
             fireEvent.click(chatSpaceButton)
@@ -125,6 +140,36 @@ describe('JoinChatSpace', () => {
 
         expect(joinChatSpaceAction).toBeCalledTimes(1);
         expect(joinChatSpaceAction).toBeCalledWith(alreadyJoinedChatSpaces[0].id);
+        expect(navigateMock).toBeCalledWith(ROUTES.CHATSPACES);
+    });
+    
+    it('should accept invitation', async () => {
+        const invitedChatSpacesResult = [
+            {
+                id: 1,
+                name: "KTU"
+            },
+        ]
+
+        useFetchAllChatSpaces.mockReturnValue({ allChatSpacesLoaded: true, allChatSpaces: {data: []} })
+        useFetchUserChatSpaces.mockReturnValue({ joinedChatSpacesLoaded: true, joinedChatSpaces: {data: []} })
+        useFetchInvitedChatSpaces.mockReturnValue({ invitedChatSpaces: { data: invitedChatSpacesResult }, invitedChatSpacesLoaded: true })
+
+        const acceptInvitationAction = jest.fn().mockResolvedValue({status: 204});
+        useAcceptInvitation.mockReturnValue({ acceptInvitationAction})
+        const navigateMock = jest.fn();
+        useNavigate.mockReturnValue(navigateMock);
+    
+        const { getByText } = render(<JoinChatSpace/>);
+        
+        const chatSpaceButton = getByText("Accept invite");
+
+        await act(() => {
+            fireEvent.click(chatSpaceButton)
+        });
+
+        expect(acceptInvitationAction).toBeCalledTimes(1);
+        expect(acceptInvitationAction).toBeCalledWith(invitedChatSpacesResult[0].id);
         expect(navigateMock).toBeCalledWith(ROUTES.CHATSPACES);
     });
 });

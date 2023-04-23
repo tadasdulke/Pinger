@@ -20,7 +20,7 @@ describe('getUserEndpoints', () => {
 
         const result = await getSelf();
 
-        expect(getMock).toBeCalledWith(API_SERVICE_ENDPOINTS.USERS, {
+        expect(getMock).toBeCalledWith(`${API_SERVICE_ENDPOINTS.USERS}/self`, {
             headers: {
                 'Content-Type': 'application/json',
             }

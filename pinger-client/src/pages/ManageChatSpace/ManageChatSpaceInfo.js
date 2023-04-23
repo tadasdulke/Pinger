@@ -35,7 +35,7 @@ const ManageChatSapceInfo = () => {
         }
     };
 
-
+    console.log(result)
     return (
         <Expandable text="Chatspace info">
             <div className="px-[30px]">

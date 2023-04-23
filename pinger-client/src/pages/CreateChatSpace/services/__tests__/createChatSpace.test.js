@@ -8,9 +8,9 @@ describe('createChatSpace', () => {
     
     apiClient.createChatSpace = jest.fn().mockResolvedValue(expectedRespone);
     
-    const actualResponse = await createChatSpace(chatSpaceName);
+    const actualResponse = await createChatSpace(chatSpaceName, false);
     expect(actualResponse).toEqual(expectedRespone);
-    expect(apiClient.createChatSpace).toBeCalledWith(chatSpaceName);
+    expect(apiClient.createChatSpace).toBeCalledWith(chatSpaceName, false);
   });
   
   test('should return error', async () => {

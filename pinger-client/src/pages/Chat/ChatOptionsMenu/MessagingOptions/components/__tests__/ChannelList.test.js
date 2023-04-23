@@ -11,7 +11,8 @@ jest.mock("@Services", () => ({
 }))
 
 jest.mock("@Common", () => ({
-    useFetchData: jest.fn().mockReturnValue({})
+    useFetchData: jest.fn().mockReturnValue({}),
+    Loader: () => <div>Loading</div>
 }))
 
 jest.mock('react-redux', () => ({

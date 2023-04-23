@@ -48,6 +48,7 @@ function CreateChannel() {
             onSubmit={handleSubmit}
             initialValues={{
               [FIELDS.NAME]: '',
+              [FIELDS.PRIVATE]: false,
             }}
             validationSchema={Yup.object().shape({
               [FIELDS.NAME]: Yup.string().trim().required('Required'),

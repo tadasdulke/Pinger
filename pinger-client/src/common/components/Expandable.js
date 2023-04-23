@@ -11,7 +11,11 @@ const Expandable = ({text, children}) => {
                 <h2 className="text-xl">
                     {text}
                 </h2>
-                <button onClick={() => setExpanded(!expanded)} className={cx({"rotate-180": expanded})}>
+                <button 
+                    data-testid="expand-button" 
+                    onClick={() => setExpanded(!expanded)} 
+                    className={cx({"rotate-180": expanded})}
+                >
                     <ReactSVG
                         src="http://localhost:5122/public/icons/arrow-down.svg"
                         beforeInjection={(svg) => {

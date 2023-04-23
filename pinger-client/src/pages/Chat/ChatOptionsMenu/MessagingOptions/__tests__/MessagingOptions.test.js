@@ -12,7 +12,10 @@ jest.mock('@Common', () => ({
 }))
 
 jest.mock('react-redux', () => ({
-    useDispatch: jest.fn()
+    useDispatch: jest.fn(),
+    useSelector: jest.fn().mockReturnValue({
+        isOwner: true
+    })
 }))
 
 jest.mock('react-router-dom', () => ({

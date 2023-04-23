@@ -1,11 +1,12 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import useFetchChatSpace from '../hooks/useFetchChatSpace';
 
 jest.mock('react-redux', () => ({
-    useSelector: jest.fn()
+    useSelector: jest.fn(),
+    useDispatch: jest.fn(),
 }))
 
 jest.mock('../hooks/useFetchChatSpace', () => ({
@@ -17,17 +18,24 @@ import ChatSpaceInformation from '..';
 
 describe('ChatSpaceInformation', () => {
     it('should render fetched chat space info', () => {
+        const dispatchMock = jest.fn();
+        useDispatch.mockReturnValue(dispatchMock)
         const chatSpaceName = "test";
         useFetchChatSpace.mockReturnValue({
             result: {
                 data: {
-                    name: chatSpaceName
+                    name: chatSpaceName,
+                    owner: {
+                        id: "ownerId"
+                    }
                 }
             }
         })
 
         useSelector.mockReturnValue({
-            currentWorkspaceId: 1
+            currentWorkspaceId: 1,
+            name: "test",
+            userId: "userId",
         })
 
         const { getByText } = render(

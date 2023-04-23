@@ -74,7 +74,7 @@ describe('LoginForm', () => {
             fireEvent.click(createButton)
         });
 
-        expect(createChatSpaceActionMock).toBeCalledWith(chatSpaceName);
+        expect(createChatSpaceActionMock).toBeCalledWith(chatSpaceName, false);
         expect(createChatSpaceActionMock).toBeCalledTimes(1);
         expect(navigateMock).toBeCalledWith(ROUTES.CHATSPACES)
     });

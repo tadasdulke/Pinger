@@ -60,7 +60,7 @@ function JoinChatSpace() {
 
   const resolvePublicChatSpaces = () => {
     if(!allChatSpaces || !joinedChatSpaces) {
-      return null;
+      return [];
     }
 
     return allChatSpaces.data.filter(chatSpace => !joinedChatSpaces.data.some(joinedChatSpace => joinedChatSpace.id === chatSpace.id) )
@@ -71,7 +71,7 @@ function JoinChatSpace() {
 
   const shouldShowPublicChatSpacesInfoMessage = allChatSpacesLoaded && joinedChatSpacesLoaded && publicChatspacesToDisplay?.length <= 0;
   const shouldShowInvitedInfoMessage = invitedChatSpacesLoaded && chatSpacesWithInvites <= 0;
-
+  
   return (
     <Container>
       <Row>
@@ -93,7 +93,7 @@ function JoinChatSpace() {
                 buttonText="Join"
               />
             ))}
-            {shouldShowPublicChatSpacesInfoMessage && <p className="text-white my-[10px]">There are no available chatspaces that you can join</p>}
+            {shouldShowPublicChatSpacesInfoMessage && <p className="text-white my-[10px]">There are no available chatspaces to join</p>}
           </div>
           <div>
           <h2 className="text-white text-xl">

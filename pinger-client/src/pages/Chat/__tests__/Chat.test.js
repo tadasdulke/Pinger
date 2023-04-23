@@ -3,6 +3,10 @@ import { render, act } from '@testing-library/react';
 import apiClient from '@Api';
 import Chat from '..'
 
+jest.mock('../hooks', () => ({
+    useGlobalListener: jest.fn()
+}))
+
 jest.mock('../ChatSpaceInformation', () => ({
     __esModule: true,
     default: () => <div>ChatSpaceInformation</div>

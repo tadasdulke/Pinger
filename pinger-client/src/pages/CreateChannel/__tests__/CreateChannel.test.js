@@ -94,7 +94,7 @@ describe('CreateChannel', () => {
             fireEvent.click(submitButton)
         });
 
-        expect(createChannelActioMock).toBeCalledWith(channelName);
+        expect(createChannelActioMock).toBeCalledWith(channelName, false);
         expect(createChannelActioMock).toBeCalledTimes(1);
         expect(dispatchMock).toBeCalledTimes(1);
         expect(navigateMock).toBeCalledWith(`${ROUTES.USE_CHATSPACE}/${ROUTES.CHANNEL_CHAT}/${channelId}`)
@@ -128,7 +128,7 @@ describe('CreateChannel', () => {
             fireEvent.click(submitButton)
         });
 
-        expect(createChannelActioMock).toBeCalledWith(channelName);
+        expect(createChannelActioMock).toBeCalledWith(channelName, false);
         expect(createChannelActioMock).toBeCalledTimes(1);
         expect(dispatchMock).not.toBeCalled();
         expect(navigateMock).not.toBeCalled()

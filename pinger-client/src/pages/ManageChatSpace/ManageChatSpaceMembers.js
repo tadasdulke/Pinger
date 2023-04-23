@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import { Expandable, Loader, useApiAction } from '@Common';
+import {Expandable, Loader, useApiAction } from '@Common';
 import { useDispatch, useSelector } from 'react-redux';
 
 import removeChatSpaceMember from './services/removeChatSpaceMember'

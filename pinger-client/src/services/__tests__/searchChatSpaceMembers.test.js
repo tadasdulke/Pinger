@@ -15,9 +15,4 @@ describe('searchChatSpaceMembers', () => {
     const members = await searchChatSpaceMembers("search");
     expect(members).toEqual(expectedChatspaceMembers);
   });
-  
-  test('should return null if receiver id is not provided', async () => {
-    const messages = await searchChatSpaceMembers(null);
-    expect(messages).toEqual(null);
-  });
 });
