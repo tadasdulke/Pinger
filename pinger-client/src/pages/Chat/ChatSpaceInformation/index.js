@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import useFetchChatSpace from './hooks/useFetchChatSpace'
-import { changeIsOwner, changeName } from '@Store/slices/workspaces';
+import { changeIsOwner, changeName, changeIsPrivate } from '@Store/slices/workspaces';
 
 const ChatSpaceInformation = () => {
     const { currentWorkspaceId, name } = useSelector(state => state.workspace)
@@ -15,6 +15,7 @@ const ChatSpaceInformation = () => {
             const ownerId = result.data.owner.id;
             dispatch(changeIsOwner(ownerId === userId));
             dispatch(changeName(result.data.name));
+            dispatch(changeIsPrivate(result.data.private));
         }
     }, [result])
 

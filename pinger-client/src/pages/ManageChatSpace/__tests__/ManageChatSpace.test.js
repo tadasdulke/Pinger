@@ -1,6 +1,5 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-
 import ManageChatSpace from '../index'
 
 jest.mock("../ManageChatSpaceInfo", () => ({
@@ -21,6 +20,12 @@ jest.mock("../ManageChatSpaceChannels", () => ({
 jest.mock("../InviteMembers", () => ({
     __esModule: true,
     default: () => <div/>
+}))
+
+jest.mock('react-redux', () => ({
+    useSelector: jest.fn().mockReturnValue({
+        isPrivate: true
+    })
 }))
 
 describe('ManageChatSpace', () => {

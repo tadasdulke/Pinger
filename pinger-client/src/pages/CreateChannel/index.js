@@ -36,7 +36,7 @@ function CreateChannel() {
 
   return (
     <Row nogutter>
-      <Col lg={7}>
+      <Col lg={4}>
         <div className="text-white pt-[30px] px-[30px]">
           <h1 className="text-3xl">
             Create channel

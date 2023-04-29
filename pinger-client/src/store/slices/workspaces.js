@@ -6,6 +6,7 @@ const workspaceSlice = createSlice({
     currentWorkspaceId: null,
     name: '',
     isOwner: null,
+    isPrivate: false,
   },
   reducers: {
     restore: (state) => {
@@ -19,10 +20,13 @@ const workspaceSlice = createSlice({
     },
     changeName: (state, action) => {
       state.name = action.payload;
+    },
+    changeIsPrivate: (state, action) => {
+      state.isPrivate = action.payload;
     }
   },
 });
 
 export default workspaceSlice.reducer;
 
-export const { changeCurrentWorkspaceId, restore, changeIsOwner, changeName } = workspaceSlice.actions;
+export const { changeCurrentWorkspaceId, restore, changeIsOwner, changeName, changeIsPrivate } = workspaceSlice.actions;
